@@ -521,12 +521,12 @@ routers, routes, components, pages, plugins, and full feature scaffolds.
 
 ### Tasks
 
-- [ ] Set up CLI framework
+- [x] Set up CLI framework
   - Use [Citty](https://github.com/unjs/citty) for command parsing (lightweight,
     ESM-first, aligns with unjs ecosystem)
   - Use [Handlebars](https://handlebarsjs.com/) for template rendering
   - Use [Consola](https://github.com/unjs/consola) for console output
-- [ ] Create template files (`templates/`)
+- [x] Create template files (`templates/`)
   - `model.ts.hbs` — Drizzle schema + type exports + relations
   - `queries.ts.hbs` — module-scoped prepared statements
   - `mutations.ts.hbs` — CRUD mutation functions
@@ -537,29 +537,29 @@ routers, routes, components, pages, plugins, and full feature scaffolds.
   - `component-react.tsx.hbs` — React component with `qwikify$` wrapper
   - `page.tsx.hbs` — Qwik page with `routeLoader$`
   - `plugin.ts.hbs` — Fastify plugin with `fp()`
-- [ ] Implement `make:model <Name>` command
+- [x] Implement `make:model <Name>` command
   - Generate schema, queries, and mutations files
   - Support `--columns "title:text,published:boolean"` option
   - Support `--with-router` to also generate the tRPC router
-- [ ] Implement `make:router <name>` command
+- [x] Implement `make:router <name>` command
   - Generate tRPC queries and mutations files
   - Print instructions for registering in `src/routers/index.ts`
-- [ ] Implement `make:route <path>` command
+- [x] Implement `make:route <path>` command
   - Generate Fastify REST route with CORS
   - Create nested directories matching the path
-- [ ] Implement `make:component <name>` command
+- [x] Implement `make:component <name>` command
   - Default: Qwik component in `src/client/components/qwik/`
   - `--react` flag: React component in `src/client/components/react/`
-- [ ] Implement `make:page <path>` command
+- [x] Implement `make:page <path>` command
   - Generate Qwik page with `routeLoader$` in `src/client/routes/`
   - Support dynamic segments like `[slug]`
-- [ ] Implement `make:plugin <name>` command
+- [x] Implement `make:plugin <name>` command
   - Generate Fastify plugin in `src/plugins/app/`
   - Include `onClose` cleanup hook template
-- [ ] Implement `make:scaffold <Name>` command
+- [x] Implement `make:scaffold <Name>` command
   - Run `make:model`, `make:router`, create list and detail pages, create card
     and form components — all at once
-- [ ] Write unit tests
+- [x] Write unit tests
   - Each command generates files with the correct content
   - Handlebars templates render correctly with given context
   - `--columns` flag parses column definitions into the template
@@ -601,7 +601,7 @@ package, and write integration and E2E tests to verify the entire stack.
 
 ### Tasks
 
-- [ ] Create the example application structure
+- [x] Create the example application structure
 
   ```
   examples/starter/
@@ -623,12 +623,6 @@ package, and write integration and E2E tests to verify the entire stack.
   │   │   └── posts/
   │   │       ├── queries.ts
   │   │       └── mutations.ts
-  │   ├── routes/
-  │   │   └── health/
-  │   │       └── index.ts
-  │   ├── plugins/
-  │   │   ├── external/
-  │   │   └── app/
   │   ├── renderer/
   │   │   └── worker.ts
   │   └── client/
@@ -644,17 +638,17 @@ package, and write integration and E2E tests to verify the entire stack.
   └── package.json
   ```
 
-- [ ] Wire up all framework packages together
+- [x] Wire up all framework packages together
   - `@scratchy/core` for server
   - `@scratchy/drizzle` for database
   - `@scratchy/trpc` for API
   - `@scratchy/renderer` for SSR
   - `@scratchy/vite-plugin` for client bundling
-- [ ] Create Docker Compose file for local infrastructure
+- [x] Create Docker Compose file for local infrastructure
   - PostgreSQL 16
   - DragonflyDB (Redis-compatible)
-- [ ] Create `.env.example` with all required environment variables
-- [ ] Write integration tests
+- [x] Create `.env.example` with all required environment variables
+- [x] Write integration tests
   - Server starts and health check works
   - tRPC queries and mutations succeed
   - REST external routes respond with CORS headers
@@ -663,7 +657,7 @@ package, and write integration and E2E tests to verify the entire stack.
 - [ ] Write E2E tests (optional, Playwright or Cypress)
   - Navigate to home page, verify SSR HTML
   - Interact with client-side component, verify Qwik resumability
-- [ ] Create README for the example app with getting started instructions
+- [x] Create README for the example app with getting started instructions
 
 ### Key Dependencies
 

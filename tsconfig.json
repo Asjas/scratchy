@@ -17,5 +17,11 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true
-  }
+  },
+  "exclude": [
+    "**/node_modules",
+    "examples/*/src/client",
+    "examples/*/vite.config.ts",
+    "examples/*/drizzle.config.ts"
+  ]
 }

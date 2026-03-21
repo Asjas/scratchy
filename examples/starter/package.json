@@ -4,9 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "node --env-file=.env src/index.ts",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@scratchy/core": "workspace:*",
+    "@scratchy/drizzle": "workspace:*",
+    "@scratchy/renderer": "workspace:*",
+    "@scratchy/trpc": "workspace:*",
+    "@scratchy/utils": "workspace:*",
+    "@scratchy/vite-plugin": "workspace:*",
+    "drizzle-orm": "0.45.1",
+    "ulid": "3.0.2"
+  },
   "devDependencies": {
-    "typescript": "5.8.3"
+    "@trpc/server": "11.14.1",
+    "@types/node": "22.16.0",
+    "fastify": "5.8.2",
+    "superjson": "2.2.6",
+    "typescript": "5.8.3",
+    "zod": "4.3.6",
+    "vite": "^5.4.0",
+    "@builder.io/qwik": "^1.5.0",
+    "@builder.io/qwik-city": "^1.5.0",
+    "@tailwindcss/vite": "^4.0.0"
   }
 }
