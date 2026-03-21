@@ -22,15 +22,22 @@
 
 #### Fastify Plugins
 
-- [@fastify/autoload](https://github.com/fastify/fastify-autoload) — Automatic plugin loading
+- [@fastify/autoload](https://github.com/fastify/fastify-autoload) — Automatic
+  plugin loading
 - [@fastify/cors](https://github.com/fastify/fastify-cors) — CORS support
-- [@fastify/helmet](https://github.com/fastify/fastify-helmet) — Security headers
-- [@fastify/rate-limit](https://github.com/fastify/fastify-rate-limit) — Rate limiting
-- [@fastify/sensible](https://github.com/fastify/fastify-sensible) — Error helpers and utilities
-- [@fastify/multipart](https://github.com/fastify/fastify-multipart) — File uploads
+- [@fastify/helmet](https://github.com/fastify/fastify-helmet) — Security
+  headers
+- [@fastify/rate-limit](https://github.com/fastify/fastify-rate-limit) — Rate
+  limiting
+- [@fastify/sensible](https://github.com/fastify/fastify-sensible) — Error
+  helpers and utilities
+- [@fastify/multipart](https://github.com/fastify/fastify-multipart) — File
+  uploads
 - [fastify-plugin](https://github.com/fastify/fastify-plugin) — Plugin wrapper
-- [fastify-print-routes](https://github.com/ShogunPanda/fastify-print-routes) — Route table logging
-- [fastify-type-provider-zod](https://github.com/turkerdev/fastify-type-provider-zod) — Zod validation
+- [fastify-print-routes](https://github.com/ShogunPanda/fastify-print-routes) —
+  Route table logging
+- [fastify-type-provider-zod](https://github.com/turkerdev/fastify-type-provider-zod)
+  — Zod validation
 
 ### tRPC
 
@@ -154,10 +161,13 @@
 
 - [ULID Specification](https://github.com/ulid/spec)
 - [ulid npm Package](https://www.npmjs.com/package/ulid)
-- [SuperJSON](https://github.com/flightcontrolhq/superjson) — Extended JSON serializer
-- [close-with-grace](https://github.com/mcollina/close-with-grace) — Graceful shutdown
+- [SuperJSON](https://github.com/flightcontrolhq/superjson) — Extended JSON
+  serializer
+- [close-with-grace](https://github.com/mcollina/close-with-grace) — Graceful
+  shutdown
 - [Pino Logger](https://getpino.io/)
-- [async-cache-dedupe](https://github.com/mcollina/async-cache-dedupe) — Cache with deduplication
+- [async-cache-dedupe](https://github.com/mcollina/async-cache-dedupe) — Cache
+  with deduplication
 
 ## Framework Inspiration
 

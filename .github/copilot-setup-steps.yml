@@ -1,0 +1,17 @@
+# Setup steps for GitHub Copilot coding agent
+# These steps run before Copilot executes any commands in pull request sessions
+# Docs: https://docs.github.com/en/copilot/customizing-copilot/extending-copilot-coding-agent
+
+steps:
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: "22"
+
+  - name: Install pnpm
+    uses: pnpm/action-setup@v4
+    with:
+      version: 10
+
+  - name: Install project dependencies
+    run: pnpm install --frozen-lockfile

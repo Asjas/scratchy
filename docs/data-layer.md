@@ -8,15 +8,15 @@ migrations, and caching.
 
 ## Stack
 
-| Component          | Technology                                   |
-| ------------------ | -------------------------------------------- |
-| ORM                | Drizzle ORM                                  |
-| Database           | PostgreSQL (>= 16)                           |
-| Driver             | `pg` (node-postgres)                         |
-| Cache              | Redis (DragonflyDB) + async-cache-dedupe     |
-| IDs                | ULID (Universally Unique Lexicographically Sortable Identifier) |
-| Validation         | Zod                                          |
-| Migrations         | Drizzle Kit                                  |
+| Component  | Technology                                                      |
+| ---------- | --------------------------------------------------------------- |
+| ORM        | Drizzle ORM                                                     |
+| Database   | PostgreSQL (>= 16)                                              |
+| Driver     | `pg` (node-postgres)                                            |
+| Cache      | Redis (DragonflyDB) + async-cache-dedupe                        |
+| IDs        | ULID (Universally Unique Lexicographically Sortable Identifier) |
+| Validation | Zod                                                             |
+| Migrations | Drizzle Kit                                                     |
 
 ## Database Connection
 
@@ -29,8 +29,8 @@ import { Pool } from "pg";
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
-  max: 100,          // Maximum connections
-  min: 10,           // Minimum idle connections
+  max: 100, // Maximum connections
+  min: 10, // Minimum idle connections
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 10_000,
   keepAlive: true,
@@ -59,7 +59,7 @@ Every entity follows this structure:
 ```typescript
 // db/schema/<entity>.ts
 import { relations } from "drizzle-orm";
-import { text, boolean, timestamp, index } from "drizzle-orm/pg-core";
+import { boolean, index, text, timestamp } from "drizzle-orm/pg-core";
 import { mySchema } from "~/db/my-schema.js";
 import { timestamps } from "~/db/schema/columns.helpers.js";
 
@@ -78,7 +78,7 @@ export const postStatus = mySchema.enum("post_status", [
 export const post = mySchema.table(
   "post",
   {
-    id: text().primaryKey(),           // ULID
+    id: text().primaryKey(), // ULID
     title: text().notNull(),
     slug: text().notNull().unique(),
     content: text(),
@@ -87,7 +87,7 @@ export const post = mySchema.table(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     publishedAt: timestamp({ withTimezone: true }),
-    ...timestamps,                     // createdAt, updatedAt
+    ...timestamps, // createdAt, updatedAt
   },
   (table) => [
     index("post_slug_idx").on(table.slug),
@@ -132,6 +132,7 @@ Always use a custom schema instead of `public`:
 ```typescript
 // db/my-schema.ts
 import { pgSchema } from "drizzle-orm/pg-core";
+
 export const mySchema = pgSchema(process.env.DATABASE_SCHEMA || "app");
 ```
 
@@ -151,6 +152,7 @@ const newPost = await db.insert(post).values({
 ```
 
 **Why ULID over UUID?**
+
 - Lexicographically sortable (natural time ordering in indexes)
 - Shorter string representation (26 chars vs 36)
 - Contains a timestamp component
@@ -162,7 +164,7 @@ const newPost = await db.insert(post).values({
 
 ```typescript
 // db/queries/posts.ts
-import { eq, and, desc, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "~/db/index.js";
 import { post } from "~/db/schema/post.js";
 
@@ -253,10 +255,7 @@ async function searchPosts(query: string) {
     .select()
     .from(post)
     .where(
-      or(
-        ilike(post.title, `%${query}%`),
-        ilike(post.content, `%${query}%`),
-      ),
+      or(ilike(post.title, `%${query}%`), ilike(post.content, `%${query}%`)),
     )
     .limit(50);
 }
@@ -296,10 +295,7 @@ export async function updatePost(id: string, data: Partial<NewPost>) {
 
 ```typescript
 export async function deletePost(id: string) {
-  const [deleted] = await db
-    .delete(post)
-    .where(eq(post.id, id))
-    .returning();
+  const [deleted] = await db.delete(post).where(eq(post.id, id)).returning();
   return deleted;
 }
 ```
@@ -364,8 +360,8 @@ Wrap database reads with caching and request deduplication:
 import { createCache } from "async-cache-dedupe";
 
 export const cache = createCache({
-  ttl: 60,           // Default TTL in seconds
-  stale: 300,        // Stale-while-revalidate in seconds
+  ttl: 60, // Default TTL in seconds
+  stale: 300, // Stale-while-revalidate in seconds
   storage: {
     type: "redis",
     options: { client: redisClient },
@@ -373,14 +369,18 @@ export const cache = createCache({
 });
 
 // Define cached functions
-cache.define("getPost", {
-  ttl: 300,
-  references: (args, key, result) => [`post:${args.id}`],
-  serialize: ({ id }) => id,
-}, async ({ id }: { id: string }) => {
-  const [result] = await findPostById.execute({ id });
-  return result;
-});
+cache.define(
+  "getPost",
+  {
+    ttl: 300,
+    references: (args, key, result) => [`post:${args.id}`],
+    serialize: ({ id }) => id,
+  },
+  async ({ id }: { id: string }) => {
+    const [result] = await findPostById.execute({ id });
+    return result;
+  },
+);
 
 // Usage
 const post = await cache.getPost({ id: "abc123" });
@@ -391,12 +391,12 @@ await cache.invalidateAll([`post:abc123`]);
 
 ### Cache Invalidation Strategy
 
-| Event              | Invalidate                                    |
-| ------------------ | --------------------------------------------- |
-| Post created       | `posts:list`                                  |
-| Post updated       | `post:{id}`, `posts:list`                     |
-| Post deleted       | `post:{id}`, `posts:list`                     |
-| Comment added      | `post:{postId}`, `comments:post:{postId}`     |
+| Event         | Invalidate                                |
+| ------------- | ----------------------------------------- |
+| Post created  | `posts:list`                              |
+| Post updated  | `post:{id}`, `posts:list`                 |
+| Post deleted  | `post:{id}`, `posts:list`                 |
+| Comment added | `post:{postId}`, `comments:post:{postId}` |
 
 ## Migrations
 
@@ -432,5 +432,5 @@ pnpm drizzle-kit migrate --config src/drizzle.config.ts
 6. **Use `withTimezone: true`** on all timestamp columns
 7. **Validate before inserting** — use Zod schemas to validate data before
    passing to Drizzle
-8. **Cache read-heavy queries** — use async-cache-dedupe for frequently
-   accessed data
+8. **Cache read-heavy queries** — use async-cache-dedupe for frequently accessed
+   data

@@ -5,7 +5,8 @@
 Scratchy uses a **dual API approach**:
 
 1. **tRPC** — for internal communication between the Scratchy client and server
-2. **REST** — for external consumers (third-party integrations, mobile apps, webhooks)
+2. **REST** — for external consumers (third-party integrations, mobile apps,
+   webhooks)
 
 ```
 ┌─────────────────┐     tRPC (type-safe)      ┌─────────────────┐
@@ -49,11 +50,11 @@ src/routers/
 
 ### Procedure Types
 
-| Type           | HTTP Method | Use Case                                  |
-| -------------- | ----------- | ----------------------------------------- |
-| `query`        | GET/POST    | Read data (fetching, listing, searching)  |
-| `mutation`     | POST        | Write data (create, update, delete)       |
-| `subscription` | SSE         | Real-time data streams                    |
+| Type           | HTTP Method | Use Case                                 |
+| -------------- | ----------- | ---------------------------------------- |
+| `query`        | GET/POST    | Read data (fetching, listing, searching) |
+| `mutation`     | POST        | Write data (create, update, delete)      |
+| `subscription` | SSE         | Real-time data streams                   |
 
 ### Input Validation Pattern
 

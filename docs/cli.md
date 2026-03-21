@@ -19,6 +19,7 @@ pnpm scratchy make:model Post
 ```
 
 **Creates:**
+
 ```
 src/db/schema/post.ts          # Table definition with types and relations
 src/db/queries/posts.ts        # Prepared statement queries
@@ -26,10 +27,11 @@ src/db/mutations/posts.ts      # CRUD mutation functions
 ```
 
 **Generated schema file:**
+
 ```typescript
 // src/db/schema/post.ts
 import { relations } from "drizzle-orm";
-import { text, boolean, index } from "drizzle-orm/pg-core";
+import { boolean, index, text } from "drizzle-orm/pg-core";
 import { mySchema } from "~/db/my-schema.js";
 import { timestamps } from "~/db/schema/columns.helpers.js";
 
@@ -54,6 +56,7 @@ export const postRelations = relations(post, ({ one, many }) => ({
 ```
 
 **Generated queries file:**
+
 ```typescript
 // src/db/queries/posts.ts
 import { eq, sql } from "drizzle-orm";
@@ -66,22 +69,20 @@ export const findPostById = db
   .where(eq(post.id, sql.placeholder("id")))
   .prepare("find_post_by_id");
 
-export const findAllPosts = db
-  .select()
-  .from(post)
-  .prepare("find_all_posts");
+export const findAllPosts = db.select().from(post).prepare("find_all_posts");
 
 export type FindPostById = Awaited<ReturnType<typeof findPostById.execute>>;
 export type FindAllPosts = Awaited<ReturnType<typeof findAllPosts.execute>>;
 ```
 
 **Generated mutations file:**
+
 ```typescript
 // src/db/mutations/posts.ts
 import { eq } from "drizzle-orm";
 import { ulid } from "ulid";
 import { db } from "~/db/index.js";
-import { post, type NewPost } from "~/db/schema/post.js";
+import { type NewPost, post } from "~/db/schema/post.js";
 
 export async function createPost(data: Omit<NewPost, "id">) {
   const [result] = await db
@@ -101,15 +102,13 @@ export async function updatePost(id: string, data: Partial<NewPost>) {
 }
 
 export async function deletePost(id: string) {
-  const [result] = await db
-    .delete(post)
-    .where(eq(post.id, id))
-    .returning();
+  const [result] = await db.delete(post).where(eq(post.id, id)).returning();
   return result;
 }
 ```
 
 **Options:**
+
 ```bash
 pnpm scratchy make:model Post --columns "title:text,content:text,published:boolean"
 pnpm scratchy make:model Post --with-router    # Also generates tRPC router
@@ -126,18 +125,20 @@ pnpm scratchy make:router posts
 ```
 
 **Creates:**
+
 ```
 src/routers/posts/queries.ts     # Query procedures
 src/routers/posts/mutations.ts   # Mutation procedures
 ```
 
 **Generated queries file:**
+
 ```typescript
 // src/routers/posts/queries.ts
-import { z } from "zod";
-import { publicProcedure, protectedProcedure } from "~/router.js";
-import { findPostById, findAllPosts } from "~/db/queries/posts.js";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { findAllPosts, findPostById } from "~/db/queries/posts.js";
+import { protectedProcedure, publicProcedure } from "~/router.js";
 
 export const postQueries = {
   getById: protectedProcedure
@@ -166,11 +167,12 @@ export const postQueries = {
 ```
 
 **Generated mutations file:**
+
 ```typescript
 // src/routers/posts/mutations.ts
 import { z } from "zod";
+import { createPost, deletePost, updatePost } from "~/db/mutations/posts.js";
 import { protectedProcedure } from "~/router.js";
-import { createPost, updatePost, deletePost } from "~/db/mutations/posts.js";
 
 export const postMutations = {
   create: protectedProcedure
@@ -205,9 +207,10 @@ export const postMutations = {
 ```
 
 **After generating**, register the router in `src/routers/index.ts`:
+
 ```typescript
-import { postQueries } from "~/routers/posts/queries.js";
 import { postMutations } from "~/routers/posts/mutations.js";
+import { postQueries } from "~/routers/posts/queries.js";
 
 export const appRouter = router({
   // ... existing routers
@@ -229,11 +232,13 @@ pnpm scratchy make:route /external/api/v1/products
 ```
 
 **Creates:**
+
 ```
 src/routes/external/api/v1/products/index.ts
 ```
 
 **Generated route file:**
+
 ```typescript
 // src/routes/external/api/v1/products/index.ts
 import type { FastifyPluginAsync } from "fastify";
@@ -304,11 +309,13 @@ pnpm scratchy make:component user-profile
 ```
 
 **Creates:**
+
 ```
 src/client/components/qwik/user-profile.tsx
 ```
 
 **Generated component file:**
+
 ```typescript
 // src/client/components/qwik/user-profile.tsx
 import { component$ } from "@builder.io/qwik";
@@ -327,6 +334,7 @@ export const UserProfile = component$<UserProfileProps>((props) => {
 ```
 
 **Options:**
+
 ```bash
 pnpm scratchy make:component chart --react    # Creates a React component with qwikify$
 pnpm scratchy make:component hero --page      # Creates a page component in routes/
@@ -343,11 +351,13 @@ pnpm scratchy make:page blog/[slug]
 ```
 
 **Creates:**
+
 ```
 src/client/routes/blog/[slug]/index.tsx
 ```
 
 **Generated page file:**
+
 ```typescript
 // src/client/routes/blog/[slug]/index.tsx
 import { component$ } from "@builder.io/qwik";
@@ -381,11 +391,13 @@ pnpm scratchy make:plugin email-service
 ```
 
 **Creates:**
+
 ```
 src/plugins/app/email-service.ts
 ```
 
 **Generated plugin file:**
+
 ```typescript
 // src/plugins/app/email-service.ts
 import fp from "fastify-plugin";
@@ -425,6 +437,7 @@ pnpm scratchy make:scaffold Product
 ```
 
 **Creates:**
+
 ```
 src/db/schema/product.ts
 src/db/queries/products.ts
