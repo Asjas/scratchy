@@ -203,7 +203,7 @@ export function createServerConfig(
 
   return {
     server: { port, proxy },
-    preview: { port },
+    preview: { port, proxy },
   };
 }
 
