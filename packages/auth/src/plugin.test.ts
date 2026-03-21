@@ -28,12 +28,12 @@ describe("authPlugin", () => {
     await fastify.ready();
   });
 
-  it("decorates request with session (null when unauthenticated)", async () => {
+  it("decorates request with session and user (null when unauthenticated)", async () => {
     const auth = buildAuth();
     await fastify.register(authPlugin, { auth });
 
     fastify.get("/test", (request: FastifyRequest) => {
-      return { session: request.session };
+      return { session: request.session, user: request.user };
     });
 
     const response = await fastify.inject({
@@ -42,7 +42,7 @@ describe("authPlugin", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ session: null });
+    expect(response.json()).toEqual({ session: null, user: null });
   });
 
   it("makes the auth instance available via getAuthDecorator", async () => {

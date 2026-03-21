@@ -8,6 +8,15 @@ import FastifyBetterAuth, {
 } from "fastify-better-auth";
 import fp from "fastify-plugin";
 
+/** User data attached to `request.user` by the auth plugin. */
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role?: string;
+  [key: string]: unknown;
+}
+
 /** Session data attached to `request.session` by the auth plugin. */
 export interface AuthSession {
   session: {
@@ -17,18 +26,13 @@ export interface AuthSession {
     expiresAt: Date;
     [key: string]: unknown;
   };
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role?: string;
-    [key: string]: unknown;
-  };
+  user: AuthUser;
 }
 
 declare module "fastify" {
   interface FastifyRequest {
     session: AuthSession | null;
+    user: AuthUser | null;
   }
 }
 
@@ -41,7 +45,7 @@ export interface AuthPluginOptions {
  * Fastify plugin that integrates Better Auth into the Scratchy
  * framework. Registers the `fastify-better-auth` plugin for route
  * handling and adds an `onRequest` hook that resolves the current
- * session and attaches it to `request.session`.
+ * session and attaches it to `request.session` and `request.user`.
  *
  * @example
  * ```ts
@@ -52,6 +56,7 @@ export interface AuthPluginOptions {
  *
  * // In routes:
  * request.session?.user // { id, name, email, role, ... }
+ * request.user          // { id, name, email, role, ... } (shorthand)
  * ```
  */
 export default fp(
@@ -61,6 +66,7 @@ export default fp(
     } as FastifyBetterAuthOptions<BetterAuthOptions>);
 
     fastify.decorateRequest("session", null);
+    fastify.decorateRequest("user", null);
 
     fastify.addHook("onRequest", async (request) => {
       const authInstance = getAuthDecorator(fastify);
@@ -70,9 +76,11 @@ export default fp(
         });
 
         request.session = session as AuthSession | null;
+        request.user = (session as AuthSession | null)?.user ?? null;
       } catch (error) {
         request.log.warn({ err: error }, "failed to resolve auth session");
         request.session = null;
+        request.user = null;
       }
     });
 
