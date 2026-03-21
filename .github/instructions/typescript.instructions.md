@@ -315,6 +315,21 @@ async function getUser(id: string) {
 }
 ```
 
+### ❌ Don't use `isNaN()` — use `Number.isNaN()` instead
+
+The global `isNaN()` coerces its argument to a number before checking, which
+leads to surprising results (e.g. `isNaN("hello")` is `true`).
+`Number.isNaN()` performs no coercion and only returns `true` for the actual
+IEEE 754 `NaN` value.
+
+```typescript
+// BAD — coerces the argument, produces unexpected results
+if (isNaN(value)) { ... }
+
+// GOOD — strict check, no coercion
+if (Number.isNaN(value)) { ... }
+```
+
 ### ❌ Don't suppress TypeScript errors
 
 ```typescript
