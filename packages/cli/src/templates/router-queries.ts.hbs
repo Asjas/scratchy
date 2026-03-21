@@ -22,8 +22,9 @@ export const {{camelName}}Queries = {
       }),
     )
     .query(async ({ input }) => {
-      const items = await findAll{{pascalName}}s.execute();
-      const start = (input.page - 1) * input.limit;
-      return items.slice(start, start + input.limit);
+      const { page, limit } = input;
+      const offset = (page - 1) * limit;
+      const items = await findAll{{pascalName}}s.execute({ limit, offset });
+      return items;
     }),
 };
