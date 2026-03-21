@@ -4,12 +4,29 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./worker": "./src/worker.ts",
+    "./plugin": "./src/plugin.ts",
+    "./shared-buffer": "./src/shared-buffer.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "fastify-plugin": "5.1.0",
+    "piscina": "5.1.4"
+  },
+  "peerDependencies": {
+    "ioredis": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ioredis": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "fastify": "5.8.2",
+    "ioredis": "5.10.1",
     "typescript": "5.8.3"
   }
 }

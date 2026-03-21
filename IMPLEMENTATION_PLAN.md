@@ -386,36 +386,36 @@ utilities.
 
 ### Tasks
 
-- [ ] Create Piscina worker pool Fastify plugin (`src/plugin.ts`)
+- [x] Create Piscina worker pool Fastify plugin (`src/plugin.ts`)
   - Register `fastify-piscina` with configurable thread counts
   - Default: `minThreads: 2`,
     `maxThreads: Math.max(4, os.availableParallelism())`
   - Set `idleTimeout`, `taskTimeout`, and `resourceLimits`
   - Provide `declare module "fastify"` augmentation for `fastify.runTask`
   - Drain pool on `onClose` hook
-- [ ] Create worker entry point (`src/worker.ts`)
+- [x] Create worker entry point (`src/worker.ts`)
   - Accept `RenderTask` with `type: "ssr" | "ssg"`, `route`, `props`, `headers`
   - Return `RenderResult` with `html`, `head`, `statusCode`, `headers`
   - Route to `renderSSR()` or `renderSSG()` based on task type
   - Wrap rendered HTML in the shell template
-- [ ] Create HTML shell template (`src/templates/shell.ts`)
+- [x] Create HTML shell template (`src/templates/shell.ts`)
   - Minimal `<!DOCTYPE html>` with head/body slots
   - Include viewport meta tag
   - Provide function `wrapInShell(body, head, options)` for composition
-- [ ] Implement SharedArrayBuffer utilities (`src/shared-buffer.ts`)
+- [x] Implement SharedArrayBuffer utilities (`src/shared-buffer.ts`)
   - `createSharedBuffer(dataSize)` — allocate header + data region
   - `writeToBuffer(shared, payload)` — encode JSON, set data, notify
   - `readFromBuffer(shared, timeoutMs)` — wait, decode JSON, acknowledge
   - `BufferStatus` const object (IDLE, DATA_READY, CONSUMED, ERROR)
-- [ ] Implement Redis communication utilities (`src/redis-comm.ts`)
+- [x] Implement Redis communication utilities (`src/redis-comm.ts`)
   - `storeRenderContext(redis, requestId, context, ttl)`
   - `getRenderContext(redis, requestId)`
   - `storeRenderResult(redis, requestId, html, ttl)`
   - `cleanupRenderContext(redis, requestId)`
-- [ ] Create SSR route handler helper (`src/ssr-handler.ts`)
+- [x] Create SSR route handler helper (`src/ssr-handler.ts`)
   - Utility function that creates a Fastify route handler for SSR pages
   - Fetches data, dispatches to worker pool, returns HTML response
-- [ ] Write unit tests
+- [x] Write unit tests
   - SharedArrayBuffer write/read round-trip preserves data
   - Worker entry point dispatches to correct renderer based on task type
   - Shell template produces valid HTML
@@ -425,9 +425,7 @@ utilities.
 
 ```
 piscina
-fastify-piscina
 fastify-plugin
-@builder.io/qwik (peerDependency — for SSR in the worker)
 ioredis (optional peerDependency — for Redis communication)
 ```
 
