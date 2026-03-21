@@ -313,30 +313,30 @@ authorization middleware, and Fastify adapter registration.
 
 ### Tasks
 
-- [ ] Create tRPC initialization (`src/trpc.ts`)
+- [x] Create tRPC initialization (`src/trpc.ts`)
   - `initTRPC.context<Context>().create()` with `superjson` transformer
   - Enable SSE with configurable `maxDurationMs` and ping interval
   - Export `router`, `publicProcedure`, `middleware` from the `t` instance
-- [ ] Create context factory (`src/context.ts`)
+- [x] Create context factory (`src/context.ts`)
   - Accept `CreateFastifyContextOptions`
   - Extract user from request (delegate to auth plugin)
   - Provide `hasRole(role)` helper on the context
   - Export `Context` type
-- [ ] Create authentication middleware (`src/middleware.ts`)
+- [x] Create authentication middleware (`src/middleware.ts`)
   - `isAuthenticated` — rejects if `ctx.user` is null
   - `isAdmin` — rejects if user role is not `"admin"`
   - `isOwner` — checks `input.id` or `input.userId` against `ctx.user.id`
   - `isOwnerOrAdmin` — combines ownership and admin checks
   - Export `protectedProcedure` (public + `isAuthenticated`)
-- [ ] Create Fastify plugin (`src/plugin.ts`)
+- [x] Create Fastify plugin (`src/plugin.ts`)
   - Register `@trpc/server/adapters/fastify` on `/trpc` prefix
   - Wire up `createContext`, `appRouter`, and `onError` handler
   - Set `responseMeta` for cache control headers
-- [ ] Create tRPC client factory (`src/client.ts`)
+- [x] Create tRPC client factory (`src/client.ts`)
   - Export `createClient<AppRouter>()` using `httpBatchStreamLink`
   - Configure `superjson` transformer
   - Default to `POST` method override for E2E testing compatibility
-- [ ] Write unit tests
+- [x] Write unit tests
   - Context creation extracts user correctly
   - `isAuthenticated` middleware rejects unauthenticated requests
   - `isAdmin` middleware rejects non-admin users
