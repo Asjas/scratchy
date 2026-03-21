@@ -33,7 +33,7 @@ export default fp(
   ) {
     const { drizzle } = await import("drizzle-orm/node-postgres");
 
-    const pool = await createPool(opts.connectionString, opts.pool);
+    const pool = await createPool(opts.connectionString, opts.pool, fastify.log);
 
     const db = drizzle({
       client: pool,
