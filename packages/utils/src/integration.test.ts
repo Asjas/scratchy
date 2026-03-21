@@ -59,6 +59,16 @@ async function buildServer(): Promise<FastifyInstance> {
   server.get("/redirect", (request, reply) => {
     const { to } = request.query as { to?: string };
     const location = safeRedirect(to, "/home");
+    // Defense-in-depth: safeRedirect already guarantees a relative path, but
+    // this explicit guard lets static-analysis tools (CodeQL CWE-601) verify
+    // no open-redirect is possible.
+    if (
+      !location.startsWith("/") ||
+      location.startsWith("//") ||
+      location.startsWith("/\\")
+    ) {
+      return reply.redirect("/home");
+    }
     return reply.redirect(location);
   });
 

@@ -30,12 +30,58 @@ const IP_HEADER_NAMES = Object.freeze([
   "oxygen-buyer-ip",
 ] as const);
 
-function parseForwardedHeader(value: string): string | null {
-  for (const part of value.split(";")) {
-    const trimmed = part.trim();
-    if (trimmed.startsWith("for=")) return trimmed.slice(4);
+/**
+ * Parse a RFC 7239 `Forwarded` header and return all IP candidates found in
+ * `for=` directives across every comma-separated hop entry.
+ *
+ * Handles:
+ * - Multiple hop entries:  `for=1.2.3.4, for=5.6.7.8`
+ * - Quoted values:         `for="1.2.3.4:1234"`
+ * - IPv6 bracket literals: `for="[2001:db8::1]"` or `for=[2001:db8::1]`
+ * - IPv6 with port:        `for="[2001:db8::1]:4711"`
+ * - IPv4 with port:        `for=1.2.3.4:1234`
+ */
+function parseForwardedHeader(value: string): string[] {
+  const candidates: string[] = [];
+
+  // Split on commas to handle multiple hop entries (RFC 7239 §4).
+  for (const entry of value.split(",")) {
+    // Each hop entry has semicolon-separated directive parameters.
+    for (const directive of entry.split(";")) {
+      const trimmed = directive.trim();
+      // The "for" directive name is case-insensitive (RFC 7239 §4).
+      if (!/^for\s*=/i.test(trimmed)) continue;
+
+      // Extract the value after the first "=".
+      let forValue = trimmed.slice(trimmed.indexOf("=") + 1).trim();
+
+      // Strip surrounding double quotes.
+      if (forValue.startsWith('"') && forValue.endsWith('"')) {
+        forValue = forValue.slice(1, -1);
+      }
+
+      // Handle IPv6 address literals in square brackets:
+      //   "[2001:db8::1]" or "[2001:db8::1]:4711"
+      if (forValue.startsWith("[")) {
+        const closingBracket = forValue.indexOf("]");
+        if (closingBracket !== -1) {
+          forValue = forValue.slice(1, closingBracket);
+        }
+      } else {
+        // Strip optional port from IPv4: "1.2.3.4:1234" → "1.2.3.4".
+        // Bare IPv6 addresses have multiple colons — don't strip those.
+        const colonCount = (forValue.match(/:/g) ?? []).length;
+        if (colonCount === 1) {
+          forValue = (forValue.split(":")[0] ?? forValue).trim();
+        }
+      }
+
+      if (forValue) candidates.push(forValue);
+      break; // Only one "for=" per hop entry is meaningful.
+    }
   }
-  return null;
+
+  return candidates;
 }
 
 function extractIPs(
@@ -46,15 +92,13 @@ function extractIPs(
   const value = Array.isArray(rawValue) ? rawValue.join(",") : rawValue;
 
   if (headerName === "forwarded") {
-    const parsed = parseForwardedHeader(value);
-    return parsed ? [parsed] : [];
+    return parseForwardedHeader(value);
   }
 
-  if (value.includes(",")) {
-    return value.split(",").map((ip) => ip.trim());
-  }
-
-  return [value.trim()];
+  return value
+    .split(",")
+    .map((ip) => ip.trim())
+    .filter(Boolean);
 }
 
 /**

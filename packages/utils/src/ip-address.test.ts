@@ -55,6 +55,58 @@ describe("getClientIPAddress", () => {
     expect(result).toBe("203.0.113.5");
   });
 
+  it("parses Forwarded with multiple comma-separated hop entries", () => {
+    const result = getClientIPAddress(
+      req({ forwarded: "for=203.0.113.5, for=10.0.0.1" }),
+    );
+    expect(result).toBe("203.0.113.5");
+  });
+
+  it("parses Forwarded for= with an IPv6 address in brackets", () => {
+    const result = getClientIPAddress(
+      req({ forwarded: "for=[2001:db8::1]; proto=https" }),
+    );
+    expect(result).toBe("2001:db8::1");
+  });
+
+  it("parses Forwarded for= with a quoted IPv6 address in brackets", () => {
+    const result = getClientIPAddress(
+      req({ forwarded: 'for="[2001:db8::1]"' }),
+    );
+    expect(result).toBe("2001:db8::1");
+  });
+
+  it("parses Forwarded for= with an IPv6 address and port", () => {
+    const result = getClientIPAddress(
+      req({ forwarded: 'for="[2001:db8::1]:4711"' }),
+    );
+    expect(result).toBe("2001:db8::1");
+  });
+
+  it("parses Forwarded for= with an IPv4 address and port", () => {
+    const result = getClientIPAddress(
+      req({ forwarded: "for=203.0.113.5:1234" }),
+    );
+    expect(result).toBe("203.0.113.5");
+  });
+
+  it("parses Forwarded for= with a quoted IPv4 address", () => {
+    const result = getClientIPAddress(req({ forwarded: 'for="203.0.113.5"' }));
+    expect(result).toBe("203.0.113.5");
+  });
+
+  it("parses Forwarded for= case-insensitively", () => {
+    const result = getClientIPAddress(req({ forwarded: "For=203.0.113.5" }));
+    expect(result).toBe("203.0.113.5");
+  });
+
+  it("skips invalid for= entries and uses the next hop in Forwarded", () => {
+    const result = getClientIPAddress(
+      req({ forwarded: "for=invalid, for=203.0.113.5" }),
+    );
+    expect(result).toBe("203.0.113.5");
+  });
+
   it("prefers x-azure-clientip over other headers", () => {
     const result = getClientIPAddress(
       req({
