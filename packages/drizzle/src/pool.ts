@@ -79,7 +79,16 @@ export async function createPool(
     }
   });
 
-  await pool.query("SELECT 1");
+  try {
+    await pool.query("SELECT 1");
+  } catch (error) {
+    try {
+      await pool.end();
+    } catch {
+      // Ignore errors from pool.end() to avoid masking the original failure
+    }
+    throw error;
+  }
 
   return pool;
 }
