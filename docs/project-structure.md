@@ -86,6 +86,14 @@ scratchy/
 │   │   ├── routes/                # File-based routing (Qwik City)
 │   │   │   ├── layout.tsx         # Root layout
 │   │   │   ├── index.tsx          # Home page (/)
+│   │   │   ├── error.tsx          # Root error boundary (catches unhandled errors)
+│   │   │   ├── not-found.tsx      # 404 page
+│   │   │   ├── global-error.tsx   # Fatal error page (root layout failures)
+│   │   │   ├── admin/
+│   │   │   │   ├── layout.tsx     # Admin layout (with onRequest auth guard)
+│   │   │   │   ├── index.tsx      # Admin dashboard
+│   │   │   │   ├── loading.tsx    # Loading skeleton for admin section
+│   │   │   │   └── error.tsx      # Error boundary for admin section
 │   │   │   └── [slug]/
 │   │   │       └── index.tsx      # Dynamic routes
 │   │   ├── styles/                # Tailwind CSS
@@ -97,7 +105,9 @@ scratchy/
 │   ├── lib/                       # Shared server utilities
 │   │   ├── cache.ts               # async-cache-dedupe with Redis
 │   │   ├── constants.ts           # Time, size, and other constants
+│   │   ├── errors.ts              # createError(), ErrorResponse, notFound()
 │   │   ├── logging.ts             # Pino logger configuration
+│   │   ├── session.ts             # createCookie(), createSessionStorage()
 │   │   └── worker-redis.ts        # Redis-based worker communication
 │   │
 │   └── types/                     # TypeScript type augmentations
@@ -185,6 +195,53 @@ scratchy/
 | ----------------------- | ----------------------------------------- |
 | `src/types/fastify.d.ts` | Extends Fastify types with decorators   |
 
+## Route File Conventions
+
+Scratchy uses special file names in `src/client/routes/` inspired by Next.js App
+Router and Qwik City conventions:
+
+| File              | Purpose                                              | Pattern Source |
+| ----------------- | ---------------------------------------------------- | -------------- |
+| `index.tsx`       | Page component for the route                         | Qwik City      |
+| `layout.tsx`      | Shared layout wrapping child routes                  | Qwik City      |
+| `loading.tsx`     | Loading skeleton shown while page data loads         | Next.js        |
+| `error.tsx`       | Error boundary for the route segment                 | Next.js        |
+| `not-found.tsx`   | 404 page when `notFound()` is thrown                 | Next.js        |
+| `global-error.tsx`| Fatal error fallback (root layout failure)           | Next.js        |
+
+### Route Module Exports
+
+Route files (`index.tsx`, `layout.tsx`) can export special functions:
+
+```typescript
+// Data loading (runs on server before render)
+export const useProductData = routeLoader$(async (event) => {
+  return await findProductById.execute({ id: event.params.id });
+});
+
+// Server actions (handle form submissions)
+export const useAddToCart = routeAction$(
+  async (data, event) => { /* ... */ },
+  zod$({ productId: z.string(), quantity: z.number().min(1) }),
+);
+
+// Middleware (runs before loader/action)
+export const onRequest: RequestHandler = async (event) => {
+  // Authentication, logging, etc.
+  await event.next();
+};
+
+// HTTP method-specific middleware
+export const onGet: RequestHandler = async (event) => { /* ... */ };
+export const onPost: RequestHandler = async (event) => { /* ... */ };
+
+// Page metadata
+export const head: DocumentHead = {
+  title: "Product Page",
+  meta: [{ name: "description", content: "Product details" }],
+};
+```
+
 ## Adding New Features
 
 ### Adding a New Database Entity
@@ -215,6 +272,18 @@ scratchy/
 1. Create file in `src/client/routes/<path>/index.tsx`
 2. Export default component using `component$()`
 3. Add `routeLoader$` for data loading if needed
+4. Add `routeAction$` for form handling if needed
+5. Add `onRequest` middleware for auth guards if needed
+6. Optionally add `loading.tsx` for streaming skeleton
+7. Optionally add `error.tsx` for error boundary
+
+### Adding Middleware to a Route
+
+1. Export `onRequest` from a `layout.tsx` or `index.tsx` file
+2. Use `event.sharedMap` to pass data to loaders and components
+3. Call `event.next()` to continue the chain
+4. Throw `event.redirect()` to redirect
+5. See [middleware.md](middleware.md) for full patterns
 
 ### Adding a New Component
 

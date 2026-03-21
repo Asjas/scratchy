@@ -193,7 +193,17 @@ src/client/
   declarations for React components.
 - **Type exports**: `export type AllItems = Awaited<ReturnType<typeof fn>>`.
 - **Error handling**: Use `fastify.to(promise)` for `[err, result]` tuples
-  where available.
+  where available. Use `createError()` for structured HTTP errors.
+- **Data loading**: Use `routeLoader$()` for server-side data in route
+  components. Never fetch data client-side when SSR can provide it.
+- **Form handling**: Use `routeAction$()` with `zod$()` validation for form
+  submissions. Use the `<Form>` component for progressive enhancement.
+- **Middleware**: Export `onRequest`, `onGet`, `onPost` from route files for
+  per-route middleware. Use Fastify plugins for global middleware.
+- **Sessions**: Use `createCookie()` for signed cookies, Redis-backed session
+  storage in production. Regenerate session IDs on auth state changes.
+- **Error pages**: Add `error.tsx` in route directories for error boundaries.
+  Use `notFound()` to trigger not-found pages.
 
 ## Instruction Files
 
@@ -222,7 +232,15 @@ Comprehensive guides are maintained in the `/docs` directory:
 | `getting-started.md`      | Setup guide and prerequisites                     |
 | `project-structure.md`    | Directory layout and code organization            |
 | `api-design.md`           | tRPC and RESTful API patterns                     |
+| `data-loading.md`         | routeLoader$, server functions, caching           |
+| `forms-and-actions.md`    | routeAction$, Form component, file uploads        |
+| `middleware.md`            | Request middleware, onRequest, lifecycle hooks     |
+| `error-handling.md`       | Error boundaries, error pages, structured errors  |
+| `sessions.md`             | Cookie/session management, flash messages         |
+| `security.md`             | CSRF, CSP, auth, rate limiting, input validation  |
 | `rendering.md`            | SSR, SSG, and Worker Thread rendering pipeline    |
+| `streaming.md`            | Streaming SSR, progressive rendering, defer/Await |
+| `testing.md`              | Testing strategy, Vitest, Cypress, test utilities |
 | `data-layer.md`           | Drizzle ORM, database patterns, and data flow     |
 | `cli.md`                  | CLI scaffolding commands                          |
 | `worker-communication.md` | SharedArrayBuffer, Atomics, and Redis patterns    |
