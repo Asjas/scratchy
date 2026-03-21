@@ -58,7 +58,7 @@ async function createServer(config: Config) {
   await server.register(fastifyAutoload, {
     dir: join(import.meta.dirname, "routes"),
     dirNameRoutePrefix: false,
-    matchFilter: /\.(?:ts|js)$/,
+    matchFilter: /index\.(?:ts|js)$/,
   });
 
   setupErrorHandler(server);
