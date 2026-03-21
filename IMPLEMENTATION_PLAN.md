@@ -467,7 +467,7 @@ code with Qwik, React interop, and Tailwind CSS.
   - Configure `server.proxy` to forward `/trpc` and `/external/api` to the
     Fastify backend
   - Set `build.target` to `es2022`
-  - Enable source maps in development
+  - Enable source maps for builds
 - [x] Support optional React interop
   - If the user opts in, include `qwikReact()` from
     `@builder.io/qwik-react/vite`
