@@ -4,12 +4,23 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./middleware": "./src/middleware.ts",
+    "./plugin": "./src/plugin.ts",
+    "./client": "./src/client.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@trpc/client": "11.14.1",
+    "@trpc/server": "11.14.1",
+    "fastify-plugin": "5.1.0",
+    "superjson": "2.2.6",
+    "zod": "4.3.6"
+  },
   "devDependencies": {
+    "fastify": "5.8.2",
     "typescript": "5.8.3"
   }
 }
