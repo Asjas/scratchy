@@ -44,15 +44,24 @@ export function createSSRHandler(options: SSRHandlerOptions = {}) {
 
     const result = await request.server.runTask(task);
 
+    const hasContentTypeHeader =
+      result.headers &&
+      Object.keys(result.headers).some(
+        (key) => key.toLowerCase() === "content-type",
+      );
+
+    const replyWithStatus = reply.status(result.statusCode);
+
+    if (!hasContentTypeHeader) {
+      replyWithStatus.header("content-type", "text/html; charset=utf-8");
+    }
+
     if (result.headers) {
       for (const [key, value] of Object.entries(result.headers)) {
-        reply.header(key, value);
+        replyWithStatus.header(key, value);
       }
     }
 
-    return reply
-      .status(result.statusCode)
-      .header("content-type", "text/html; charset=utf-8")
-      .send(result.html);
+    return replyWithStatus.send(result.html);
   };
 }
