@@ -4,12 +4,22 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./helpers": "./src/helpers.ts",
+    "./plugin": "./src/plugin.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "drizzle-orm": "0.45.1",
+    "fastify-plugin": "5.1.0",
+    "pg": "8.20.0"
+  },
   "devDependencies": {
+    "@types/pg": "8.20.0",
+    "drizzle-kit": "0.31.10",
+    "fastify": "5.8.2",
     "typescript": "5.8.3"
   }
 }

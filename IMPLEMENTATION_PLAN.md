@@ -154,40 +154,40 @@ package registers into.
 
 ### Tasks
 
-- [ ] Create the Fastify server factory (`src/server.ts`)
+- [x] Create the Fastify server factory (`src/server.ts`)
   - Accept a configuration object (port, host, logging level, trust proxy)
   - Register `fastify-type-provider-zod` for Zod-based schema validation
   - Set up Pino structured logging
   - Configure `routerOptions` (ignore trailing slash, max param length)
-- [ ] Create configuration loader (`src/config.ts`)
+- [x] Create configuration loader (`src/config.ts`)
   - Load from environment variables with Zod validation
   - Provide defaults for development
   - Export typed `Config` interface
-- [ ] Create plugin autoloading setup
+- [x] Create plugin autoloading setup
   - `src/plugins/external/` for third-party plugins (CORS, Helmet, Rate Limit)
   - `src/plugins/app/` for application plugins
   - Use `@fastify/autoload` with `encapsulate: false` for shared scope
-- [ ] Implement built-in plugins
+- [x] Implement built-in plugins
   - `src/plugins/external/helmet.ts` — `@fastify/helmet` with CSP
   - `src/plugins/external/rate-limit.ts` — `@fastify/rate-limit`
   - `src/plugins/external/sensible.ts` — `@fastify/sensible` for error helpers
-- [ ] Create error handler (`src/error-handler.ts`)
+- [x] Create error handler (`src/error-handler.ts`)
   - Handle Zod validation errors with structured messages
   - Handle Fastify HTTP errors
   - Log unexpected errors and return 500
   - 404 handler with rate limiting
-- [ ] Create health check route (`src/routes/health.ts`)
+- [x] Create health check route (`src/routes/health.ts`)
   - `GET /health` returning `{ status: "ok", timestamp: "<ISO>" }`
-- [ ] Set up graceful shutdown (`src/shutdown.ts`)
+- [x] Set up graceful shutdown (`src/shutdown.ts`)
   - Use `close-with-grace` for SIGTERM/SIGINT
   - Drain connections before exit
-- [ ] Create Fastify type augmentation file (`src/types/fastify.d.ts`)
+- [x] Create Fastify type augmentation file (`src/types/fastify.d.ts`)
   - Declare `config` decorator on `FastifyInstance`
-- [ ] Export public API from `src/index.ts`
+- [x] Export public API from `src/index.ts`
   - `createServer(config)` — the main factory
   - `definePlugin(fn)` — helper wrapping `fastify-plugin`
   - Re-export key types
-- [ ] Write unit tests
+- [x] Write unit tests
   - Server starts and responds to `/health`
   - Error handler returns proper error shapes
   - Config validation rejects invalid values
@@ -241,32 +241,32 @@ helpers, and patterns for prepared statements and migrations.
 
 ### Tasks
 
-- [ ] Create connection pool factory (`src/pool.ts`)
+- [x] Create connection pool factory (`src/pool.ts`)
   - Accept `DATABASE_URL` and pool sizing options
   - Append libpq keepalive parameters automatically
   - Set up TCP keepalive on new connections
   - Handle pool-level errors gracefully (log, don't crash)
   - Verify connection on startup with `SELECT 1`
-- [ ] Create schema namespace helper (`src/schema.ts`)
+- [x] Create schema namespace helper (`src/schema.ts`)
   - `createSchema(name)` returning a `pgSchema` instance
   - Default to `"app"` schema (configurable via `DATABASE_SCHEMA` env var)
-- [ ] Create column helpers (`src/helpers.ts`)
+- [x] Create column helpers (`src/helpers.ts`)
   - `timestamps` object with `createdAt` and `updatedAt` columns
   - `withTimezone: true` on all timestamp columns
   - `$onUpdateFn(() => new Date())` on `updatedAt`
-- [ ] Create Fastify plugin (`src/plugin.ts`)
+- [x] Create Fastify plugin (`src/plugin.ts`)
   - Register as a Fastify plugin via `fastify-plugin`
   - Decorate `fastify.db` with the Drizzle instance
   - Decorate `fastify.pool` with the underlying `pg.Pool`
   - Clean up pool on `onClose` hook
   - Provide `declare module "fastify"` augmentation
-- [ ] Create `drizzle.config.ts` factory (`src/drizzle-config.ts`)
+- [x] Create `drizzle.config.ts` factory (`src/drizzle-config.ts`)
   - Export a helper function that generates the Drizzle Kit config
   - Enforce `casing: "snake_case"` and the custom schema
-- [ ] Document the prepared-statement pattern (module-scoped
+- [x] Document the prepared-statement pattern (module-scoped
       `db.select().prepare()`)
   - Provide example in the package README
-- [ ] Write unit tests
+- [x] Write unit tests
   - Pool factory creates a pool with correct options
   - Schema helper returns a valid `pgSchema`
   - Column helpers produce the correct Drizzle column definitions
