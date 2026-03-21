@@ -18,19 +18,22 @@ export interface ClientOptions {
  * (which `@scratchy/trpc` does by default).
  */
 export function createClient<TRouter extends AnyRouter>(opts: ClientOptions) {
+  // tRPC's `httpBatchStreamLink` expects the transformer option to match the
+  // router's inferred transformer type (encoded in `TRouter["_def"]["_config"]`).
+  // Because `TRouter` is generic, TypeScript cannot verify at compile time that
+  // `superjson` satisfies the constraint. The cast through `unknown` is necessary
+  // to bridge this gap. It is safe because all Scratchy routers are initialised
+  // with `superjson` in `@scratchy/trpc`'s `trpc.ts`.
+  type LinkOptions = Parameters<typeof httpBatchStreamLink<TRouter>>[0];
+
   return createTRPCClient<TRouter>({
     links: [
-      httpBatchStreamLink<TRouter>(
-        // The transformer type is inferred from the generic TRouter, but we
-        // always use superjson (matching the server-side init in trpc.ts).
-        // The cast is safe because Scratchy routers are always created with superjson.
-        {
-          url: opts.url,
-          transformer: superjson,
-          methodOverride: "POST",
-          headers: opts.headers,
-        } as unknown as Parameters<typeof httpBatchStreamLink<TRouter>>[0],
-      ),
+      httpBatchStreamLink<TRouter>({
+        url: opts.url,
+        transformer: superjson,
+        methodOverride: "POST",
+        headers: opts.headers,
+      } as unknown as LinkOptions),
     ],
   });
 }
