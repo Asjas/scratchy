@@ -194,6 +194,18 @@ importers:
         specifier: 5.8.3
         version: 5.8.3
 
+  packages/utils:
+    devDependencies:
+      '@types/node':
+        specifier: 22.16.0
+        version: 22.16.0
+      fastify:
+        specifier: 5.8.2
+        version: 5.8.2
+      typescript:
+        specifier: 5.8.3
+        version: 5.8.3
+
   packages/vite-plugin:
     dependencies:
       vite-tsconfig-paths:

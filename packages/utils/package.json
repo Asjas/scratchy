@@ -1,0 +1,26 @@
+{
+  "name": "@scratchy/utils",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./promise": "./src/promise.ts",
+    "./timers": "./src/timers.ts",
+    "./ip-address": "./src/ip-address.ts",
+    "./locales": "./src/locales.ts",
+    "./prefetch": "./src/prefetch.ts",
+    "./safe-redirect": "./src/safe-redirect.ts",
+    "./responses": "./src/responses.ts",
+    "./sec-fetch": "./src/sec-fetch.ts",
+    "./redirect-back": "./src/redirect-back.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "22.16.0",
+    "fastify": "5.8.2",
+    "typescript": "5.8.3"
+  }
+}
