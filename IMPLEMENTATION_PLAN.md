@@ -241,32 +241,32 @@ helpers, and patterns for prepared statements and migrations.
 
 ### Tasks
 
-- [ ] Create connection pool factory (`src/pool.ts`)
+- [x] Create connection pool factory (`src/pool.ts`)
   - Accept `DATABASE_URL` and pool sizing options
   - Append libpq keepalive parameters automatically
   - Set up TCP keepalive on new connections
   - Handle pool-level errors gracefully (log, don't crash)
   - Verify connection on startup with `SELECT 1`
-- [ ] Create schema namespace helper (`src/schema.ts`)
+- [x] Create schema namespace helper (`src/schema.ts`)
   - `createSchema(name)` returning a `pgSchema` instance
   - Default to `"app"` schema (configurable via `DATABASE_SCHEMA` env var)
-- [ ] Create column helpers (`src/helpers.ts`)
+- [x] Create column helpers (`src/helpers.ts`)
   - `timestamps` object with `createdAt` and `updatedAt` columns
   - `withTimezone: true` on all timestamp columns
   - `$onUpdateFn(() => new Date())` on `updatedAt`
-- [ ] Create Fastify plugin (`src/plugin.ts`)
+- [x] Create Fastify plugin (`src/plugin.ts`)
   - Register as a Fastify plugin via `fastify-plugin`
   - Decorate `fastify.db` with the Drizzle instance
   - Decorate `fastify.pool` with the underlying `pg.Pool`
   - Clean up pool on `onClose` hook
   - Provide `declare module "fastify"` augmentation
-- [ ] Create `drizzle.config.ts` factory (`src/drizzle-config.ts`)
+- [x] Create `drizzle.config.ts` factory (`src/drizzle-config.ts`)
   - Export a helper function that generates the Drizzle Kit config
   - Enforce `casing: "snake_case"` and the custom schema
-- [ ] Document the prepared-statement pattern (module-scoped
+- [x] Document the prepared-statement pattern (module-scoped
       `db.select().prepare()`)
   - Provide example in the package README
-- [ ] Write unit tests
+- [x] Write unit tests
   - Pool factory creates a pool with correct options
   - Schema helper returns a valid `pgSchema`
   - Column helpers produce the correct Drizzle column definitions
