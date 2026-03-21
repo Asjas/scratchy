@@ -89,7 +89,7 @@ export const Button = component$(({
 }: {
   variant?: "primary" | "secondary" | "ghost";
   size?: "sm" | "md" | "lg";
-  children: any;
+  children?: unknown;
 }) => {
   const baseStyles = "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
 
