@@ -1,4 +1,3 @@
-import type { AuthSession } from "./plugin.js";
 import type {
   FastifyReply,
   FastifyRequest,
@@ -62,9 +61,7 @@ export function requireAdmin(
     return;
   }
 
-  const user = request.session.user as AuthSession["user"];
-
-  if (user.role !== "admin") {
+  if (request.session.user.role !== "admin") {
     reply.code(403).send({
       error: "Forbidden",
       message: "Admin access required",
