@@ -28,5 +28,29 @@ export function redirectBack(
 ): string {
   const referer = request.headers["referer"];
   const raw = Array.isArray(referer) ? referer[0] : referer;
-  return raw && raw.length > 0 ? raw : options.fallback;
+
+  // Only allow safe relative redirects.
+  // 1. If no referer or it's empty, use the fallback.
+  if (typeof raw !== "string" || raw.length === 0) {
+    return options.fallback;
+  }
+
+  // 2. If it's already a relative path, return it directly.
+  if (raw.startsWith("/")) {
+    return raw;
+  }
+
+  // 3. If it's an absolute HTTP(S) URL, strip origin and keep only path,
+  //    query, and hash. For anything else, fall back.
+  try {
+    const url = new URL(raw);
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      const path = `${url.pathname}${url.search}${url.hash}`;
+      return path.length > 0 ? path : options.fallback;
+    }
+  } catch {
+    // Invalid URL; fall through to fallback.
+  }
+
+  return options.fallback;
 }
