@@ -1,0 +1,28 @@
+{
+  "name": "@scratchy/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./client": "./src/client.ts",
+    "./plugin": "./src/plugin.ts",
+    "./hooks": "./src/hooks.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "better-auth": "1.5.5",
+    "fastify-better-auth": "1.2.0",
+    "fastify-plugin": "5.1.0"
+  },
+  "devDependencies": {
+    "fastify": "5.8.2",
+    "typescript": "5.8.3"
+  },
+  "peerDependencies": {
+    "fastify": ">=5.0.0"
+  }
+}
