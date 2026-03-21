@@ -50,7 +50,10 @@ export default async function handler(
     throw new Error("Worker must run inside a worker thread");
   }
 
-  const stream = await renderRouteToStream(task.route, task.props);
+  const stream = await renderRouteToStream({
+    route: task.route,
+    props: task.props,
+  });
   const reader = stream.getReader();
 
   for (;;) {
