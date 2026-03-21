@@ -344,15 +344,36 @@ import { Redis } from "ioredis";
 const publisher = new Redis(process.env.REDIS_URL);
 const subscriber = new Redis(process.env.REDIS_URL);
 
+async function deleteByPattern(pattern: string): Promise<void> {
+  let cursor = "0";
+
+  do {
+    const [nextCursor, keys] = await publisher.scan(
+      cursor,
+      "MATCH",
+      pattern,
+      "COUNT",
+      1000,
+    );
+
+    cursor = nextCursor;
+
+    if (keys.length > 0) {
+      const pipeline = publisher.pipeline();
+      for (const key of keys) {
+        pipeline.del(key);
+      }
+      await pipeline.exec();
+    }
+  } while (cursor !== "0");
+}
+
 // Listen for invalidation messages
 subscriber.subscribe("cache:invalidate");
 subscriber.on("message", async (channel, message) => {
   if (channel === "cache:invalidate") {
     const { pattern } = JSON.parse(message);
-    const keys = await publisher.keys(pattern);
-    if (keys.length > 0) {
-      await publisher.del(...keys);
-    }
+    await deleteByPattern(pattern);
   }
 });
 
