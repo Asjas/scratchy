@@ -41,6 +41,23 @@ export default fp(
       maxOldGenerationSizeMb = 512,
     } = opts;
 
+    if (!Number.isInteger(minThreads) || minThreads <= 0) {
+      throw new RangeError(
+        `renderer worker pool configuration error: minThreads must be a positive integer, got ${minThreads}`,
+      );
+    }
+
+    if (!Number.isInteger(maxThreads) || maxThreads <= 0) {
+      throw new RangeError(
+        `renderer worker pool configuration error: maxThreads must be a positive integer, got ${maxThreads}`,
+      );
+    }
+
+    if (minThreads > maxThreads) {
+      throw new RangeError(
+        `renderer worker pool configuration error: minThreads (${minThreads}) cannot be greater than maxThreads (${maxThreads})`,
+      );
+    }
     const pool = new Piscina({
       filename: worker,
       minThreads,
