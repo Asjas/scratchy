@@ -1,6 +1,5 @@
 import { post } from "../../db/schema/post.js";
 import { TRPCError, publicProcedure } from "../../router.js";
-import type {} from "@scratchy/drizzle/plugin";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
