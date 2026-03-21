@@ -287,7 +287,7 @@ Key streaming features:
 // Route handler with streaming
 fastify.get("/dashboard", async (request, reply) => {
   const result = await fastify.runTask({
-    type: "ssr-stream",
+    type: "stream-ssr",
     route: "/dashboard",
     props: { userId: request.user.id },
   });
