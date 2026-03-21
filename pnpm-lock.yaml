@@ -82,7 +82,7 @@ importers:
         version: link:../../packages/vite-plugin
       drizzle-orm:
         specifier: 0.45.1
-        version: 0.45.1(@types/pg@8.20.0)(pg@8.20.0)
+        version: 0.45.1(@types/pg@8.20.0)(kysely@0.28.14)(pg@8.20.0)
       ulid:
         specifier: 3.0.2
         version: 3.0.2
@@ -2476,7 +2476,7 @@ packages:
 
   fastify-better-auth@1.2.0:
     resolution: {integrity: sha512-Jx27gm7caq6kd3gmTPpg9FsYtHIoDyjJ2L1/e0f8vxRP7W9PowwTxvm8dNuiGy0MZ3N2kUwfirqBf1HrlzjIgg==}
-    engines: {node: '>= 22.0.0'}
+    engines: {node: '>= 23.10.0'}
     peerDependencies:
       better-auth: 1.x
       fastify: 5.x
@@ -3939,7 +3939,7 @@ snapshots:
 
   '@better-fetch/fetch@1.1.21': {}
 
-  '@builder.io/qwik-city@1.19.2(@types/node@22.16.0)(jiti@2.6.1)(lightningcss@1.32.0)(rollup@4.59.1)(tsx@4.21.0)(typescript@5.8.3)(yaml@2.8.3)':
+  '@builder.io/qwik-city@1.19.2(@types/node@22.16.0)(lightningcss@1.32.0)(rollup@4.59.1)(typescript@5.8.3)':
     dependencies:
       '@mdx-js/mdx': 3.1.1
       '@types/mdx': 2.0.13
@@ -6978,16 +6978,15 @@ snapshots:
     transitivePeerDependencies:
       - rollup
 
-  vite-node@3.2.4(@types/node@22.16.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3):
+  vite-node@3.2.4(@types/node@22.16.0)(lightningcss@1.32.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 6.4.1(@types/node@22.16.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
+      vite: 5.4.21(@types/node@22.16.0)(lightningcss@1.32.0)
     transitivePeerDependencies:
       - '@types/node'
-      - jiti
       - less
       - lightningcss
       - sass
@@ -6996,8 +6995,6 @@ snapshots:
       - sugarss
       - supports-color
       - terser
-      - tsx
-      - yaml
 
   vite-tsconfig-paths@6.1.1(typescript@5.8.3)(vite@6.4.1(@types/node@22.16.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)):
     dependencies:
@@ -7058,7 +7055,7 @@ snapshots:
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
       vite: 6.4.1(@types/node@22.16.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
-      vite-node: 3.2.4(@types/node@22.16.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
+      vite-node: 3.2.4(@types/node@22.16.0)(lightningcss@1.32.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.13
