@@ -195,6 +195,9 @@ src/client/
 - **Components**: Use Qwik's `component$()` for Qwik components, ES5 function
   declarations for React components.
 - **Type exports**: `export type AllItems = Awaited<ReturnType<typeof fn>>`.
+- **Function style**: Only add `async` when `await` is used inside the function.
+  Otherwise, use a regular (ES5) function declaration. `async` wraps the return
+  in a Promise — an unnecessary allocation when no `await` is present.
 - **Error handling**: Use `fastify.to(promise)` for `[err, result]` tuples where
   available. Use `createError()` for structured HTTP errors.
 - **Data loading**: Use `routeLoader$()` for server-side data in route

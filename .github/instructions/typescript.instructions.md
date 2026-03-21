@@ -281,6 +281,40 @@ const Status = {
 type Status = (typeof Status)[keyof typeof Status];
 ```
 
+### ❌ Don't use `async` without `await`
+
+The `async` keyword wraps the return value in a Promise (extra allocation per
+call). Only add `async` when `await` is actually used inside the function body.
+Otherwise, use a regular ES5 function declaration or expression.
+
+```typescript
+// BAD — unnecessary async, extra Promise allocation
+async function getHealth() {
+  return { status: "ok" };
+}
+
+// GOOD — no await needed, use regular function
+function getHealth() {
+  return { status: "ok" };
+}
+
+// BAD — async arrow without await
+const handler = async (request: FastifyRequest) => {
+  return { user: request.user };
+};
+
+// GOOD — regular arrow function
+const handler = (request: FastifyRequest) => {
+  return { user: request.user };
+};
+
+// GOOD — async is correct here because await is used
+async function getUser(id: string) {
+  const user = await findUserById.execute({ id });
+  return user;
+}
+```
+
 ### ❌ Don't suppress TypeScript errors
 
 ```typescript
