@@ -1,7 +1,7 @@
 name: CI
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # allow manual triggering of the workflow
   push:
     branches: [main]
     paths-ignore:
@@ -25,11 +25,11 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x, 24.x]
+        node-version: [22.x, 24.x, 25.x]
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -37,13 +37,13 @@ jobs:
           run_install: false
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
 
       - name: Cache ESLint and Prettier
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .cache
           key: ${{ runner.os }}-lint-cache-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml', 'eslint.config.mjs', '.prettierrc') }}
@@ -62,6 +62,9 @@ jobs:
 
       - name: Run TypeScript type check
         run: pnpm typecheck
+
+      - name: Run build
+        run: pnpm build
 
       - name: Run tests
         run: pnpm test
