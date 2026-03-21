@@ -10,9 +10,10 @@ export type CreateAuthOptions = BetterAuthOptions;
 /**
  * Creates a Better Auth instance with the given options.
  *
- * This is a thin wrapper around `betterAuth()` that allows
- * Scratchy to set framework-level defaults while giving the
- * consumer full control via the options object.
+ * This is a thin wrapper around `betterAuth()` used by Scratchy
+ * as a framework integration point. It currently forwards the
+ * provided options directly to `betterAuth()`, giving the consumer
+ * full control via the options object.
  *
  * @param options - Better Auth configuration options.
  * @returns A configured Better Auth instance.
