@@ -72,9 +72,7 @@ export interface ServerConfigOptions {
  * Full config options combining all sub-options.
  */
 export interface ScratchyConfigOptions
-  extends ScratchyViteOptions,
-    BuildConfigOptions,
-    ServerConfigOptions {}
+  extends ScratchyViteOptions, BuildConfigOptions, ServerConfigOptions {}
 
 /**
  * Tailwind CSS configuration options.
@@ -122,11 +120,7 @@ export async function scratchyVite(
   const { qwikVite } = await import("@builder.io/qwik/optimizer");
   const tsconfigPaths = (await import("vite-tsconfig-paths")).default;
 
-  const plugins: PluginOption[] = [
-    ...qwikCity(),
-    qwikVite(),
-    tsconfigPaths(),
-  ];
+  const plugins: PluginOption[] = [...qwikCity(), qwikVite(), tsconfigPaths()];
 
   if (react) {
     const { qwikReact } = await import("@builder.io/qwik-react/vite");
@@ -146,9 +140,7 @@ export async function scratchyVite(
  * substrings, or pass through a custom function directly.
  */
 function resolveManualChunks(
-  manualChunks:
-    | Record<string, string[]>
-    | ((id: string) => string | undefined),
+  manualChunks: Record<string, string[]> | ((id: string) => string | undefined),
 ): (id: string) => string | undefined {
   if (typeof manualChunks === "function") {
     return manualChunks;
@@ -167,7 +159,9 @@ function resolveManualChunks(
 /**
  * Create the Vite `build` configuration with sensible defaults for Scratchy.
  */
-export function createBuildConfig(opts?: BuildConfigOptions): UserConfig["build"] {
+export function createBuildConfig(
+  opts?: BuildConfigOptions,
+): UserConfig["build"] {
   const {
     target = DEFAULT_TARGET,
     sourcemap = true,
@@ -243,10 +237,7 @@ export async function createScratchyConfig(
 export function createTailwindConfig(
   opts?: TailwindConfigOptions,
 ): TailwindConfig {
-  const {
-    content = DEFAULT_CONTENT_GLOBS,
-    darkMode = "class",
-  } = opts ?? {};
+  const { content = DEFAULT_CONTENT_GLOBS, darkMode = "class" } = opts ?? {};
 
   return {
     content,

@@ -179,9 +179,7 @@ describe("createScratchyConfig", () => {
 
     expect(config.server?.port).toBe(3000);
     expect(config.build?.target).toBe("es2024");
-    expect(
-      (config.plugins as unknown[]).length,
-    ).toBeGreaterThan(0);
+    expect((config.plugins as unknown[]).length).toBeGreaterThan(0);
   });
 });
 
@@ -203,10 +201,7 @@ describe("createTailwindConfig", () => {
       content: ["./app/**/*.tsx", "./components/**/*.tsx"],
     });
 
-    expect(config.content).toEqual([
-      "./app/**/*.tsx",
-      "./components/**/*.tsx",
-    ]);
+    expect(config.content).toEqual(["./app/**/*.tsx", "./components/**/*.tsx"]);
   });
 
   it("should accept media dark mode strategy", () => {
