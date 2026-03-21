@@ -124,6 +124,14 @@ export function readFromBuffer<T = unknown>(
   }
 
   const length = Atomics.load(shared.dataLength, 0);
+
+  if (length < 0 || length > shared.data.byteLength) {
+    Atomics.store(shared.status, 0, BufferStatus.ERROR);
+    Atomics.notify(shared.status, 0);
+    throw new RangeError(
+      `Invalid data length in shared buffer header: ${length}. Expected 0 <= length <= ${shared.data.byteLength}.`,
+    );
+  }
   const decoder = new TextDecoder();
   const json = decoder.decode(shared.data.subarray(0, length));
   const payload = JSON.parse(json) as T;
