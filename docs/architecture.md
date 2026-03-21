@@ -27,7 +27,7 @@ Scratchy is a full-stack TypeScript framework designed for building APIs and web
 │  │                   Fastify Server                          │   │
 │  │  ┌──────────┐  ┌──────────┐  ┌────────────────────────┐  │   │
 │  │  │ tRPC     │  │ REST     │  │ Static Asset Serving   │  │   │
-│  │  │ /trpc/*  │  │ /ext/api │  │ (Vite build output)    │  │   │
+│  │  │ /trpc/*  │  │ /external/api/v1/* │  │ (Vite build output)    │  │   │
 │  │  └────┬─────┘  └────┬─────┘  └────────────────────────┘  │   │
 │  │       │              │                                     │   │
 │  │  ┌────┴──────────────┴────────┐                            │   │
