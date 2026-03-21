@@ -21,8 +21,8 @@ pnpm scratchy make:model Post
 **Creates:**
 ```
 src/db/schema/post.ts          # Table definition with types and relations
-src/db/queries/post.ts         # Prepared statement queries
-src/db/mutations/post.ts       # CRUD mutation functions
+src/db/queries/posts.ts        # Prepared statement queries
+src/db/mutations/posts.ts      # CRUD mutation functions
 ```
 
 **Generated schema file:**
@@ -55,7 +55,7 @@ export const postRelations = relations(post, ({ one, many }) => ({
 
 **Generated queries file:**
 ```typescript
-// src/db/queries/post.ts
+// src/db/queries/posts.ts
 import { eq, sql } from "drizzle-orm";
 import { db } from "~/db/index.js";
 import { post } from "~/db/schema/post.js";
@@ -77,7 +77,7 @@ export type FindAllPosts = Awaited<ReturnType<typeof findAllPosts.execute>>;
 
 **Generated mutations file:**
 ```typescript
-// src/db/mutations/post.ts
+// src/db/mutations/posts.ts
 import { eq } from "drizzle-orm";
 import { ulid } from "ulid";
 import { db } from "~/db/index.js";
@@ -136,7 +136,7 @@ src/routers/posts/mutations.ts   # Mutation procedures
 // src/routers/posts/queries.ts
 import { z } from "zod";
 import { publicProcedure, protectedProcedure } from "~/router.js";
-import { findPostById, findAllPosts } from "~/db/queries/post.js";
+import { findPostById, findAllPosts } from "~/db/queries/posts.js";
 import { TRPCError } from "@trpc/server";
 
 export const postQueries = {
@@ -170,7 +170,7 @@ export const postQueries = {
 // src/routers/posts/mutations.ts
 import { z } from "zod";
 import { protectedProcedure } from "~/router.js";
-import { createPost, updatePost, deletePost } from "~/db/mutations/post.js";
+import { createPost, updatePost, deletePost } from "~/db/mutations/posts.js";
 
 export const postMutations = {
   create: protectedProcedure
@@ -427,8 +427,8 @@ pnpm scratchy make:scaffold Product
 **Creates:**
 ```
 src/db/schema/product.ts
-src/db/queries/product.ts
-src/db/mutations/product.ts
+src/db/queries/products.ts
+src/db/mutations/products.ts
 src/routers/products/queries.ts
 src/routers/products/mutations.ts
 src/client/routes/products/index.tsx
