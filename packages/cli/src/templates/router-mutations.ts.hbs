@@ -15,7 +15,7 @@ export const {{camelName}}Mutations = {
         {{/each}}
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(({ input }) => {
       return create{{pascalName}}(input);
     }),
 
@@ -28,7 +28,7 @@ export const {{camelName}}Mutations = {
         {{/each}}
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(({ input }) => {
       const { id, ...data } = input;
       return update{{pascalName}}(id, data);
     }),

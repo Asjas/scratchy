@@ -5,6 +5,7 @@ import {
   toPascalCase,
   toPlural,
   toSnakeCase,
+  uniqueColumnDrizzleTypes,
 } from "./utils/names.js";
 import { clearTemplateCache, renderTemplate } from "./utils/render.js";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -156,6 +157,52 @@ describe("parseColumns", () => {
     expect(cols[1]?.zodType).toBe("z.number().int()");
     expect(cols[2]?.zodType).toBe("z.number()");
   });
+
+  it("throws an error for an empty column name (trailing comma)", () => {
+    expect(() => parseColumns("title:text,")).toThrow(/must not be empty/);
+  });
+
+  it("throws an error for a column name starting with a digit", () => {
+    expect(() => parseColumns("1title:text")).toThrow(/valid identifier/);
+  });
+
+  it("throws an error for a column name containing invalid characters", () => {
+    expect(() => parseColumns("my-col:text")).toThrow(/valid identifier/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// uniqueColumnDrizzleTypes
+// ---------------------------------------------------------------------------
+
+describe("uniqueColumnDrizzleTypes", () => {
+  it("returns empty array when there are no columns", () => {
+    expect(uniqueColumnDrizzleTypes([])).toEqual([]);
+  });
+
+  it("excludes text since it is always imported", () => {
+    const cols = parseColumns("title:text");
+    expect(uniqueColumnDrizzleTypes(cols)).toEqual([]);
+  });
+
+  it("returns unique non-text types in sorted order", () => {
+    const cols = parseColumns("published:boolean,age:integer,score:numeric");
+    expect(uniqueColumnDrizzleTypes(cols)).toEqual([
+      "boolean",
+      "integer",
+      "numeric",
+    ]);
+  });
+
+  it("deduplicates repeated types", () => {
+    const cols = parseColumns("active:boolean,verified:boolean");
+    expect(uniqueColumnDrizzleTypes(cols)).toEqual(["boolean"]);
+  });
+
+  it("does not include text even when mixed with other types", () => {
+    const cols = parseColumns("title:text,published:boolean");
+    expect(uniqueColumnDrizzleTypes(cols)).toEqual(["boolean"]);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -174,6 +221,7 @@ describe("renderTemplate (model.ts.hbs)", () => {
       kebabName: "post",
       snakeName: "post",
       columns: [],
+      uniqueColumnTypes: [],
     });
 
     expect(content).toContain("export type Post = typeof post.$inferSelect");
@@ -187,27 +235,14 @@ describe("renderTemplate (model.ts.hbs)", () => {
   });
 
   it("renders model columns", () => {
+    const columns = parseColumns("title:text,published:boolean");
     const content = renderTemplate("model.ts.hbs", {
       pascalName: "Post",
       camelName: "post",
       kebabName: "post",
       snakeName: "post",
-      columns: [
-        {
-          name: "title",
-          camelName: "title",
-          type: "text",
-          drizzleType: "text",
-          zodType: "z.string()",
-        },
-        {
-          name: "published",
-          camelName: "published",
-          type: "boolean",
-          drizzleType: "boolean",
-          zodType: "z.boolean()",
-        },
-      ],
+      columns,
+      uniqueColumnTypes: uniqueColumnDrizzleTypes(columns),
     });
 
     expect(content).toContain("title: text()");
@@ -215,21 +250,37 @@ describe("renderTemplate (model.ts.hbs)", () => {
     expect(content).toContain(".notNull()");
   });
 
-  it("imports drizzle column types used by columns", () => {
+  it("deduplicates drizzle import when a text column is present alongside text", () => {
+    // Two text columns + a boolean: should generate `import { index, text, boolean }`, not `{ index, text, text, boolean }`
+    const columns = parseColumns("title:text,slug:text,active:boolean");
     const content = renderTemplate("model.ts.hbs", {
       pascalName: "Post",
       camelName: "post",
       kebabName: "post",
       snakeName: "post",
-      columns: [
-        {
-          name: "title",
-          camelName: "title",
-          type: "text",
-          drizzleType: "text",
-          zodType: "z.string()",
-        },
-      ],
+      columns,
+      uniqueColumnTypes: uniqueColumnDrizzleTypes(columns),
+    });
+
+    // boolean appears once, text appears once (in the base import)
+    const importLine =
+      content.split("\n").find((l) => l.includes("drizzle-orm/pg-core")) ?? "";
+    const occurrences = (importLine.match(/\bboolean\b/g) ?? []).length;
+    expect(occurrences).toBe(1);
+    // text must NOT be duplicated
+    const textOccurrences = (importLine.match(/\btext\b/g) ?? []).length;
+    expect(textOccurrences).toBe(1);
+  });
+
+  it("imports drizzle column types used by columns", () => {
+    const columns = parseColumns("title:text");
+    const content = renderTemplate("model.ts.hbs", {
+      pascalName: "Post",
+      camelName: "post",
+      kebabName: "post",
+      snakeName: "post",
+      columns,
+      uniqueColumnTypes: uniqueColumnDrizzleTypes(columns),
     });
 
     expect(content).toContain("text");
@@ -254,6 +305,9 @@ describe("renderTemplate (queries.ts.hbs)", () => {
     expect(content).toContain("findAllPosts");
     expect(content).toContain(".prepare(");
     expect(content).toContain("find_post_by_id");
+    // findAll should accept limit/offset for DB-level pagination
+    expect(content).toContain('.placeholder("limit")');
+    expect(content).toContain('.placeholder("offset")');
   });
 
   it("exports correct type aliases", () => {
@@ -341,28 +395,29 @@ describe("renderTemplate (router-mutations.ts.hbs)", () => {
     expect(content).toContain("delete:");
   });
 
-  it("renders column inputs when columns are provided", () => {
+  it("create and update mutations do not use async (no await needed)", () => {
     const content = renderTemplate("router-mutations.ts.hbs", {
       pascalName: "Post",
       camelName: "post",
       kebabName: "post",
       snakeName: "post",
-      columns: [
-        {
-          name: "title",
-          camelName: "title",
-          type: "text",
-          drizzleType: "text",
-          zodType: "z.string()",
-        },
-        {
-          name: "published",
-          camelName: "published",
-          type: "boolean",
-          drizzleType: "boolean",
-          zodType: "z.boolean()",
-        },
-      ],
+      columns: [],
+    });
+
+    // create and update simply return the promise — no async keyword
+    expect(content).toContain(".mutation(({ input }) => {");
+    // delete does use await, so async is correct there
+    expect(content).toContain(".mutation(async ({ input }) => {");
+  });
+
+  it("renders column inputs when columns are provided", () => {
+    const cols = parseColumns("title:text,published:boolean");
+    const content = renderTemplate("router-mutations.ts.hbs", {
+      pascalName: "Post",
+      camelName: "post",
+      kebabName: "post",
+      snakeName: "post",
+      columns: cols,
     });
 
     expect(content).toContain("title");

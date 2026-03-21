@@ -59,6 +59,9 @@ export interface ColumnDefinition {
   zodType: string;
 }
 
+/** Pattern for valid TypeScript/JavaScript identifiers used as column names. */
+const SAFE_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
 const TYPE_MAP: Record<string, string> = {
   text: "text",
   string: "text",
@@ -103,6 +106,19 @@ export function parseColumns(columns: string): ColumnDefinition[] {
   return columns.split(",").map((col) => {
     const [rawName, rawType = "text"] = col.trim().split(":");
     const name = (rawName ?? "").trim();
+
+    if (!name) {
+      throw new Error(
+        `Invalid column definition "${col.trim()}": column name must not be empty.`,
+      );
+    }
+
+    if (!SAFE_IDENTIFIER.test(name)) {
+      throw new Error(
+        `Invalid column name "${name}": must be a valid identifier (letters, digits, underscores; cannot start with a digit).`,
+      );
+    }
+
     const type = (rawType ?? "text").trim().toLowerCase();
     const drizzleType = TYPE_MAP[type] ?? "text";
     const zodType = ZOD_TYPE_MAP[drizzleType] ?? "z.string()";
@@ -115,4 +131,18 @@ export function parseColumns(columns: string): ColumnDefinition[] {
       zodType,
     };
   });
+}
+
+/**
+ * Returns the unique Drizzle column builder types used by the given columns,
+ * excluding `text` (which the model template always imports unconditionally).
+ * Use this to build the extra imports list in the model template.
+ */
+export function uniqueColumnDrizzleTypes(
+  columns: ColumnDefinition[],
+): string[] {
+  const types = new Set(
+    columns.map((c) => c.drizzleType).filter((t) => t !== "text"),
+  );
+  return [...types].sort();
 }

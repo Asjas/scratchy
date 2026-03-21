@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { index, text{{#each columns}}, {{this.drizzleType}}{{/each}} } from "drizzle-orm/pg-core";
+import { index, text{{#each uniqueColumnTypes}}, {{this}}{{/each}} } from "drizzle-orm/pg-core";
 import { mySchema } from "~/db/my-schema.js";
 import { timestamps } from "~/db/schema/columns.helpers.js";
 

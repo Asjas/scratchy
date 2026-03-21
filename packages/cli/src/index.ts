@@ -23,6 +23,7 @@ export {
   toSnakeCase,
   toPlural,
   parseColumns,
+  uniqueColumnDrizzleTypes,
 } from "./utils/names.js";
 export type { ColumnDefinition } from "./utils/names.js";
 

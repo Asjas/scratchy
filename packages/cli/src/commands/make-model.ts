@@ -4,6 +4,7 @@ import {
   toKebabCase,
   toPascalCase,
   toSnakeCase,
+  uniqueColumnDrizzleTypes,
 } from "../utils/names.js";
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
@@ -55,6 +56,7 @@ export const makeModelCommand = defineCommand({
       kebabName,
       snakeName,
       columns,
+      uniqueColumnTypes: uniqueColumnDrizzleTypes(columns),
     };
 
     // Generate schema file

@@ -14,4 +14,6 @@ export const find{{pascalName}}ById = db
 export const findAll{{pascalName}}s = db
   .select()
   .from({{camelName}})
+  .limit(sql.placeholder("limit"))
+  .offset(sql.placeholder("offset"))
   .prepare("find_all_{{snakeName}}s");

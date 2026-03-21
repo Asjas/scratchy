@@ -4,6 +4,7 @@ import {
   toKebabCase,
   toPascalCase,
   toSnakeCase,
+  uniqueColumnDrizzleTypes,
 } from "../utils/names.js";
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
@@ -51,6 +52,7 @@ export const makeScaffoldCommand = defineCommand({
       kebabName,
       snakeName,
       columns,
+      uniqueColumnTypes: uniqueColumnDrizzleTypes(columns),
     };
 
     // 1. Schema
