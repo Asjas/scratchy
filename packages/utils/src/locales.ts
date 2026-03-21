@@ -54,6 +54,7 @@ export function getClientLocales(request: RequestLike): Locales {
     .filter(({ locale, quality }) => {
       if (!locale || locale === "*") return false;
       if (Number.isNaN(quality)) return false;
+      if (quality <= 0 || quality > 1) return false;
       // Validate that the locale is supported by the Intl API
       try {
         return Intl.DateTimeFormat.supportedLocalesOf([locale]).length > 0;
