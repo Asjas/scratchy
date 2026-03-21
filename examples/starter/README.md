@@ -52,7 +52,7 @@ pnpm install
 
 ```bash
 # From examples/starter/
-pnpm drizzle-kit migrate --config drizzle.config.ts
+pnpm dlx drizzle-kit migrate --config drizzle.config.ts
 ```
 
 ### 5. Start the server
