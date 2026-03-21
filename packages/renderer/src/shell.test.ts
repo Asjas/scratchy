@@ -35,14 +35,14 @@ describe("wrapInShell", () => {
 
   it("should include extra html attributes when provided", () => {
     const html = wrapInShell("<div></div>", "", {
-      htmlAttributes: 'class="dark"',
+      htmlAttributes: { class: "dark" },
     });
     expect(html).toContain('<html lang="en" class="dark">');
   });
 
   it("should include extra body attributes when provided", () => {
     const html = wrapInShell("<div></div>", "", {
-      bodyAttributes: 'class="bg-white"',
+      bodyAttributes: { class: "bg-white" },
     });
     expect(html).toContain('<body class="bg-white">');
   });
@@ -52,5 +52,31 @@ describe("wrapInShell", () => {
     // Head section exists but with only the default meta tags
     expect(html).toContain("<head>");
     expect(html).toContain("</head>");
+  });
+
+  it("should escape attribute values to prevent injection", () => {
+    const html = wrapInShell("<div></div>", "", {
+      htmlAttributes: { class: '"><script>alert(1)</script>' },
+    });
+    expect(html).not.toContain("<script>alert(1)</script>");
+    expect(html).toContain(
+      'class="&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"',
+    );
+  });
+
+  it("should escape the lang attribute value", () => {
+    const html = wrapInShell("<div></div>", "", {
+      lang: '"><script>alert(1)</script>',
+    });
+    expect(html).not.toContain("<script>alert(1)</script>");
+    expect(html).toContain("&quot;&gt;&lt;script&gt;");
+  });
+
+  it("should reject invalid attribute names", () => {
+    expect(() =>
+      wrapInShell("<div></div>", "", {
+        htmlAttributes: { 'on"click': "alert(1)" },
+      }),
+    ).toThrow(/Invalid HTML attribute name/);
   });
 });

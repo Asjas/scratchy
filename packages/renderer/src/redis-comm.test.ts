@@ -85,6 +85,45 @@ describe("redis-comm", () => {
         ),
       ).rejects.toThrow(/No render context found/);
     });
+
+    it("should reject zero TTL", async () => {
+      const redis = createMockRedis();
+
+      await expect(
+        storeRenderContext(
+          redis as unknown as Parameters<typeof storeRenderContext>[0],
+          "req-ttl",
+          {},
+          0,
+        ),
+      ).rejects.toThrow(RangeError);
+    });
+
+    it("should reject negative TTL", async () => {
+      const redis = createMockRedis();
+
+      await expect(
+        storeRenderContext(
+          redis as unknown as Parameters<typeof storeRenderContext>[0],
+          "req-ttl",
+          {},
+          -5,
+        ),
+      ).rejects.toThrow(RangeError);
+    });
+
+    it("should reject non-integer TTL", async () => {
+      const redis = createMockRedis();
+
+      await expect(
+        storeRenderContext(
+          redis as unknown as Parameters<typeof storeRenderContext>[0],
+          "req-ttl",
+          {},
+          1.5,
+        ),
+      ).rejects.toThrow(RangeError);
+    });
   });
 
   describe("storeRenderResult", () => {
@@ -121,6 +160,19 @@ describe("redis-comm", () => {
         "EX",
         600,
       );
+    });
+
+    it("should reject invalid TTL", async () => {
+      const redis = createMockRedis();
+
+      await expect(
+        storeRenderResult(
+          redis as unknown as Parameters<typeof storeRenderResult>[0],
+          "req-ttl",
+          "<html></html>",
+          0,
+        ),
+      ).rejects.toThrow(RangeError);
     });
   });
 

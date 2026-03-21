@@ -1,3 +1,4 @@
+import type { RenderResult, RenderTask } from "./worker.js";
 import Fastify from "fastify";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -33,7 +34,7 @@ describe("renderer plugin", () => {
 
     await server.ready();
 
-    const result = await server.runTask({
+    const result = await server.runTask<RenderTask, RenderResult>({
       type: "ssr",
       route: "/test",
       props: { greeting: "hello" },
@@ -42,7 +43,7 @@ describe("renderer plugin", () => {
     expect(result.statusCode).toBe(200);
     expect(result.html).toContain("<!DOCTYPE html>");
     expect(result.html).toContain('data-route="/test"');
-    expect(result.html).toContain('"greeting":"hello"');
+    expect(result.html).toContain("&quot;greeting&quot;:&quot;hello&quot;");
 
     await server.close();
   });
@@ -59,7 +60,7 @@ describe("renderer plugin", () => {
 
     await server.ready();
 
-    const result = await server.runTask({
+    const result = await server.runTask<RenderTask, RenderResult>({
       type: "ssg",
       route: "/static-page",
     });

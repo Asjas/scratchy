@@ -63,9 +63,23 @@ export function createSharedBuffer(dataSize: number): SharedBuffer {
  * data region, sets the data-length header, transitions the status
  * to `DATA_READY`, and notifies any waiting consumer.
  *
- * @throws if the encoded payload exceeds the buffer's data capacity.
+ * @throws {Error} if the buffer still holds unread data (`DATA_READY` status).
+ * @throws {RangeError} if the encoded payload exceeds the buffer's data capacity.
  */
 export function writeToBuffer(shared: SharedBuffer, payload: unknown): void {
+  const previousStatus = Atomics.compareExchange(
+    shared.status,
+    0,
+    BufferStatus.IDLE,
+    BufferStatus.IDLE,
+  );
+
+  if (previousStatus === BufferStatus.DATA_READY) {
+    throw new Error(
+      "Cannot write to shared buffer: previous payload has not been consumed",
+    );
+  }
+
   const encoder = new TextEncoder();
   const encoded = encoder.encode(JSON.stringify(payload));
 

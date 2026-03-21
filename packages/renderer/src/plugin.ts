@@ -17,6 +17,12 @@ export interface RendererPluginOptions {
   maxThreads?: number;
   /** Milliseconds an idle worker can live before being terminated (default: 60 000). */
   idleTimeout?: number;
+  /**
+   * Maximum time in milliseconds a single render task may run before
+   * being aborted (default: 30 000). Prevents hung SSR/SSG renders
+   * from occupying a worker indefinitely.
+   */
+  taskTimeout?: number;
   /** V8 old-generation heap limit in MB per worker (default: 512). */
   maxOldGenerationSizeMb?: number;
 }
@@ -38,6 +44,7 @@ export default fp(
       minThreads = 2,
       maxThreads = Math.max(4, availableParallelism()),
       idleTimeout = 60_000,
+      taskTimeout = 30_000,
       maxOldGenerationSizeMb = 512,
     } = opts;
 
@@ -69,14 +76,20 @@ export default fp(
     });
 
     fastify.decorate("piscina", pool);
-    fastify.decorate("runTask", pool.run.bind(pool));
+    fastify.decorate(
+      "runTask",
+      <T, R>(task: T) =>
+        pool.run(task, {
+          signal: AbortSignal.timeout(taskTimeout),
+        }) as Promise<R>,
+    );
 
     fastify.addHook("onClose", async () => {
       await pool.close();
     });
 
     fastify.log.info(
-      { worker, minThreads, maxThreads },
+      { worker, minThreads, maxThreads, taskTimeout },
       "renderer worker pool initialized",
     );
   },

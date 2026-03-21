@@ -1,4 +1,4 @@
-import type { RenderTask } from "./worker.js";
+import type { RenderResult, RenderTask } from "./worker.js";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 /**
@@ -42,7 +42,7 @@ export function createSSRHandler(options: SSRHandlerOptions = {}) {
       headers: request.headers as Record<string, string | string[] | undefined>,
     };
 
-    const result = await request.server.runTask(task);
+    const result = await request.server.runTask<RenderTask, RenderResult>(task);
 
     const hasContentTypeHeader =
       result.headers &&

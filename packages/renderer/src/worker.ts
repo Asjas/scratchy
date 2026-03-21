@@ -27,6 +27,22 @@ export interface RenderResult {
 }
 
 /**
+ * Escapes HTML-special characters to prevent XSS when interpolating
+ * untrusted values into HTML attributes or text content.
+ *
+ * Inlined here because Piscina workers cannot import local `.ts`
+ * files (Node.js type stripping does not resolve `.js` → `.ts`).
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+/**
  * Wraps body and head content in the HTML shell.
  *
  * This is intentionally inlined rather than imported from
@@ -57,14 +73,20 @@ ${body}
  * Server-side renders the given route.
  *
  * This is a placeholder implementation. In a real application the
- * Qwik SSR pipeline would be invoked here.
+ * Qwik SSR pipeline would be invoked here. Route and props are
+ * HTML-escaped to prevent XSS; props are embedded in a non-executable
+ * `<script type="application/json">` block for safe transport.
  */
 function renderSSR(
   route: string,
   props?: Record<string, unknown>,
 ): RenderResult {
   const head = "<title>SSR</title>";
-  const body = `<div id="app" data-route="${route}">${props ? JSON.stringify(props) : ""}</div>`;
+  const escapedRoute = escapeHtml(route);
+  const propsScript = props
+    ? `<script type="application/json" id="__PROPS__">${escapeHtml(JSON.stringify(props))}</script>`
+    : "";
+  const body = `<div id="app" data-route="${escapedRoute}"></div>${propsScript}`;
 
   return {
     html: shell(body, head),
@@ -77,14 +99,20 @@ function renderSSR(
  * Statically generates HTML for the given route.
  *
  * This is a placeholder implementation. In a real application the
- * Qwik SSG pipeline would be invoked here.
+ * Qwik SSG pipeline would be invoked here. Route and props are
+ * HTML-escaped to prevent XSS; props are embedded in a non-executable
+ * `<script type="application/json">` block for safe transport.
  */
 function renderSSG(
   route: string,
   props?: Record<string, unknown>,
 ): RenderResult {
   const head = "<title>SSG</title>";
-  const body = `<div id="app" data-route="${route}" data-ssg="true">${props ? JSON.stringify(props) : ""}</div>`;
+  const escapedRoute = escapeHtml(route);
+  const propsScript = props
+    ? `<script type="application/json" id="__PROPS__">${escapeHtml(JSON.stringify(props))}</script>`
+    : "";
+  const body = `<div id="app" data-route="${escapedRoute}" data-ssg="true"></div>${propsScript}`;
 
   return {
     html: shell(body, head),

@@ -76,6 +76,27 @@ describe("writeToBuffer / readFromBuffer round-trip", () => {
     );
   });
 
+  it("should throw when writing to a buffer with unread data", () => {
+    const shared = createSharedBuffer(4096);
+    writeToBuffer(shared, { first: true });
+
+    expect(() => writeToBuffer(shared, { second: true })).toThrow(
+      /previous payload has not been consumed/,
+    );
+  });
+
+  it("should allow writing after consumer reads (CONSUMED state)", () => {
+    const shared = createSharedBuffer(4096);
+
+    writeToBuffer(shared, { first: true });
+    readFromBuffer(shared); // transitions to CONSUMED
+
+    // Should succeed now
+    writeToBuffer(shared, { second: true });
+    const result = readFromBuffer(shared);
+    expect(result).toEqual({ second: true });
+  });
+
   it("should throw when reading from a buffer in error state", () => {
     const shared = createSharedBuffer(256);
     Atomics.store(shared.status, 0, BufferStatus.ERROR);
