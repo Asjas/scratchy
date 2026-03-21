@@ -59,10 +59,10 @@ ${body}
  * This is a placeholder implementation. In a real application the
  * Qwik SSR pipeline would be invoked here.
  */
-async function renderSSR(
+function renderSSR(
   route: string,
   props?: Record<string, unknown>,
-): Promise<RenderResult> {
+): RenderResult {
   const head = "<title>SSR</title>";
   const body = `<div id="app" data-route="${route}">${props ? JSON.stringify(props) : ""}</div>`;
 
@@ -79,10 +79,10 @@ async function renderSSR(
  * This is a placeholder implementation. In a real application the
  * Qwik SSG pipeline would be invoked here.
  */
-async function renderSSG(
+function renderSSG(
   route: string,
   props?: Record<string, unknown>,
-): Promise<RenderResult> {
+): RenderResult {
   const head = "<title>SSG</title>";
   const body = `<div id="app" data-route="${route}" data-ssg="true">${props ? JSON.stringify(props) : ""}</div>`;
 
@@ -97,7 +97,7 @@ async function renderSSG(
  * Worker entry point. Piscina calls this function for each task
  * dispatched via `fastify.runTask()`.
  */
-export default async function handler(task: RenderTask): Promise<RenderResult> {
+export default function handler(task: RenderTask): RenderResult {
   switch (task.type) {
     case "ssr":
       return renderSSR(task.route, task.props);

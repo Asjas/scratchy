@@ -1,12 +1,8 @@
 import Fastify from "fastify";
 import { resolve } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("renderer plugin", () => {
-  afterEach(async () => {
-    // Each test creates and closes its own server
-  });
-
   it("should decorate fastify with piscina and runTask", async () => {
     const plugin = (await import("./plugin.js")).default;
     const server = Fastify({ logger: false });

@@ -10,12 +10,12 @@ function createMockRedis() {
   const store = new Map<string, string>();
 
   return {
-    get: vi.fn(async (key: string) => store.get(key) ?? null),
-    set: vi.fn(async (key: string, value: string) => {
+    get: vi.fn((key: string) => store.get(key) ?? null),
+    set: vi.fn((key: string, value: string) => {
       store.set(key, value);
       return "OK";
     }),
-    del: vi.fn(async (...keys: string[]) => {
+    del: vi.fn((...keys: string[]) => {
       let count = 0;
       for (const key of keys) {
         if (store.delete(key)) count++;

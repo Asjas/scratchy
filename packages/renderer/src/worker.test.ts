@@ -2,8 +2,8 @@ import handler from "./worker.js";
 import { describe, expect, it } from "vitest";
 
 describe("worker handler", () => {
-  it("should render an SSR task and return valid HTML", async () => {
-    const result = await handler({
+  it("should render an SSR task and return valid HTML", () => {
+    const result = handler({
       type: "ssr",
       route: "/about",
     });
@@ -14,8 +14,8 @@ describe("worker handler", () => {
     expect(result.head).toBe("<title>SSR</title>");
   });
 
-  it("should render an SSG task and return valid HTML", async () => {
-    const result = await handler({
+  it("should render an SSG task and return valid HTML", () => {
+    const result = handler({
       type: "ssg",
       route: "/blog/hello",
     });
@@ -27,8 +27,8 @@ describe("worker handler", () => {
     expect(result.head).toBe("<title>SSG</title>");
   });
 
-  it("should include props in the rendered body for SSR", async () => {
-    const result = await handler({
+  it("should include props in the rendered body for SSR", () => {
+    const result = handler({
       type: "ssr",
       route: "/profile",
       props: { userId: "u1", name: "Alice" },
@@ -38,8 +38,8 @@ describe("worker handler", () => {
     expect(result.html).toContain('"name":"Alice"');
   });
 
-  it("should include props in the rendered body for SSG", async () => {
-    const result = await handler({
+  it("should include props in the rendered body for SSG", () => {
+    const result = handler({
       type: "ssg",
       route: "/posts/42",
       props: { title: "Hello World" },
@@ -48,8 +48,8 @@ describe("worker handler", () => {
     expect(result.html).toContain('"title":"Hello World"');
   });
 
-  it("should render empty body when no props are given", async () => {
-    const result = await handler({
+  it("should render empty body when no props are given", () => {
+    const result = handler({
       type: "ssr",
       route: "/empty",
     });
@@ -58,9 +58,9 @@ describe("worker handler", () => {
     expect(result.html).toContain("></div>");
   });
 
-  it("should throw for unknown task type", async () => {
-    await expect(
-      handler({ type: "unknown" as "ssr", route: "/" }),
-    ).rejects.toThrow(/Unknown render task type/);
+  it("should throw for unknown task type", () => {
+    expect(() => handler({ type: "unknown" as "ssr", route: "/" })).toThrow(
+      /Unknown render task type/,
+    );
   });
 });

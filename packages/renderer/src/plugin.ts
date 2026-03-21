@@ -29,7 +29,7 @@ export interface RendererPluginOptions {
  * The pool is drained automatically when the server closes.
  */
 export default fp(
-  async function rendererPlugin(
+  function rendererPlugin(
     fastify: FastifyInstance,
     opts: RendererPluginOptions,
   ) {
