@@ -26,8 +26,20 @@ export async function* interval(
     if (options?.signal?.aborted) return;
     try {
       yield await setTimeout(ms, void 0, { signal: options?.signal });
-    } catch {
-      return;
+    } catch (error) {
+      // Only treat abort-related errors as a signal to stop the interval.
+      if (options?.signal?.aborted) {
+        return;
+      }
+      if (
+        error &&
+        typeof error === "object" &&
+        "name" in error &&
+        (error as { name: unknown }).name === "AbortError"
+      ) {
+        return;
+      }
+      throw error;
     }
   }
 }
