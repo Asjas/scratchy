@@ -41,6 +41,9 @@ cp .env.example .env
 # Edit .env if you changed any credentials in docker-compose.yml
 ```
 
+> **Note:** `pnpm dev` uses Node's `--env-file=.env` flag to load environment
+> variables automatically. No additional dotenv loader is required.
+
 ### 3. Install dependencies
 
 ```bash

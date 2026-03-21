@@ -35,11 +35,18 @@ export const postMutations = {
   /** Update an existing post's title and/or content. */
   update: publicProcedure
     .input(
-      z.object({
-        id: z.string().min(1),
-        title: z.string().min(1).max(200).optional(),
-        content: z.string().min(1).optional(),
-      }),
+      z
+        .object({
+          id: z.string().min(1),
+          title: z.string().min(1).max(200).optional(),
+          content: z.string().min(1).optional(),
+        })
+        .refine(
+          ({ title, content }) => title !== undefined || content !== undefined,
+          {
+            message: "At least one of title or content must be provided",
+          },
+        ),
     )
     .mutation(({ ctx, input }) => {
       const { db } = ctx.request.server;
