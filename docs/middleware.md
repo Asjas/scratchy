@@ -162,7 +162,7 @@ controlling the request:
 import type { RequestEvent } from "scratchy/server";
 
 // Runs before the handler for ANY HTTP method
-export function onRequest(event: RequestEvent) {
+export async function onRequest(event: RequestEvent) {
   const token = event.cookie.get("session_token");
   if (!token) {
     event.redirect("/login", 302);
@@ -190,7 +190,7 @@ import type { RequestEvent } from "scratchy/server";
 import { z } from "zod";
 
 // Only runs on GET requests
-export function onGet(event: RequestEvent) {
+export async function onGet(event: RequestEvent) {
   event.headers.set("cache-control", "public, max-age=60");
   await event.next();
 }
@@ -606,6 +606,7 @@ export default fp(async function logger(fastify) {
 
 ```typescript
 // middleware/csrf-protection.ts
+import { timingSafeEqual } from "node:crypto";
 import type { MiddlewareFn } from "scratchy/server";
 
 export const csrfProtection: MiddlewareFn = async (event) => {
@@ -617,7 +618,11 @@ export const csrfProtection: MiddlewareFn = async (event) => {
   const csrfToken = event.request.headers["x-csrf-token"];
   const sessionToken = event.cookie.get("csrf_token")?.value;
 
-  if (!csrfToken || !sessionToken || csrfToken !== sessionToken) {
+  if (
+    !csrfToken ||
+    !sessionToken ||
+    !timingSafeEqual(Buffer.from(csrfToken), Buffer.from(sessionToken))
+  ) {
     event.status(403);
     return { error: "Invalid CSRF token" };
   }

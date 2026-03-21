@@ -557,7 +557,7 @@ fastify.get("/settings", async (request, reply) => {
   const session = await getSession(request.headers.cookie ?? null);
 
   // Reading a flash key removes it from the session
-  const success = session.get<string>("__flash_success");
+  const success = session.get<string>("success");
 
   reply.header("set-cookie", await commitSession(session));
   return { success, settings: await loadSettings() };

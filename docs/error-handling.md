@@ -899,14 +899,13 @@ export const paymentMutations = {
       try {
         result = await paymentGateway.charge(ctx.user.id, input.amount);
       } catch (err) {
-
-      } catch (err) {
         ctx.request.log.error(
           { err, userId: ctx.user.id },
           "payment charge failed",
         );
 
-        const code = err instanceof Error ? (err as { code?: string }).code : undefined;
+        const code =
+          err instanceof Error ? (err as { code?: string }).code : undefined;
 
         if (code === "INSUFFICIENT_FUNDS") {
           throw new TRPCError({
@@ -1044,13 +1043,14 @@ Configure task timeouts in Piscina to prevent runaway workers:
 ```typescript
 // plugins/app/worker-pool.ts
 import fp from "fastify-plugin";
+import os from "node:os";
 import { resolve } from "node:path";
 
 export default fp(async function workerPool(fastify) {
   await fastify.register(import("fastify-piscina"), {
     worker: resolve(import.meta.dirname, "..", "..", "renderer", "worker.ts"),
     minThreads: 2,
-    maxThreads: Math.max(4, navigator.hardwareConcurrency || 4),
+    maxThreads: Math.max(4, os.availableParallelism()),
     idleTimeout: 60_000,
     taskTimeout: 30_000, // Kill worker tasks after 30 seconds
     resourceLimits: {

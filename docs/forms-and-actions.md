@@ -913,7 +913,8 @@ export default fp(async function csrf(fastify) {
   const CSRF_FIELD = "_csrf";
   const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
-  fastify.addHook("onRequest", async (request, reply) => {
+  // Use preHandler (not onRequest) so request.body is available for form submissions
+  fastify.addHook("preHandler", async (request, reply) => {
     if (SAFE_METHODS.has(request.method)) return;
 
     const session = request.session;
@@ -924,6 +925,7 @@ export default fp(async function csrf(fastify) {
       return reply.status(403).send({ error: "Missing CSRF session token" });
     }
 
+    // Check header first (JS clients), then form body field (non-JS fallback)
     const received =
       request.headers[CSRF_HEADER]?.toString() ??
       (request.body as Record<string, string>)?.[CSRF_FIELD];
