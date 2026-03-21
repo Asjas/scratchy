@@ -4,21 +4,21 @@
 
 ### Required Software
 
-| Software       | Version  | Installation                                                    |
-| -------------- | -------- | --------------------------------------------------------------- |
-| **Node.js**    | >= 22.x  | [nodejs.org](https://nodejs.org/) or use `nvm`                  |
-| **pnpm**       | >= 10.x  | `npm install -g pnpm@latest`                                    |
-| **PostgreSQL** | >= 16    | [postgresql.org](https://www.postgresql.org/download/)           |
+| Software       | Version               | Installation                                                                   |
+| -------------- | --------------------- | ------------------------------------------------------------------------------ |
+| **Node.js**    | >= 22.x               | [nodejs.org](https://nodejs.org/) or use `nvm`                                 |
+| **pnpm**       | >= 10.x               | `npm install -g pnpm@latest`                                                   |
+| **PostgreSQL** | >= 16                 | [postgresql.org](https://www.postgresql.org/download/)                         |
 | **Redis**      | >= 7 (or DragonflyDB) | [redis.io](https://redis.io/) or [dragonflydb.io](https://www.dragonflydb.io/) |
-| **Git**        | >= 2.x   | [git-scm.com](https://git-scm.com/)                            |
+| **Git**        | >= 2.x                | [git-scm.com](https://git-scm.com/)                                            |
 
 ### Optional but Recommended
 
-| Software           | Purpose                                | Link                                                 |
-| ------------------ | -------------------------------------- | ---------------------------------------------------- |
-| **Docker**         | Local PostgreSQL and Redis via Compose | [docker.com](https://www.docker.com/)                |
+| Software           | Purpose                                | Link                                                    |
+| ------------------ | -------------------------------------- | ------------------------------------------------------- |
+| **Docker**         | Local PostgreSQL and Redis via Compose | [docker.com](https://www.docker.com/)                   |
 | **VS Code**        | Recommended editor                     | [code.visualstudio.com](https://code.visualstudio.com/) |
-| **GitHub Copilot** | AI coding assistant                    | Uses the `.github/instructions/` files               |
+| **GitHub Copilot** | AI coding assistant                    | Uses the `.github/instructions/` files                  |
 
 ## Quick Start
 
@@ -66,6 +66,7 @@ docker compose up -d
 ```
 
 This starts:
+
 - PostgreSQL on port 5432
 - Redis (DragonflyDB) on port 6379
 
@@ -82,6 +83,7 @@ pnpm dev
 ```
 
 This starts:
+
 - **Fastify server** on `http://localhost:5000`
 - **Vite dev server** on `http://localhost:4173` (with API proxying)
 - **Worker pool** for SSR/SSG
@@ -151,7 +153,8 @@ Create `tsconfig.json`:
 mkdir -p src/{db/schema,routers,routes,plugins/{app,external},hooks,renderer,client/{components,routes,styles},lib,types}
 ```
 
-See [project-structure.md](./project-structure.md) for the full directory layout.
+See [project-structure.md](./project-structure.md) for the full directory
+layout.
 
 ## Common Development Commands
 
@@ -206,12 +209,12 @@ Recommended extensions for working with Scratchy:
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.eslint": "explicit",
   },
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "tailwindCSS.experimental.classRegex": [
-    ["class\\s*=\\s*\"([^\"]*)\"", "([^\"]*)"]
-  ]
+    ["class\\s*=\\s*\"([^\"]*)\"", "([^\"]*)"],
+  ],
 }
 ```
 
@@ -220,6 +223,7 @@ Recommended extensions for working with Scratchy:
 ### Common Issues
 
 **Port already in use:**
+
 ```bash
 # Find and kill the process using the port
 lsof -i :5000
@@ -227,11 +231,13 @@ kill -9 <PID>
 ```
 
 **Database connection refused:**
+
 - Ensure PostgreSQL is running: `pg_isready`
 - Check your `DATABASE_URL` in `.env`
 - If using Docker: `docker compose ps` to verify containers are up
 
 **Node.js version mismatch:**
+
 ```bash
 # Check your version
 node --version
@@ -241,11 +247,13 @@ nvm use 22
 ```
 
 **pnpm not found:**
+
 ```bash
 npm install -g pnpm@latest
 ```
 
 **Type errors after pulling changes:**
+
 ```bash
 pnpm install --frozen-lockfile
 pnpm typecheck
@@ -253,8 +261,12 @@ pnpm typecheck
 
 ## Next Steps
 
-- Read the [Architecture Guide](./architecture.md) to understand the system design
-- Read the [Project Structure Guide](./project-structure.md) for directory conventions
-- Read the [API Design Guide](./api-design.md) to understand tRPC and REST patterns
+- Read the [Architecture Guide](./architecture.md) to understand the system
+  design
+- Read the [Project Structure Guide](./project-structure.md) for directory
+  conventions
+- Read the [API Design Guide](./api-design.md) to understand tRPC and REST
+  patterns
 - Read the [Data Layer Guide](./data-layer.md) to understand database patterns
-- Check the [References](./references.md) for links to all external documentation
+- Check the [References](./references.md) for links to all external
+  documentation

@@ -148,52 +148,52 @@ scratchy/
 
 ### Code
 
-| Element           | Convention    | Example                                    |
-| ----------------- | ------------- | ------------------------------------------ |
-| Files/Folders     | kebab-case    | `user-profile.tsx`, `db-queries/`          |
-| Components        | PascalCase    | `UserProfile`, `NavigationBar`             |
-| Variables         | camelCase     | `userName`, `isAuthenticated`              |
-| Functions         | camelCase     | `createUser`, `findPostById`               |
-| Constants         | UPPER_SNAKE   | `MAX_RETRIES`, `DEFAULT_TIMEOUT`           |
-| DB Tables/Columns | snake_case    | `user_profile`, `created_at`               |
-| Types/Interfaces  | PascalCase    | `User`, `PostCreateInput`                  |
-| Enums (const obj) | PascalCase    | `UserRole`, `PostStatus`                   |
+| Element           | Convention  | Example                           |
+| ----------------- | ----------- | --------------------------------- |
+| Files/Folders     | kebab-case  | `user-profile.tsx`, `db-queries/` |
+| Components        | PascalCase  | `UserProfile`, `NavigationBar`    |
+| Variables         | camelCase   | `userName`, `isAuthenticated`     |
+| Functions         | camelCase   | `createUser`, `findPostById`      |
+| Constants         | UPPER_SNAKE | `MAX_RETRIES`, `DEFAULT_TIMEOUT`  |
+| DB Tables/Columns | snake_case  | `user_profile`, `created_at`      |
+| Types/Interfaces  | PascalCase  | `User`, `PostCreateInput`         |
+| Enums (const obj) | PascalCase  | `UserRole`, `PostStatus`          |
 
 ### Import Conventions
 
-| Context             | Extension Rule                  | Example                              |
-| ------------------- | ------------------------------- | ------------------------------------ |
-| Server (Node.js)    | Always use `.js` extension      | `import { db } from "~/db/index.js"` |
-| Client (Vite)       | Omit extensions                 | `import { Button } from "~/components/button"` |
-| Node.js built-ins   | Use `node:` prefix              | `import { join } from "node:path"`   |
-| npm packages        | No extension                    | `import Fastify from "fastify"`      |
+| Context           | Extension Rule             | Example                                        |
+| ----------------- | -------------------------- | ---------------------------------------------- |
+| Server (Node.js)  | Always use `.js` extension | `import { db } from "~/db/index.js"`           |
+| Client (Vite)     | Omit extensions            | `import { Button } from "~/components/button"` |
+| Node.js built-ins | Use `node:` prefix         | `import { join } from "node:path"`             |
+| npm packages      | No extension               | `import Fastify from "fastify"`                |
 
 ## Key File Responsibilities
 
 ### Entry Points
 
-| File                | Purpose                                     |
-| ------------------- | ------------------------------------------- |
-| `src/index.ts`      | Application bootstrap (starts server)       |
-| `src/server.ts`     | Fastify server creation and configuration   |
-| `src/client/entry.ts` | Client-side application entry             |
-| `src/renderer/worker.ts` | Worker thread entry point              |
+| File                     | Purpose                                   |
+| ------------------------ | ----------------------------------------- |
+| `src/index.ts`           | Application bootstrap (starts server)     |
+| `src/server.ts`          | Fastify server creation and configuration |
+| `src/client/entry.ts`    | Client-side application entry             |
+| `src/renderer/worker.ts` | Worker thread entry point                 |
 
 ### Configuration Files
 
-| File                   | Purpose                                    |
-| ---------------------- | ------------------------------------------ |
-| `tsconfig.json`        | TypeScript compiler options                |
-| `vite.config.ts`       | Vite bundler configuration                 |
-| `tailwind.config.ts`   | Tailwind CSS theme and plugins             |
-| `drizzle.config.ts`    | Drizzle Kit migration configuration        |
-| `src/config.ts`        | Runtime environment configuration          |
+| File                 | Purpose                             |
+| -------------------- | ----------------------------------- |
+| `tsconfig.json`      | TypeScript compiler options         |
+| `vite.config.ts`     | Vite bundler configuration          |
+| `tailwind.config.ts` | Tailwind CSS theme and plugins      |
+| `drizzle.config.ts`  | Drizzle Kit migration configuration |
+| `src/config.ts`      | Runtime environment configuration   |
 
 ### Type Augmentations
 
-| File                    | Purpose                                   |
-| ----------------------- | ----------------------------------------- |
-| `src/types/fastify.d.ts` | Extends Fastify types with decorators   |
+| File                     | Purpose                               |
+| ------------------------ | ------------------------------------- |
+| `src/types/fastify.d.ts` | Extends Fastify types with decorators |
 
 ## Route File Conventions
 
@@ -288,10 +288,12 @@ export const head: DocumentHead = {
 ### Adding a New Component
 
 1. **Qwik component**: `src/client/components/qwik/<name>.tsx`
-2. **React component**: `src/client/components/react/<name>.tsx` (with `qwikify$` wrapper)
+2. **React component**: `src/client/components/react/<name>.tsx` (with
+   `qwikify$` wrapper)
 
 ### Adding a New Fastify Plugin
 
-1. Create file in `src/plugins/app/<name>.ts` or `src/plugins/external/<name>.ts`
+1. Create file in `src/plugins/app/<name>.ts` or
+   `src/plugins/external/<name>.ts`
 2. Wrap with `fp()` from `fastify-plugin`
 3. Add TypeScript augmentation in `src/types/fastify.d.ts` if adding decorators

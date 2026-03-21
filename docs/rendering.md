@@ -18,6 +18,7 @@ Browser Request → Fastify → Worker Pool → Qwik SSR → HTML Response
 ```
 
 **When to use SSR:**
+
 - Pages with user-specific content (dashboards, profiles)
 - Pages requiring real-time data
 - Pages with authentication-gated content
@@ -32,6 +33,7 @@ Build/First Request → Worker Pool → Qwik SSG → HTML Cache → Serve from C
 ```
 
 **When to use SSG:**
+
 - Marketing pages
 - Blog posts and documentation
 - Product listings that change infrequently
@@ -314,13 +316,13 @@ Rule of thumb: `maxThreads = CPU cores - 2`
 
 Track these metrics for the rendering pipeline:
 
-| Metric                    | Description                              | Alert Threshold |
-| ------------------------- | ---------------------------------------- | --------------- |
-| `render_duration_ms`      | Time to render a page in a worker        | > 500ms         |
-| `worker_queue_depth`      | Number of tasks waiting for a worker     | > 10            |
-| `worker_active_count`     | Number of workers currently rendering    | = maxThreads    |
-| `cache_hit_rate`          | SSG cache hit percentage                 | < 80%           |
-| `worker_error_count`      | Number of render failures                | > 0             |
+| Metric                | Description                           | Alert Threshold |
+| --------------------- | ------------------------------------- | --------------- |
+| `render_duration_ms`  | Time to render a page in a worker     | > 500ms         |
+| `worker_queue_depth`  | Number of tasks waiting for a worker  | > 10            |
+| `worker_active_count` | Number of workers currently rendering | = maxThreads    |
+| `cache_hit_rate`      | SSG cache hit percentage              | < 80%           |
+| `worker_error_count`  | Number of render failures             | > 0             |
 
 ### Optimization Tips
 
@@ -329,7 +331,8 @@ Track these metrics for the rendering pipeline:
 3. **Stream HTML** when possible to start sending bytes while still rendering
 4. **Keep worker payloads small** — pass IDs, not full objects, when workers can
    fetch from cache
-5. **Set task timeouts** — kill workers that take too long (prevent memory leaks)
+5. **Set task timeouts** — kill workers that take too long (prevent memory
+   leaks)
 6. **Monitor heap usage** — use `resourceLimits.maxOldGenerationSizeMb` to
    constrain worker memory
 

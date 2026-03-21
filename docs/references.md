@@ -33,8 +33,10 @@
 - [@fastify/session](https://github.com/fastify/session) — Session management
 - [@fastify/secure-session](https://github.com/fastify/fastify-secure-session) — Encrypted sessions
 - [fastify-plugin](https://github.com/fastify/fastify-plugin) — Plugin wrapper
-- [fastify-print-routes](https://github.com/ShogunPanda/fastify-print-routes) — Route table logging
-- [fastify-type-provider-zod](https://github.com/turkerdev/fastify-type-provider-zod) — Zod validation
+- [fastify-print-routes](https://github.com/ShogunPanda/fastify-print-routes) —
+  Route table logging
+- [fastify-type-provider-zod](https://github.com/turkerdev/fastify-type-provider-zod)
+  — Zod validation
 
 ### tRPC
 
@@ -158,10 +160,13 @@
 
 - [ULID Specification](https://github.com/ulid/spec)
 - [ulid npm Package](https://www.npmjs.com/package/ulid)
-- [SuperJSON](https://github.com/flightcontrolhq/superjson) — Extended JSON serializer
-- [close-with-grace](https://github.com/mcollina/close-with-grace) — Graceful shutdown
+- [SuperJSON](https://github.com/flightcontrolhq/superjson) — Extended JSON
+  serializer
+- [close-with-grace](https://github.com/mcollina/close-with-grace) — Graceful
+  shutdown
 - [Pino Logger](https://getpino.io/)
-- [async-cache-dedupe](https://github.com/mcollina/async-cache-dedupe) — Cache with deduplication
+- [async-cache-dedupe](https://github.com/mcollina/async-cache-dedupe) — Cache
+  with deduplication
 
 ## Framework Inspiration
 
