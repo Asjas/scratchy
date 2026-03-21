@@ -116,6 +116,20 @@ describe("isOwner middleware", () => {
       "You must be logged in to access this endpoint",
     );
   });
+
+  it("should throw BAD_REQUEST when input has no id or userId", async () => {
+    const noIdRouter = router({
+      noId: publicProcedure.use(isOwner).query(({ ctx }) => {
+        return { userId: ctx.user.id };
+      }),
+    });
+
+    const noIdCaller = noIdRouter.createCaller;
+    const ctx = makeCtx({ id: "user-1", role: "member" });
+    await expect(noIdCaller(ctx).noId()).rejects.toThrow(
+      "Input must include an 'id' or 'userId' field for ownership checks",
+    );
+  });
 });
 
 describe("isOwnerOrAdmin middleware", () => {
@@ -153,6 +167,20 @@ describe("isOwnerOrAdmin middleware", () => {
     const ctx = makeCtx(null);
     await expect(caller(ctx).resource({ id: "user-1" })).rejects.toThrow(
       "You must be logged in to access this endpoint",
+    );
+  });
+
+  it("should throw BAD_REQUEST when input has no id or userId", async () => {
+    const noIdRouter = router({
+      noId: publicProcedure.use(isOwnerOrAdmin).query(({ ctx }) => {
+        return { userId: ctx.user.id };
+      }),
+    });
+
+    const noIdCaller = noIdRouter.createCaller;
+    const ctx = makeCtx({ id: "user-1", role: "member" });
+    await expect(noIdCaller(ctx).noId()).rejects.toThrow(
+      "Input must include an 'id' or 'userId' field for ownership checks",
     );
   });
 });

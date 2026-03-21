@@ -35,9 +35,26 @@ export default fp<TrpcPluginOptions<AnyRouter>>(
       trpcOptions: {
         router: opts.router,
         createContext,
-        onError({ path, error }: { path: string | undefined; error: Error }) {
+        responseMeta() {
+          return {
+            headers: {
+              "cache-control": "no-store, no-cache, must-revalidate, private",
+            },
+          };
+        },
+        onError({
+          path,
+          error,
+          type,
+          input,
+        }: {
+          path: string | undefined;
+          error: Error;
+          type: string;
+          input: unknown;
+        }) {
           fastify.log.error(
-            { path, error: error.message },
+            { path, type, input, err: error },
             "tRPC error on %s",
             path,
           );

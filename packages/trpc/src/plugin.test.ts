@@ -75,6 +75,32 @@ describe("tRPC plugin", () => {
     await server.close();
   });
 
+  it("should set cache-control headers on responses", async () => {
+    const appRouter = router({
+      ping: publicProcedure.query(() => {
+        return { pong: true };
+      }),
+    });
+
+    const plugin = (await import("./plugin.js")).default;
+    const server = Fastify({ logger: false });
+
+    await server.register(plugin, { router: appRouter });
+    await server.ready();
+
+    const response = await server.inject({
+      method: "GET",
+      url: "/trpc/ping",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["cache-control"]).toBe(
+      "no-store, no-cache, must-revalidate, private",
+    );
+
+    await server.close();
+  });
+
   it("should handle mutations via POST", async () => {
     const appRouter = router({
       createItem: publicProcedure

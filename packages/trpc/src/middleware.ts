@@ -38,8 +38,26 @@ export const isAdmin = middleware(({ ctx, next }) => {
 });
 
 /**
+ * Extracts the owner identifier from `input.userId` or `input.id`.
+ * Returns `undefined` when neither field is present or `input` is not
+ * a plain object.
+ */
+function extractOwnerId(input: unknown): string | undefined {
+  if (typeof input !== "object" || input === null) {
+    return undefined;
+  }
+
+  const record = input as Record<string, unknown>;
+  const value = record.userId ?? record.id;
+  return typeof value === "string" ? value : undefined;
+}
+
+/**
  * Middleware that checks if `input.id` or `input.userId` matches
  * `ctx.user.id`. Rejects unauthenticated requests as well.
+ *
+ * Throws `BAD_REQUEST` if the input does not contain a recognisable
+ * owner identifier (`id` or `userId`).
  */
 export const isOwner = middleware(({ ctx, next, input }) => {
   if (!ctx.user) {
@@ -49,9 +67,15 @@ export const isOwner = middleware(({ ctx, next, input }) => {
     });
   }
 
-  const userId =
-    (input as Record<"userId", string>)?.userId ||
-    (input as Record<"id", string>)?.id;
+  const userId = extractOwnerId(input);
+
+  if (userId === undefined) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message:
+        "Input must include an 'id' or 'userId' field for ownership checks",
+    });
+  }
 
   if (ctx.user.id !== userId) {
     throw new TRPCError({
@@ -66,6 +90,9 @@ export const isOwner = middleware(({ ctx, next, input }) => {
 /**
  * Middleware that allows access if the user is the resource owner
  * (matching `input.id` or `input.userId`) **or** has the `"admin"` role.
+ *
+ * Throws `BAD_REQUEST` if the input does not contain a recognisable
+ * owner identifier (`id` or `userId`).
  */
 export const isOwnerOrAdmin = middleware(({ ctx, next, input }) => {
   if (!ctx.user) {
@@ -75,9 +102,15 @@ export const isOwnerOrAdmin = middleware(({ ctx, next, input }) => {
     });
   }
 
-  const userId =
-    (input as Record<"userId", string>)?.userId ||
-    (input as Record<"id", string>)?.id;
+  const userId = extractOwnerId(input);
+
+  if (userId === undefined) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message:
+        "Input must include an 'id' or 'userId' field for ownership checks",
+    });
+  }
 
   const ownerMatch = ctx.user.id === userId;
   const adminMatch = ctx.hasRole("admin");
