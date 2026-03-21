@@ -11,7 +11,9 @@ export interface RendererPluginOptions {
   worker: string;
   /** Minimum number of worker threads to keep alive (default: 2). */
   minThreads?: number;
-  /** Maximum number of worker threads (default: `max(4, availableParallelism())`). */
+  /** Maximum number of worker threads (default: `max(4, availableParallelism())`).
+   *  Override this in containerized environments where the container's
+   *  CPU limit may differ from the host's reported parallelism. */
   maxThreads?: number;
   /** Milliseconds an idle worker can live before being terminated (default: 60 000). */
   idleTimeout?: number;

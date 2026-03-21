@@ -39,7 +39,7 @@ export function createSSRHandler(options: SSRHandlerOptions = {}) {
       type: "ssr",
       route: request.url,
       props,
-      headers: request.headers as Record<string, string>,
+      headers: request.headers as Record<string, string | string[] | undefined>,
     };
 
     const result = await request.server.runTask(task);

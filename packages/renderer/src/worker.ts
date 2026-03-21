@@ -9,7 +9,7 @@ export interface RenderTask {
   /** Optional props / data to pass into the renderer. */
   props?: Record<string, unknown>;
   /** Optional request headers forwarded from the client. */
-  headers?: Record<string, string>;
+  headers?: Record<string, string | string[] | undefined>;
 }
 
 /**
@@ -28,9 +28,16 @@ export interface RenderResult {
 
 /**
  * Wraps body and head content in the HTML shell.
- * Inlined here so the worker has zero local-file imports, which
- * avoids .js/.ts extension mismatches when Piscina loads the file
- * with Node.js native type stripping.
+ *
+ * This is intentionally inlined rather than imported from
+ * `templates/shell.ts`. Piscina workers are loaded by Node.js
+ * directly (outside Vitest), and Node.js type stripping does not
+ * resolve `.js` extensions to `.ts` files. Keeping the worker
+ * free of local-file imports avoids this resolution mismatch.
+ *
+ * The canonical, feature-complete template lives in
+ * `templates/shell.ts` — keep both in sync when modifying the
+ * HTML structure.
  */
 function shell(body: string, head: string): string {
   return `<!DOCTYPE html>

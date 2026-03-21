@@ -15,7 +15,11 @@ export const BufferStatus = {
 
 export type BufferStatus = (typeof BufferStatus)[keyof typeof BufferStatus];
 
-/** Header occupies 8 bytes: 4 for status (Int32) + 4 for data length (Int32). */
+/**
+ * Header occupies 8 bytes:
+ *   - bytes 0–3  → Int32 status flag (BufferStatus)
+ *   - bytes 4–7  → Int32 data length in bytes
+ */
 const HEADER_SIZE = 8;
 
 /**
