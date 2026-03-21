@@ -1,0 +1,29 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { protectedProcedure } from "~/router.js";
+import { find{{pascalName}}ById, findAll{{pascalName}}s } from "~/db/queries/{{kebabName}}s.js";
+
+export const {{camelName}}Queries = {
+  getById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input }) => {
+      const [item] = await find{{pascalName}}ById.execute({ id: input.id });
+      if (!item) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "{{pascalName}} not found" });
+      }
+      return item;
+    }),
+
+  list: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+      }),
+    )
+    .query(async ({ input }) => {
+      const items = await findAll{{pascalName}}s.execute();
+      const start = (input.page - 1) * input.limit;
+      return items.slice(start, start + input.limit);
+    }),
+};

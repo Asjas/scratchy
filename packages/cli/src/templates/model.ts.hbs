@@ -1,0 +1,23 @@
+import { relations } from "drizzle-orm";
+import { index, text{{#each columns}}, {{this.drizzleType}}{{/each}} } from "drizzle-orm/pg-core";
+import { mySchema } from "~/db/my-schema.js";
+import { timestamps } from "~/db/schema/columns.helpers.js";
+
+export type {{pascalName}} = typeof {{camelName}}.$inferSelect;
+export type New{{pascalName}} = typeof {{camelName}}.$inferInsert;
+
+export const {{camelName}} = mySchema.table(
+  "{{snakeName}}",
+  {
+    id: text().primaryKey(),
+    {{#each columns}}
+    {{this.name}}: {{this.drizzleType}}().notNull(),
+    {{/each}}
+    ...timestamps,
+  },
+  (table) => [
+    index("{{snakeName}}_id_idx").on(table.id),
+  ],
+);
+
+export const {{camelName}}Relations = relations({{camelName}}, ({}) => ({}));

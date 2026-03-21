@@ -1,0 +1,42 @@
+import { z } from "zod";
+import { protectedProcedure } from "~/router.js";
+import {
+  create{{pascalName}},
+  update{{pascalName}},
+  delete{{pascalName}},
+} from "~/db/mutations/{{kebabName}}s.js";
+
+export const {{camelName}}Mutations = {
+  create: protectedProcedure
+    .input(
+      z.object({
+        {{#each columns}}
+        {{this.name}}: {{{this.zodType}}}{{#unless @last}},{{/unless}}
+        {{/each}}
+      }),
+    )
+    .mutation(async ({ input }) => {
+      return create{{pascalName}}(input);
+    }),
+
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        {{#each columns}}
+        {{this.name}}: {{{this.zodType}}}.optional(){{#unless @last}},{{/unless}}
+        {{/each}}
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      return update{{pascalName}}(id, data);
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      await delete{{pascalName}}(input.id);
+      return { success: true };
+    }),
+};

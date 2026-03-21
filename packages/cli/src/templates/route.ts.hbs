@@ -1,0 +1,19 @@
+import type { FastifyPluginAsync } from "fastify";
+
+const routes: FastifyPluginAsync = async function (fastify) {
+  await fastify.register(import("@fastify/cors"), {
+    origin: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  });
+
+  fastify.get("/{{routePath}}", async (_request, _reply) => {
+    return { data: [] };
+  });
+
+  fastify.post("/{{routePath}}", async (request, _reply) => {
+    return { data: request.body };
+  });
+};
+
+export default routes;
