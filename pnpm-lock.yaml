@@ -61,10 +61,50 @@ importers:
         version: 3.2.4(@types/debug@4.1.13)(@types/node@22.16.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
 
   examples/starter:
+    dependencies:
+      '@scratchy/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@scratchy/drizzle':
+        specifier: workspace:*
+        version: link:../../packages/drizzle
+      '@scratchy/renderer':
+        specifier: workspace:*
+        version: link:../../packages/renderer
+      '@scratchy/trpc':
+        specifier: workspace:*
+        version: link:../../packages/trpc
+      '@scratchy/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@scratchy/vite-plugin':
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
+      drizzle-orm:
+        specifier: 0.45.1
+        version: 0.45.1(@types/pg@8.20.0)(pg@8.20.0)
+      ulid:
+        specifier: 3.0.2
+        version: 3.0.2
     devDependencies:
+      '@trpc/server':
+        specifier: 11.14.1
+        version: 11.14.1(typescript@5.8.3)
+      '@types/node':
+        specifier: 22.16.0
+        version: 22.16.0
+      fastify:
+        specifier: 5.8.2
+        version: 5.8.2
+      superjson:
+        specifier: 2.2.6
+        version: 2.2.6
       typescript:
         specifier: 5.8.3
         version: 5.8.3
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
 
   packages/cli:
     dependencies:
@@ -3179,6 +3219,10 @@ packages:
     engines: {node: '>=0.8.0'}
     hasBin: true
 
+  ulid@3.0.2:
+    resolution: {integrity: sha512-yu26mwteFYzBAot7KVMqFGCVpsF6g8wXfJzQUHvu1no3+rRRSFcSV2nKeYvNPLD2J4b08jYBDhHUjeH0ygIl9w==}
+    hasBin: true
+
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
@@ -6166,6 +6210,8 @@ snapshots:
 
   uglify-js@3.19.3:
     optional: true
+
+  ulid@3.0.2: {}
 
   undici-types@6.21.0: {}
 
