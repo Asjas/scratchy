@@ -289,10 +289,11 @@ Business logic lives in service modules, shared by both tRPC and REST:
 
 ```typescript
 // services/products.ts
-import { createProduct, findProductById } from "~/db/mutations/products.js";
+import { createProduct } from "~/db/mutations/products.js";
+import { findProductById } from "~/db/queries/products.js";
 
 export async function getProduct(id: string): Promise<Product> {
-  const product = await findProductById.execute({ id });
+  const [product] = await findProductById.execute({ id });
   if (!product) throw new Error("Product not found");
   return product;
 }
