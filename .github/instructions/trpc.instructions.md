@@ -123,9 +123,16 @@ export const protectedProcedure = t.procedure.use(isAuthenticated);
 
 ```typescript
 export const isAdmin = t.middleware(({ ctx, next }) => {
-  if (!ctx.user || !ctx.hasRole("admin")) {
+  if (!ctx.user) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
+      message: "You must be logged in to access this endpoint",
+    });
+  }
+
+  if (!ctx.hasRole("admin")) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
       message: "Admin access required",
     });
   }
