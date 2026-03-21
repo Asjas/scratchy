@@ -1,7 +1,10 @@
-import type { Logger } from "drizzle-orm";
 import pg from "pg";
 
 const { Pool } = pg;
+
+export interface PoolLogger {
+  error(msg: string): void;
+}
 
 export interface PoolOptions {
   /** Maximum number of clients in the pool. */
@@ -42,7 +45,7 @@ function appendKeepaliveParams(url: string): string {
 export async function createPool(
   connectionString: string,
   options: PoolOptions = {},
-  logger?: Logger,
+  logger?: PoolLogger,
 ): Promise<pg.Pool> {
   const merged = { ...DEFAULT_POOL_OPTIONS, ...options };
 
@@ -68,14 +71,14 @@ export async function createPool(
 
     client.on("error", (err) => {
       if (logger) {
-        logger.logQuery("Database client error: " + err.message, []);
+        logger.error("Database client error: " + err.message);
       }
     });
   });
 
   pool.on("error", (err) => {
     if (logger) {
-      logger.logQuery("Unexpected database pool error: " + err.message, []);
+      logger.error("Unexpected database pool error: " + err.message);
     }
   });
 

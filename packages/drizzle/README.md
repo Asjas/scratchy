@@ -26,10 +26,14 @@ The pool factory automatically:
 
 - Appends libpq keepalive parameters to prevent silent connection drops
 - Sets up TCP keepalive on new connections
-- Handles pool-level errors gracefully (doesn't crash; logs when a logger is provided)
+- Handles pool-level errors gracefully (doesn't crash; logs when a logger is
+  provided)
 - Verifies the connection on startup with `SELECT 1`
 
-When used with the Fastify plugin (or when you pass a `logger` to `createPool`), pool and client errors are logged via that logger; without a logger, errors are still handled so they don't crash the process.
+When used with the Fastify plugin (or when you pass a `logger` to `createPool`),
+pool and client errors are logged via that logger; without a logger, errors are
+still handled so they don't crash the process.
+
 ### Schema Namespace
 
 Always use a custom PostgreSQL schema instead of the default `public` schema:
@@ -37,7 +41,7 @@ Always use a custom PostgreSQL schema instead of the default `public` schema:
 ```typescript
 import { createSchema } from "@scratchy/drizzle";
 
-// Defaults to "app"
+// Reads DATABASE_SCHEMA env var, or defaults to "app"
 const mySchema = createSchema();
 
 // Or use a custom name
