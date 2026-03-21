@@ -9,7 +9,30 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "vite-tsconfig-paths": "6.1.1"
+  },
+  "peerDependencies": {
+    "@builder.io/qwik": ">=1.0.0",
+    "@builder.io/qwik-city": ">=1.0.0",
+    "@builder.io/qwik-react": ">=0.4.0",
+    "@tailwindcss/vite": ">=4.0.0",
+    "vite": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@builder.io/qwik-react": {
+      "optional": true
+    },
+    "@tailwindcss/vite": {
+      "optional": true
+    }
+  },
   "devDependencies": {
-    "typescript": "5.8.3"
+    "@builder.io/qwik": "1.19.2",
+    "@builder.io/qwik-city": "1.19.2",
+    "@builder.io/qwik-react": "0.5.8",
+    "@tailwindcss/vite": "4.2.2",
+    "typescript": "5.8.3",
+    "vite": "6.4.1"
   }
 }
