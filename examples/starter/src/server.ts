@@ -41,9 +41,16 @@ export async function buildServer(opts: ServerOpts = {}) {
   }
 
   // ── tRPC API ─────────────────────────────────────────────────────────────
+  const effectiveRouter = opts.router ?? appRouter;
+  if (!shouldRegisterDb && effectiveRouter === appRouter) {
+    throw new Error(
+      "Default appRouter requires a database, but DATABASE_URL is unset or skipDb is true. " +
+        "Either configure DATABASE_URL / disable skipDb, or pass a custom router via ServerOpts.router.",
+    );
+  }
   const { default: trpcPlugin } = await import("@scratchy/trpc/plugin");
   await server.register(trpcPlugin, {
-    router: opts.router ?? appRouter,
+    router: effectiveRouter,
   });
 
   // ── Renderer worker pool ─────────────────────────────────────────────────
