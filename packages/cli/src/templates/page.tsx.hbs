@@ -1,13 +1,13 @@
 import { component$ } from "@builder.io/qwik";
 import { routeLoader$ } from "@builder.io/qwik-city";
 
-export const use{{pascalName}}Data = routeLoader$(async ({ params, status }) => {
+export const use{{pascalName}}Data = routeLoader$(async ({ params }) => {
   // Load data for {{pascalName}} page
   return { params };
 });
 
 export default component$(() => {
-  const data = use{{pascalName}}Data();
+  use{{pascalName}}Data();
 
   return (
     <div class="{{kebabName}}-page">
