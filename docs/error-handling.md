@@ -49,8 +49,8 @@ Errors propagate upward through these layers. Each layer catches, enriches, and
 re-throws or responds with structured error data. The guiding principles:
 
 1. **Errors are values** — use typed error classes, not bare strings.
-2. **Structured everywhere** — every error carries a code, message, and
-   optional metadata.
+2. **Structured everywhere** — every error carries a code, message, and optional
+   metadata.
 3. **Fail loudly in development, gracefully in production** — show full stack
    traces in dev, user-friendly messages in prod.
 4. **Log at the boundary** — log errors where they are caught, not where they
@@ -208,8 +208,8 @@ function validateLicenseKey(key: string): LicenseData | ErrorResponse {
 
 ### `notFound()` — Not-Found Helper
 
-A helper that throws a standardized 404 error, used in route loaders and
-server functions:
+A helper that throws a standardized 404 error, used in route loaders and server
+functions:
 
 ```typescript
 // lib/not-found.ts
@@ -244,9 +244,9 @@ export const useProductLoader = routeLoader$(async ({ params }) => {
 
 ### Error Boundary Components
 
-Scratchy uses Qwik's error boundary pattern, organized by route segment.
-Error boundaries catch rendering errors and display fallback UI without
-crashing the entire page.
+Scratchy uses Qwik's error boundary pattern, organized by route segment. Error
+boundaries catch rendering errors and display fallback UI without crashing the
+entire page.
 
 #### Component-Level Error Boundary
 
@@ -254,7 +254,7 @@ Use Qwik's `ErrorBoundary` to wrap components that may fail:
 
 ```tsx
 // components/error-boundary.tsx
-import { component$, Slot, useSignal, $ } from "@builder.io/qwik";
+import { $, Slot, component$, useSignal } from "@builder.io/qwik";
 
 interface ErrorBoundaryProps {
   fallback?: (error: unknown, reset: () => void) => JSXOutput;
@@ -365,7 +365,7 @@ export default component$<ErrorBoundaryProps>(({ error }) => {
         </p>
         <a
           href="/blog"
-          class="mt-6 inline-block rounded-lg bg-primary-600 px-4 py-2 text-white hover:bg-primary-700"
+          class="bg-primary-600 hover:bg-primary-700 mt-6 inline-block rounded-lg px-4 py-2 text-white"
         >
           Back to Blog
         </a>
@@ -401,7 +401,10 @@ export default component$<ErrorBoundaryProps>(({ error, reset }) => {
     <html lang="en">
       <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1"
+        />
         <title>Application Error</title>
       </head>
       <body class="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -412,7 +415,7 @@ export default component$<ErrorBoundaryProps>(({ error, reset }) => {
           </p>
           <button
             onClick$={reset}
-            class="mt-6 rounded-lg bg-primary-600 px-6 py-3 text-white hover:bg-primary-700"
+            class="bg-primary-600 hover:bg-primary-700 mt-6 rounded-lg px-6 py-3 text-white"
           >
             Refresh
           </button>
@@ -444,7 +447,7 @@ export default component$(() => {
       </p>
       <a
         href="/"
-        class="mt-8 inline-block rounded-lg bg-primary-600 px-6 py-3 text-white hover:bg-primary-700"
+        class="bg-primary-600 hover:bg-primary-700 mt-8 inline-block rounded-lg px-6 py-3 text-white"
       >
         Go Home
       </a>
@@ -483,13 +486,13 @@ export function isRouteErrorResponse(
 
 ### Action Failure Handling
 
-Use Qwik City's `action.fail()` pattern to return validation errors from
-form actions without throwing:
+Use Qwik City's `action.fail()` pattern to return validation errors from form
+actions without throwing:
 
 ```tsx
 // routes/contact/index.tsx
 import { component$ } from "@builder.io/qwik";
-import { routeAction$, zod$, z, Form } from "@builder.io/qwik-city";
+import { Form, routeAction$, z, zod$ } from "@builder.io/qwik-city";
 
 export const useContactAction = routeAction$(
   async (data, { fail }) => {
@@ -524,7 +527,10 @@ export default component$(() => {
       </div>
 
       <div>
-        <input name="email" type="email" />
+        <input
+          name="email"
+          type="email"
+        />
         {action.value?.failed && action.value.fieldErrors?.email && (
           <p class="text-sm text-red-600">{action.value.fieldErrors.email}</p>
         )}
@@ -543,7 +549,10 @@ export default component$(() => {
         </div>
       )}
 
-      <button type="submit" disabled={action.isRunning}>
+      <button
+        type="submit"
+        disabled={action.isRunning}
+      >
         {action.isRunning ? "Sending..." : "Send Message"}
       </button>
     </Form>
@@ -553,12 +562,11 @@ export default component$(() => {
 
 ### `useError()` — Client-Side Error State
 
-A Nuxt-inspired composable for accessing and managing error state in
-components:
+A Nuxt-inspired composable for accessing and managing error state in components:
 
 ```tsx
 // hooks/use-error.ts
-import { useSignal, $ } from "@builder.io/qwik";
+import { $, useSignal } from "@builder.io/qwik";
 import type { AppError } from "~/lib/errors";
 
 export function useError() {
@@ -605,7 +613,10 @@ export default component$(() => {
       {error.value && (
         <div class="rounded-lg border border-red-200 bg-red-50 p-4">
           <p class="text-red-800">{error.value.message}</p>
-          <button onClick$={clearError} class="mt-2 text-sm underline">
+          <button
+            onClick$={clearError}
+            class="mt-2 text-sm underline"
+          >
             Dismiss
           </button>
         </div>
@@ -618,8 +629,8 @@ export default component$(() => {
 
 ### Uncaught Error Handlers
 
-Configure global handlers for errors that escape all boundaries. These are
-set up in the client entry point:
+Configure global handlers for errors that escape all boundaries. These are set
+up in the client entry point:
 
 ```typescript
 // client/entry.ts
@@ -733,7 +744,10 @@ server.setNotFoundHandler(
     preHandler: server.rateLimit({ max: 60, timeWindow: "1 hour" }),
   },
   (request, reply) => {
-    request.log.warn({ url: request.url, method: request.method }, "route not found");
+    request.log.warn(
+      { url: request.url, method: request.method },
+      "route not found",
+    );
     return reply.status(404).send({
       error: {
         code: "NOT_FOUND",
@@ -831,25 +845,25 @@ export const courseQueries = {
 
 ### tRPC Error Code Reference
 
-| Code                  | HTTP Status | Use Case                                      |
-| --------------------- | ----------- | --------------------------------------------- |
-| `BAD_REQUEST`         | 400         | Invalid input that passed Zod validation       |
-| `UNAUTHORIZED`        | 401         | Missing or invalid authentication              |
-| `FORBIDDEN`           | 403         | Authenticated but insufficient permissions     |
-| `NOT_FOUND`           | 404         | Resource does not exist                        |
-| `METHOD_NOT_SUPPORTED`| 405         | Operation not allowed on this resource         |
-| `TIMEOUT`             | 408         | Operation took too long                        |
-| `CONFLICT`            | 409         | Resource already exists or state conflict      |
-| `PAYLOAD_TOO_LARGE`   | 413         | Request body exceeds size limit                |
-| `UNPROCESSABLE_CONTENT`| 422        | Semantically invalid input                    |
-| `TOO_MANY_REQUESTS`   | 429         | Rate limit exceeded                            |
-| `CLIENT_CLOSED_REQUEST`| 499        | Client disconnected before response            |
-| `INTERNAL_SERVER_ERROR`| 500        | Unexpected server failure                      |
+| Code                    | HTTP Status | Use Case                                   |
+| ----------------------- | ----------- | ------------------------------------------ |
+| `BAD_REQUEST`           | 400         | Invalid input that passed Zod validation   |
+| `UNAUTHORIZED`          | 401         | Missing or invalid authentication          |
+| `FORBIDDEN`             | 403         | Authenticated but insufficient permissions |
+| `NOT_FOUND`             | 404         | Resource does not exist                    |
+| `METHOD_NOT_SUPPORTED`  | 405         | Operation not allowed on this resource     |
+| `TIMEOUT`               | 408         | Operation took too long                    |
+| `CONFLICT`              | 409         | Resource already exists or state conflict  |
+| `PAYLOAD_TOO_LARGE`     | 413         | Request body exceeds size limit            |
+| `UNPROCESSABLE_CONTENT` | 422         | Semantically invalid input                 |
+| `TOO_MANY_REQUESTS`     | 429         | Rate limit exceeded                        |
+| `CLIENT_CLOSED_REQUEST` | 499         | Client disconnected before response        |
+| `INTERNAL_SERVER_ERROR` | 500         | Unexpected server failure                  |
 
 ### tRPC Error Formatting
 
-Configure the `onError` and `errorFormatter` in the tRPC adapter to shape
-error responses and log errors:
+Configure the `onError` and `errorFormatter` in the tRPC adapter to shape error
+responses and log errors:
 
 ```typescript
 // server.ts — tRPC plugin registration
@@ -962,12 +976,12 @@ export default routes;
 
 ### Worker-Side Error Handling
 
-Inside workers, catch errors and return structured results instead of
-letting them crash the worker:
+Inside workers, catch errors and return structured results instead of letting
+them crash the worker:
 
 ```typescript
 // renderer/worker.ts
-import type { RenderTask, RenderResult } from "~/types/renderer.js";
+import type { RenderResult, RenderTask } from "~/types/renderer.js";
 
 export default async function handler(task: RenderTask): Promise<RenderResult> {
   try {
@@ -1163,11 +1177,11 @@ export function handleDatabaseError(error: unknown): never {
 ```typescript
 // db/mutations/users.ts
 import { eq } from "drizzle-orm";
+import { ulid } from "ulid";
 import { db } from "~/db/index.js";
 import { user } from "~/db/schema/user.js";
-import { handleDatabaseError } from "~/lib/db-errors.js";
-import { ulid } from "ulid";
 import type { NewUser } from "~/db/schema/user.js";
+import { handleDatabaseError } from "~/lib/db-errors.js";
 
 export async function createUser(data: Omit<NewUser, "id">) {
   try {
@@ -1268,8 +1282,8 @@ export async function transferCredits(
 
 ### Structured Logging with Pino
 
-Scratchy uses Fastify's built-in Pino logger for structured JSON logging.
-Follow these rules for error logging:
+Scratchy uses Fastify's built-in Pino logger for structured JSON logging. Follow
+these rules for error logging:
 
 ```typescript
 // Inside route handlers — use request.log
@@ -1278,7 +1292,10 @@ fastify.get("/users/:id", async (request, reply) => {
 
   if (err) {
     // Always pass the error object first, then the message string
-    request.log.error({ err, userId: request.params.id }, "failed to fetch user");
+    request.log.error(
+      { err, userId: request.params.id },
+      "failed to fetch user",
+    );
     throw createError({ statusCode: 500, message: "Failed to fetch user" });
   }
 
@@ -1298,10 +1315,11 @@ export default fp(async function cachePlugin(fastify) {
 
 ### Logging Rules
 
-1. **Use `request.log`** inside route handlers — it automatically includes
-   the request ID for correlation.
+1. **Use `request.log`** inside route handlers — it automatically includes the
+   request ID for correlation.
 2. **Use `fastify.log`** only in plugin-level or startup code.
-3. **Always pass an object first**: `request.log.error({ err, key: value }, "message")`.
+3. **Always pass an object first**:
+   `request.log.error({ err, key: value }, "message")`.
 4. **Never use string interpolation** in log messages — use structured fields.
 5. **Name the error field `err`** — Pino serializes `Error` objects under this
    key automatically.
@@ -1318,12 +1336,12 @@ request.log.error({ err: error, userId }, "failed to fetch user");
 
 ### Log Levels for Errors
 
-| Level   | When to Use                                                  |
-| ------- | ------------------------------------------------------------ |
-| `fatal` | Process must exit — unrecoverable state                      |
-| `error` | Unexpected failure — 5xx errors, unhandled exceptions        |
-| `warn`  | Expected failure — 4xx errors, validation failures, retries  |
-| `info`  | Normal operations — request completed, task finished         |
+| Level   | When to Use                                                 |
+| ------- | ----------------------------------------------------------- |
+| `fatal` | Process must exit — unrecoverable state                     |
+| `error` | Unexpected failure — 5xx errors, unhandled exceptions       |
+| `warn`  | Expected failure — 4xx errors, validation failures, retries |
+| `info`  | Normal operations — request completed, task finished        |
 
 ---
 
@@ -1346,7 +1364,10 @@ export default fp(async function devErrors(fastify) {
   if (process.env.NODE_ENV !== "production") {
     fastify.addHook("onError", async (request, reply, error) => {
       // In development, attach extra debug info to the response
-      reply.header("x-error-code", (error as { code?: string }).code ?? "UNKNOWN");
+      reply.header(
+        "x-error-code",
+        (error as { code?: string }).code ?? "UNKNOWN",
+      );
       reply.header("x-error-type", error.constructor.name);
     });
   }
@@ -1410,7 +1431,7 @@ export const ErrorDisplay = component$<ErrorDisplayProps>(
         <div class="mt-8 text-center">
           <a
             href="/"
-            class="inline-block rounded-lg bg-primary-600 px-6 py-3 text-white hover:bg-primary-700"
+            class="bg-primary-600 hover:bg-primary-700 inline-block rounded-lg px-6 py-3 text-white"
           >
             Go Home
           </a>
@@ -1463,8 +1484,8 @@ process.on("unhandledRejection", (reason) => {
 
 ## Best Practices
 
-1. **Use `createError()` for all thrown errors** — ensures consistent
-   structure and serialization across the stack.
+1. **Use `createError()` for all thrown errors** — ensures consistent structure
+   and serialization across the stack.
 
 2. **Use `ErrorResponse` for expected non-200 outcomes** — when a non-success
    status is a normal return value, not an exception.
@@ -1475,6 +1496,7 @@ process.on("unhandledRejection", (reason) => {
 
 4. **Always include `cause`** — when re-throwing or wrapping errors, pass the
    original error as `cause` for debugging:
+
    ```typescript
    throw createError({
      statusCode: 502,
@@ -1486,8 +1508,8 @@ process.on("unhandledRejection", (reason) => {
 5. **Map database errors to HTTP errors** — use `handleDatabaseError()` to
    translate PostgreSQL error codes into user-friendly `AppError` instances.
 
-6. **Log once at the boundary** — do not log the same error at multiple
-   layers. Log it where it is caught and handled.
+6. **Log once at the boundary** — do not log the same error at multiple layers.
+   Log it where it is caught and handled.
 
 7. **Use type guards** — always check error types with `isAppError()`,
    `isRouteErrorResponse()`, and `isPostgresError()` instead of `instanceof`
@@ -1496,8 +1518,8 @@ process.on("unhandledRejection", (reason) => {
 8. **Never expose stack traces in production** — gate stack trace inclusion
    behind `NODE_ENV !== "production"`.
 
-9. **Provide actionable error messages** — tell the user what happened and
-   what they can do about it, not internal implementation details.
+9. **Provide actionable error messages** — tell the user what happened and what
+   they can do about it, not internal implementation details.
 
 10. **Test error paths** — write tests for error cases, not just happy paths.
     Verify that correct status codes, error codes, and messages are returned.

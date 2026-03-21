@@ -327,12 +327,15 @@ export async function listProducts(page: number, limit: number) {
 - ❌ Don't put business logic in tRPC procedures or route handlers
 - ❌ Don't skip input validation
 - ❌ Don't return raw database objects — map to response schemas
-- ❌ Don't fetch data on the client when `routeLoader$` can provide it at SSR time
+- ❌ Don't fetch data on the client when `routeLoader$` can provide it at SSR
+  time
 
 ## Related Documentation
 
-- [data-loading.md](data-loading.md) — routeLoader$, caching, revalidation patterns
-- [forms-and-actions.md](forms-and-actions.md) — routeAction$, Form component, file uploads
+- [data-loading.md](data-loading.md) — routeLoader$, caching, revalidation
+  patterns
+- [forms-and-actions.md](forms-and-actions.md) — routeAction$, Form component,
+  file uploads
 - [middleware.md](middleware.md) — Request middleware and lifecycle hooks
 - [error-handling.md](error-handling.md) — Error handling in API routes
 - [security.md](security.md) — Authentication, CSRF, rate limiting

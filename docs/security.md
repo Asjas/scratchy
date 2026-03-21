@@ -2,8 +2,8 @@
 
 Scratchy takes a **defense-in-depth** approach to security. Every layer — from
 HTTP headers to database queries — enforces its own protections so that no
-single misconfiguration leads to a breach. This document is the single
-reference for all security concerns in a Scratchy application.
+single misconfiguration leads to a breach. This document is the single reference
+for all security concerns in a Scratchy application.
 
 > **Cross-references:** This guide builds on patterns documented in
 > [sessions.md](sessions.md), [middleware.md](middleware.md),
@@ -75,11 +75,11 @@ ordering rules.
 
 Scratchy supports three authentication strategies depending on the consumer:
 
-| Strategy        | Use Case                     | Transport            |
-| --------------- | ---------------------------- | -------------------- |
-| Session-based   | Browser clients (tRPC)       | Signed cookie        |
-| JWT (Bearer)    | External API consumers       | `Authorization` header |
-| OAuth2 / OIDC   | Social login, SSO            | Redirect flow        |
+| Strategy      | Use Case               | Transport              |
+| ------------- | ---------------------- | ---------------------- |
+| Session-based | Browser clients (tRPC) | Signed cookie          |
+| JWT (Bearer)  | External API consumers | `Authorization` header |
+| OAuth2 / OIDC | Social login, SSO      | Redirect flow          |
 
 ### Session-Based Authentication
 
@@ -131,10 +131,10 @@ export default fp(async function sessionPlugin(fastify) {
 
 ```typescript
 // routers/auth/mutations.ts
-import { publicProcedure } from "~/router.js";
-import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { ulid } from "ulid";
+import { z } from "zod";
+import { publicProcedure } from "~/router.js";
 
 export const authMutations = {
   login: publicProcedure
@@ -199,7 +199,7 @@ sessions. See [api-design.md](api-design.md) for the REST route patterns.
 
 ```typescript
 // lib/jwt.ts
-import { createVerifier, createSigner } from "fast-jwt";
+import { createSigner, createVerifier } from "fast-jwt";
 
 const SECRET = getEnvVar("JWT_SECRET");
 
@@ -262,8 +262,8 @@ in a session.
 
 ```typescript
 // plugins/external/oauth2.ts
-import fp from "fastify-plugin";
 import oauthPlugin from "@fastify/oauth2";
+import fp from "fastify-plugin";
 
 export default fp(async function oauth2(fastify) {
   await fastify.register(oauthPlugin, {
@@ -293,7 +293,9 @@ import { ulid } from "ulid";
 const routes: FastifyPluginAsync = async function (fastify) {
   fastify.get("/", async (request, reply) => {
     const { token } =
-      await fastify.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
+      await fastify.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(
+        request,
+      );
 
     // Fetch user profile from the provider
     const profile = await fetchGoogleProfile(token.access_token);
@@ -354,8 +356,8 @@ export const auth = betterAuth({
       enabled: true,
       maxAge: 60 * 5, // 5 minutes
     },
-    expiresIn: 60 * 60 * 24 * 7,     // 7 days
-    updateAge: 60 * 60 * 24,          // Refresh every day
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // Refresh every day
   },
   advanced: {
     generateId: () => ulid(),
@@ -365,9 +367,9 @@ export const auth = betterAuth({
 
 ```typescript
 // plugins/app/better-auth.ts
+import { toNodeHandler } from "better-auth/node";
 import fp from "fastify-plugin";
 import { auth } from "~/lib/auth.js";
-import { toNodeHandler } from "better-auth/node";
 
 export default fp(async function betterAuthPlugin(fastify) {
   const handler = toNodeHandler(auth);
@@ -426,8 +428,8 @@ its own access requirements.
 // router.ts
 import { TRPCError, initTRPC } from "@trpc/server";
 import superjson from "superjson";
-import { hasPermission, type Permission } from "~/lib/roles.js";
 import type { Context } from "~/context.js";
+import { type Permission, hasPermission } from "~/lib/roles.js";
 
 const t = initTRPC.context<Context>().create({ transformer: superjson });
 
@@ -446,7 +448,10 @@ const isAuthenticated = t.middleware(({ ctx, next }) => {
 function requirePermission(permission: Permission) {
   return t.middleware(({ ctx, next }) => {
     if (!ctx.user) {
-      throw new TRPCError({ code: "UNAUTHORIZED", message: "Authentication required" });
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Authentication required",
+      });
     }
     if (!hasPermission(ctx.user.role, permission)) {
       throw new TRPCError({
@@ -460,7 +465,9 @@ function requirePermission(permission: Permission) {
 
 export const publicProcedure = t.procedure;
 export const protectedProcedure = t.procedure.use(isAuthenticated);
-export const adminProcedure = t.procedure.use(requirePermission("users:manage"));
+export const adminProcedure = t.procedure.use(
+  requirePermission("users:manage"),
+);
 ```
 
 ### Resource Ownership Checks
@@ -470,10 +477,10 @@ This prevents IDOR (Insecure Direct Object Reference) attacks:
 
 ```typescript
 // routers/posts/mutations.ts
-import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure } from "~/router.js";
+import { z } from "zod";
 import { findPostById } from "~/db/queries/posts.js";
+import { protectedProcedure } from "~/router.js";
 
 export const postMutations = {
   update: protectedProcedure
@@ -511,9 +518,12 @@ For Fastify REST routes, use `onRequest` hooks (similar to Qwik City's
 
 ```typescript
 // hooks/require-auth.ts
-import type { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
 
-export async function requireAuth(request: FastifyRequest, reply: FastifyReply) {
+export async function requireAuth(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   if (!request.user) {
     return reply.status(401).send({
       error: "Unauthorized",
@@ -523,7 +533,10 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
 }
 
 export function requireRole(role: string) {
-  return async function roleGuard(request: FastifyRequest, reply: FastifyReply) {
+  return async function roleGuard(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) {
     if (!request.user) {
       return reply.status(401).send({
         error: "Unauthorized",
@@ -567,9 +580,9 @@ implementation of token generation, validation, and client integration.
 
 ### Double-Submit Cookie Pattern
 
-Scratchy uses the **double-submit cookie pattern** — the CSRF token is stored
-in a signed cookie and must also be sent in a request header. The server
-compares the two values using constant-time comparison.
+Scratchy uses the **double-submit cookie pattern** — the CSRF token is stored in
+a signed cookie and must also be sent in a request header. The server compares
+the two values using constant-time comparison.
 
 ```typescript
 // plugins/external/04-csrf.ts
@@ -636,11 +649,11 @@ export default fp(async function csrfProtection(fastify) {
 The `sameSite` attribute is the **first line of defense** against CSRF. Scratchy
 defaults to `"lax"` for session cookies and `"strict"` for CSRF tokens:
 
-| Cookie          | `sameSite` | Reason                                         |
-| --------------- | ---------- | ---------------------------------------------- |
-| `session_id`    | `"lax"`    | Allows top-level navigations (OAuth redirects) |
-| `csrf_token`    | `"strict"` | Never sent on cross-origin requests            |
-| `remember_me`   | `"lax"`    | Needs to work on navigation from external sites|
+| Cookie        | `sameSite` | Reason                                          |
+| ------------- | ---------- | ----------------------------------------------- |
+| `session_id`  | `"lax"`    | Allows top-level navigations (OAuth redirects)  |
+| `csrf_token`  | `"strict"` | Never sent on cross-origin requests             |
+| `remember_me` | `"lax"`    | Needs to work on navigation from external sites |
 
 ### Client Integration
 
@@ -675,8 +688,8 @@ Qwik renderer:
 
 ```typescript
 // plugins/external/01-helmet.ts
-import fp from "fastify-plugin";
 import helmet from "@fastify/helmet";
+import fp from "fastify-plugin";
 import { randomBytes } from "node:crypto";
 
 export default fp(async function helmetPlugin(fastify) {
@@ -784,10 +797,7 @@ const routes: FastifyPluginAsync = async function (fastify) {
     "/csp-report",
     { schema: { body: cspReportSchema } },
     async (request) => {
-      request.log.warn(
-        { cspViolation: request.body },
-        "CSP violation report",
-      );
+      request.log.warn({ cspViolation: request.body }, "CSP violation report");
       return { received: true };
     },
   );
@@ -805,25 +815,25 @@ each header does and how to configure it.
 
 ### Header Reference
 
-| Header                        | Value                      | Purpose                                      |
-| ----------------------------- | -------------------------- | -------------------------------------------- |
-| `X-Content-Type-Options`      | `nosniff`                  | Prevents MIME-type sniffing                  |
-| `X-Frame-Options`             | `DENY`                     | Blocks framing (clickjacking)                |
-| `Strict-Transport-Security`   | `max-age=31536000; includeSubDomains` | Forces HTTPS for 1 year     |
-| `Referrer-Policy`             | `strict-origin-when-cross-origin` | Limits referrer leakage          |
-| `X-DNS-Prefetch-Control`      | `off`                      | Prevents DNS prefetch leaking                |
-| `X-Permitted-Cross-Domain-Policies` | `none`              | Blocks Flash/PDF cross-domain access         |
-| `Content-Security-Policy`     | _(per-request nonce)_      | XSS prevention (see CSP section)             |
-| `Cross-Origin-Opener-Policy`  | `same-origin`              | Isolates browsing context                    |
-| `Cross-Origin-Resource-Policy`| `same-origin`              | Prevents cross-origin resource reads         |
-| `Permissions-Policy`          | `camera=(), microphone=()` | Disables sensitive browser features          |
+| Header                              | Value                                 | Purpose                              |
+| ----------------------------------- | ------------------------------------- | ------------------------------------ |
+| `X-Content-Type-Options`            | `nosniff`                             | Prevents MIME-type sniffing          |
+| `X-Frame-Options`                   | `DENY`                                | Blocks framing (clickjacking)        |
+| `Strict-Transport-Security`         | `max-age=31536000; includeSubDomains` | Forces HTTPS for 1 year              |
+| `Referrer-Policy`                   | `strict-origin-when-cross-origin`     | Limits referrer leakage              |
+| `X-DNS-Prefetch-Control`            | `off`                                 | Prevents DNS prefetch leaking        |
+| `X-Permitted-Cross-Domain-Policies` | `none`                                | Blocks Flash/PDF cross-domain access |
+| `Content-Security-Policy`           | _(per-request nonce)_                 | XSS prevention (see CSP section)     |
+| `Cross-Origin-Opener-Policy`        | `same-origin`                         | Isolates browsing context            |
+| `Cross-Origin-Resource-Policy`      | `same-origin`                         | Prevents cross-origin resource reads |
+| `Permissions-Policy`                | `camera=(), microphone=()`            | Disables sensitive browser features  |
 
 ### Complete Helmet Configuration
 
 ```typescript
 // plugins/external/01-helmet.ts
-import fp from "fastify-plugin";
 import helmet from "@fastify/helmet";
+import fp from "fastify-plugin";
 
 export default fp(async function helmetPlugin(fastify) {
   await fastify.register(helmet, {
@@ -847,7 +857,7 @@ export default fp(async function helmetPlugin(fastify) {
 
     // HSTS — force HTTPS
     strictTransportSecurity: {
-      maxAge: 31_536_000,          // 1 year
+      maxAge: 31_536_000, // 1 year
       includeSubDomains: true,
       preload: true,
     },
@@ -856,7 +866,7 @@ export default fp(async function helmetPlugin(fastify) {
     frameguard: { action: "deny" },
 
     // Prevent MIME-type sniffing
-    contentTypeOptions: true,       // X-Content-Type-Options: nosniff
+    contentTypeOptions: true, // X-Content-Type-Options: nosniff
 
     // Referrer policy
     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
@@ -1013,8 +1023,8 @@ distributed deployments.
 
 ```typescript
 // plugins/external/02-rate-limit.ts
-import fp from "fastify-plugin";
 import rateLimit from "@fastify/rate-limit";
+import fp from "fastify-plugin";
 
 export default fp(async function rateLimitPlugin(fastify) {
   await fastify.register(rateLimit, {
@@ -1025,7 +1035,7 @@ export default fp(async function rateLimitPlugin(fastify) {
     redis: fastify.redis,
     // Identify clients by IP or API key
     keyGenerator: (request) => {
-      return request.headers["x-api-key"] as string || request.ip;
+      return (request.headers["x-api-key"] as string) || request.ip;
     },
     // Return standard error response
     errorResponseBuilder: (request, context) => ({
@@ -1035,8 +1045,15 @@ export default fp(async function rateLimitPlugin(fastify) {
       retryAfter: Math.ceil(context.ttl / 1000),
     }),
     // Add rate limit headers to every response
-    addHeadersOnExceeding: { "x-ratelimit-limit": true, "x-ratelimit-remaining": true },
-    addHeaders: { "x-ratelimit-limit": true, "x-ratelimit-remaining": true, "retry-after": true },
+    addHeadersOnExceeding: {
+      "x-ratelimit-limit": true,
+      "x-ratelimit-remaining": true,
+    },
+    addHeaders: {
+      "x-ratelimit-limit": true,
+      "x-ratelimit-remaining": true,
+      "retry-after": true,
+    },
   });
 });
 ```
@@ -1125,21 +1142,21 @@ export default routes;
 Rate limiting alone is not sufficient for DDoS protection. Layer these
 strategies:
 
-| Layer         | Strategy                                               |
-| ------------- | ------------------------------------------------------ |
-| Edge/CDN      | Cloudflare, AWS Shield, or similar DDoS mitigation     |
-| Reverse proxy | Connection limits in Nginx/Caddy                       |
-| Application   | `@fastify/rate-limit` with Redis backend               |
-| Request size  | `bodyLimit` in Fastify config (default 10 MB)          |
-| Timeouts      | `requestTimeout` and `keepAliveTimeout` in Fastify     |
-| Slow loris    | `connectionTimeout` at the reverse proxy level         |
+| Layer         | Strategy                                           |
+| ------------- | -------------------------------------------------- |
+| Edge/CDN      | Cloudflare, AWS Shield, or similar DDoS mitigation |
+| Reverse proxy | Connection limits in Nginx/Caddy                   |
+| Application   | `@fastify/rate-limit` with Redis backend           |
+| Request size  | `bodyLimit` in Fastify config (default 10 MB)      |
+| Timeouts      | `requestTimeout` and `keepAliveTimeout` in Fastify |
+| Slow loris    | `connectionTimeout` at the reverse proxy level     |
 
 ```typescript
 // server.ts — request-level protections
 const server = Fastify({
-  bodyLimit: 10 * 1024 * 1024,     // 10 MB max body
-  requestTimeout: 30_000,           // 30 second request timeout
-  keepAliveTimeout: 5_000,          // 5 second keep-alive timeout
+  bodyLimit: 10 * 1024 * 1024, // 10 MB max body
+  requestTimeout: 30_000, // 30 second request timeout
+  keepAliveTimeout: 5_000, // 5 second keep-alive timeout
 });
 ```
 
@@ -1147,8 +1164,8 @@ const server = Fastify({
 
 ## CORS Configuration
 
-CORS is enabled **only on external API routes** (`/external/api`). Internal
-tRPC endpoints serve same-origin requests and must never have CORS headers.
+CORS is enabled **only on external API routes** (`/external/api`). Internal tRPC
+endpoints serve same-origin requests and must never have CORS headers.
 
 See [api-design.md](api-design.md) for the full CORS strategy.
 
@@ -1167,28 +1184,35 @@ await server.register(fastifyTRPCPlugin, {
 
 ```typescript
 // plugins/external/03-cors.ts — scoped to external routes only
-import fp from "fastify-plugin";
 import cors from "@fastify/cors";
+import fp from "fastify-plugin";
 
 export default fp(async function corsPlugin(fastify) {
   // Only apply CORS to external API routes
-  fastify.register(async function externalScope(instance) {
-    await instance.register(cors, {
-      origin: (origin, callback) => {
-        const allowedOrigins = getEnvVar("CORS_ALLOWED_ORIGINS").split(",");
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"), false);
-        }
-      },
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-      allowedHeaders: ["Content-Type", "Authorization", "X-API-Key"],
-      exposedHeaders: ["X-RateLimit-Limit", "X-RateLimit-Remaining", "Retry-After"],
-      credentials: true,
-      maxAge: 86_400, // 24 hours preflight cache
-    });
-  }, { prefix: "/external/api" });
+  fastify.register(
+    async function externalScope(instance) {
+      await instance.register(cors, {
+        origin: (origin, callback) => {
+          const allowedOrigins = getEnvVar("CORS_ALLOWED_ORIGINS").split(",");
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error("Not allowed by CORS"), false);
+          }
+        },
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+        allowedHeaders: ["Content-Type", "Authorization", "X-API-Key"],
+        exposedHeaders: [
+          "X-RateLimit-Limit",
+          "X-RateLimit-Remaining",
+          "Retry-After",
+        ],
+        credentials: true,
+        maxAge: 86_400, // 24 hours preflight cache
+      });
+    },
+    { prefix: "/external/api" },
+  );
 });
 ```
 
@@ -1249,7 +1273,7 @@ zero-downtime secret rotation.
 
 ```typescript
 // lib/cookie-secrets.ts
-import { timingSafeEqual, createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 // COOKIE_SECRETS is a comma-separated list, newest first
 const secrets = getEnvVar("COOKIE_SECRETS").split(",");
@@ -1272,9 +1296,7 @@ export function verifyCookie(signed: string): string | null {
   const sigBuffer = Buffer.from(signature, "base64url");
 
   for (const secret of secrets) {
-    const expected = createHmac("sha256", secret)
-      .update(value)
-      .digest();
+    const expected = createHmac("sha256", secret).update(value).digest();
 
     if (
       sigBuffer.length === expected.length &&
@@ -1292,14 +1314,14 @@ export function verifyCookie(signed: string): string | null {
 
 1. Generate a new secret.
 2. Prepend it to `COOKIE_SECRETS` (e.g., `new_secret,old_secret`).
-3. Deploy — new cookies are signed with the new secret; old cookies still
-   verify against the old secret.
+3. Deploy — new cookies are signed with the new secret; old cookies still verify
+   against the old secret.
 4. After all old sessions expire (e.g., 7 days), remove the old secret.
 
 ### Rules
 
-- **Never commit secrets** to version control — use `.env` files (gitignored)
-  or a secrets manager.
+- **Never commit secrets** to version control — use `.env` files (gitignored) or
+  a secrets manager.
 - **Use separate secrets** for each purpose — don't reuse the session secret as
   the JWT secret.
 - **Rotate secrets periodically** — at minimum when team members leave or a
@@ -1366,14 +1388,14 @@ pnpm update --interactive
 
 ### Supply Chain Security
 
-| Practice                      | Implementation                                     |
-| ----------------------------- | -------------------------------------------------- |
-| Lock file integrity           | Always commit `pnpm-lock.yaml`; use `--frozen-lockfile` in CI |
-| Minimal dependencies          | Audit every new dependency; prefer Node.js built-ins |
-| Pinned versions               | Use exact versions in `package.json` for production deps |
-| CI vulnerability scanning     | Run `pnpm audit` in CI and fail on critical/high findings |
-| Provenance checks             | Verify package provenance with `npm audit signatures` |
-| Corepack                      | Pin pnpm version via `"packageManager"` in `package.json` |
+| Practice                  | Implementation                                                |
+| ------------------------- | ------------------------------------------------------------- |
+| Lock file integrity       | Always commit `pnpm-lock.yaml`; use `--frozen-lockfile` in CI |
+| Minimal dependencies      | Audit every new dependency; prefer Node.js built-ins          |
+| Pinned versions           | Use exact versions in `package.json` for production deps      |
+| CI vulnerability scanning | Run `pnpm audit` in CI and fail on critical/high findings     |
+| Provenance checks         | Verify package provenance with `npm audit signatures`         |
+| Corepack                  | Pin pnpm version via `"packageManager"` in `package.json`     |
 
 ```jsonc
 // package.json
@@ -1381,8 +1403,8 @@ pnpm update --interactive
   "packageManager": "pnpm@10.x.x",
   "scripts": {
     "audit": "pnpm audit --audit-level=high",
-    "preinstall": "npx only-allow pnpm"
-  }
+    "preinstall": "npx only-allow pnpm",
+  },
 }
 ```
 
@@ -1595,12 +1617,16 @@ export const deletePost = protectedProcedure
 
 ```typescript
 // BAD — Vulnerable to timing attacks
-if (csrfCookie === csrfHeader) { /* ... */ }
+if (csrfCookie === csrfHeader) {
+  /* ... */
+}
 
 // GOOD — Constant-time comparison
 const a = Buffer.from(csrfCookie, "utf8");
 const b = Buffer.from(csrfHeader, "utf8");
-if (a.length === b.length && timingSafeEqual(a, b)) { /* ... */ }
+if (a.length === b.length && timingSafeEqual(a, b)) {
+  /* ... */
+}
 ```
 
 ### ❌ Don't enable CORS on internal routes
@@ -1622,8 +1648,7 @@ await server.register(cors, { prefix: "/external/api" });
 - [@fastify/rate-limit](https://github.com/fastify/fastify-rate-limit) — Rate
   limiting
 - [@fastify/cors](https://github.com/fastify/fastify-cors) — CORS
-- [@fastify/csrf-protection](https://github.com/fastify/csrf-protection) —
-  CSRF
+- [@fastify/csrf-protection](https://github.com/fastify/csrf-protection) — CSRF
 - [@fastify/oauth2](https://github.com/fastify/fastify-oauth2) — OAuth2
 - [Better Auth](https://www.better-auth.com/) — Authentication library
 - [fast-jwt](https://github.com/nearform/fast-jwt) — JWT signing/verification

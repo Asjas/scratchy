@@ -19,12 +19,12 @@ Scratchy follows the **testing pyramid** strategy:
   ╱────────────────────╲
 ```
 
-| Layer       | Tools                        | What to Test                                     |
-| ----------- | ---------------------------- | ------------------------------------------------ |
-| Unit        | Vitest                       | Functions, type guards, utilities, routers        |
-| Integration | Vitest + Fastify inject      | HTTP cycles, tRPC client ↔ server, DB operations |
-| Component   | Vitest + `createDOM`         | Qwik components, forms, qwikified React          |
-| E2E         | Cypress                      | Auth flows, navigation, full user journeys        |
+| Layer       | Tools                   | What to Test                                     |
+| ----------- | ----------------------- | ------------------------------------------------ |
+| Unit        | Vitest                  | Functions, type guards, utilities, routers       |
+| Integration | Vitest + Fastify inject | HTTP cycles, tRPC client ↔ server, DB operations |
+| Component   | Vitest + `createDOM`    | Qwik components, forms, qwikified React          |
+| E2E         | Cypress                 | Auth flows, navigation, full user journeys       |
 
 **Guiding principles:**
 
@@ -43,15 +43,15 @@ Scratchy follows the **testing pyramid** strategy:
 
 ## Tools
 
-| Tool                     | Purpose                                          |
-| ------------------------ | ------------------------------------------------ |
-| **Vitest**               | Unit, integration, and component tests           |
-| **Node.js Test Runner**  | Lightweight alternative for pure-logic unit tests |
-| **Cypress**              | End-to-end browser testing                       |
-| **Testing Library**      | DOM assertions for component tests               |
-| **@qwik/testing**        | `createDOM` for Qwik component rendering         |
-| **fastify.inject()**     | In-process HTTP testing without a live server    |
-| **superjson**             | tRPC transformer in test clients                 |
+| Tool                    | Purpose                                           |
+| ----------------------- | ------------------------------------------------- |
+| **Vitest**              | Unit, integration, and component tests            |
+| **Node.js Test Runner** | Lightweight alternative for pure-logic unit tests |
+| **Cypress**             | End-to-end browser testing                        |
+| **Testing Library**     | DOM assertions for component tests                |
+| **@qwik/testing**       | `createDOM` for Qwik component rendering          |
+| **fastify.inject()**    | In-process HTTP testing without a live server     |
+| **superjson**           | tRPC transformer in test clients                  |
 
 ---
 
@@ -113,13 +113,13 @@ tests/
 
 ### Naming Conventions
 
-| Pattern              | Example                      |
-| -------------------- | ---------------------------- |
-| Unit / integration   | `queries.test.ts`            |
-| Component            | `counter.test.tsx`           |
-| E2E (Cypress)        | `auth.cy.ts`                 |
-| Test helpers         | `create-test-server.ts`      |
-| Fixtures             | `fixtures/users.ts`          |
+| Pattern            | Example                 |
+| ------------------ | ----------------------- |
+| Unit / integration | `queries.test.ts`       |
+| Component          | `counter.test.tsx`      |
+| E2E (Cypress)      | `auth.cy.ts`            |
+| Test helpers       | `create-test-server.ts` |
+| Fixtures           | `fixtures/users.ts`     |
 
 All filenames use **kebab-case**.
 
@@ -131,8 +131,8 @@ All filenames use **kebab-case**.
 
 ```typescript
 // vitest.config.ts
-import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
@@ -224,15 +224,15 @@ testing with real request/response objects.
 
 ```typescript
 // tests/helpers/create-test-server.ts
+import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
 import {
   serializerCompiler,
   validatorCompiler,
 } from "fastify-type-provider-zod";
-import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
-import { appRouter } from "~/routers/index.js";
 import { createContext } from "~/context.js";
+import { appRouter } from "~/routers/index.js";
 
 interface TestServerOptions {
   authenticate?: boolean;
@@ -284,8 +284,8 @@ bundling.
 ```typescript
 // tests/helpers/create-test-database.ts
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ?? "postgres://localhost:5432/scratchy_test";
@@ -341,9 +341,7 @@ interface TestContextOptions {
   user?: { id: string; email: string; role: string } | null;
 }
 
-export function createTestContext(
-  options: TestContextOptions = {},
-): Context {
+export function createTestContext(options: TestContextOptions = {}): Context {
   const user = options.user ?? null;
 
   return {
@@ -418,8 +416,8 @@ Pure functions are the cheapest tests to write. No server, no database.
 
 ```typescript
 // src/lib/format-date.test.ts
-import { describe, expect, it } from "vitest";
 import { formatDate, isValidDateString } from "./format-date.js";
+import { describe, expect, it } from "vitest";
 
 describe("formatDate", () => {
   it("formats an ISO date to a readable string", () => {
@@ -461,13 +459,16 @@ how Remix tests loaders and actions by invoking them as plain functions.
 
 ```typescript
 // src/routers/users/queries.test.ts
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { createCallerFactory } from "@trpc/server";
-import { appRouter } from "~/routers/index.js";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { createTestContext } from "tests/helpers/create-test-context.js";
 import { createTestDatabase } from "tests/helpers/create-test-database.js";
-import { mockSession, mockUnauthenticated } from "tests/helpers/mock-session.js";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import {
+  mockSession,
+  mockUnauthenticated,
+} from "tests/helpers/mock-session.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { appRouter } from "~/routers/index.js";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -517,9 +518,9 @@ describe("users.getById", () => {
     const ctx = createTestContext({ user: mockUnauthenticated() });
     const caller = createCaller(ctx);
 
-    await expect(
-      caller.users.getById({ id: "any-id" }),
-    ).rejects.toThrow("UNAUTHORIZED");
+    await expect(caller.users.getById({ id: "any-id" })).rejects.toThrow(
+      "UNAUTHORIZED",
+    );
   });
 });
 ```
@@ -528,13 +529,13 @@ describe("users.getById", () => {
 
 ```typescript
 // src/routers/users/mutations.test.ts
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { createCallerFactory } from "@trpc/server";
-import { appRouter } from "~/routers/index.js";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { createTestContext } from "tests/helpers/create-test-context.js";
 import { createTestDatabase } from "tests/helpers/create-test-database.js";
 import { mockSession } from "tests/helpers/mock-session.js";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { appRouter } from "~/routers/index.js";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -584,9 +585,9 @@ This is faster and more deterministic than testing over the network.
 
 ```typescript
 // src/routes/external/api/v1/products/index.test.ts
-import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { createTestServer } from "tests/helpers/create-test-server.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 describe("GET /external/api/v1/products", () => {
   let server: FastifyInstance;
@@ -685,9 +686,9 @@ Test middleware in isolation by wrapping it in a small Fastify instance.
 
 ```typescript
 // src/plugins/app/auth.test.ts
-import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 describe("auth middleware", () => {
   let server: FastifyInstance;
@@ -740,14 +741,14 @@ transaction.
 
 ```typescript
 // src/db/queries/users.test.ts
-import { describe, expect, it, beforeEach, afterEach, afterAll } from "vitest";
+import { eq } from "drizzle-orm";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
   createTestDatabase,
   teardownTestPool,
 } from "tests/helpers/create-test-database.js";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { user as userTable } from "~/db/schema/user.js";
-import { eq } from "drizzle-orm";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 describe("user queries", () => {
   let db: NodePgDatabase;
@@ -828,9 +829,9 @@ Test the entire HTTP → Fastify → tRPC → Database pipeline.
 
 ```typescript
 // tests/integration/user-lifecycle.test.ts
-import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { createTestServer } from "tests/helpers/create-test-server.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 describe("user lifecycle (integration)", () => {
   let server: FastifyInstance;
@@ -894,12 +895,12 @@ testing approach.
 
 ```typescript
 // tests/integration/trpc-client.test.ts
-import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { createTRPCClient, httpBatchStreamLink } from "@trpc/client";
-import superjson from "superjson";
-import type { AppRouter } from "~/routers/index.js";
 import type { FastifyInstance } from "fastify";
+import superjson from "superjson";
 import { createTestServer } from "tests/helpers/create-test-server.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { AppRouter } from "~/routers/index.js";
 
 describe("tRPC client integration", () => {
   let server: FastifyInstance;
@@ -951,13 +952,13 @@ interfere with each other — even when run in parallel.
 
 ```typescript
 // tests/integration/db-transactions.test.ts
-import { describe, expect, it, beforeEach, afterEach, afterAll } from "vitest";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import {
   createTestDatabase,
   teardownTestPool,
 } from "tests/helpers/create-test-database.js";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { user as userTable } from "~/db/schema/user.js";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 describe("database transaction isolation", () => {
   let db: NodePgDatabase;
@@ -1003,8 +1004,8 @@ Piscina pool (integration).
 
 ```typescript
 // src/renderer/worker.test.ts
-import { describe, expect, it } from "vitest";
 import handler from "./worker.js";
+import { describe, expect, it } from "vitest";
 
 describe("worker handler (unit)", () => {
   it("returns rendered HTML for an SSR task", async () => {
@@ -1042,9 +1043,9 @@ describe("worker handler (unit)", () => {
 
 ```typescript
 // tests/integration/worker-pool.test.ts
-import { describe, expect, it, beforeAll, afterAll } from "vitest";
-import Piscina from "piscina";
 import { resolve } from "node:path";
+import Piscina from "piscina";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 describe("worker pool (integration)", () => {
   let pool: Piscina;
@@ -1292,6 +1293,8 @@ actions. Inspired by Remix's pattern of calling loaders and actions directly.
 
 ```typescript
 // src/client/routes/users/index.test.ts
+// Import the loader function (the inner function, not the routeLoader$ wrapper)
+import { loadUsers } from "./index.js";
 import { describe, expect, it, vi } from "vitest";
 
 // Mock the Drizzle query that the loader calls
@@ -1303,9 +1306,6 @@ vi.mock("~/db/queries/users.js", () => ({
     ]),
   },
 }));
-
-// Import the loader function (the inner function, not the routeLoader$ wrapper)
-import { loadUsers } from "./index.js";
 
 describe("users routeLoader$", () => {
   it("returns a list of users", async () => {
@@ -1334,17 +1334,20 @@ declare global {
   }
 }
 
-Cypress.Commands.add("login", (email = "test@example.com", password = "password123") => {
-  cy.request({
-    method: "POST",
-    url: "/trpc/auth.login",
-    body: {
-      json: { email, password },
-    },
-  }).then((response) => {
-    expect(response.status).to.eq(200);
-  });
-});
+Cypress.Commands.add(
+  "login",
+  (email = "test@example.com", password = "password123") => {
+    cy.request({
+      method: "POST",
+      url: "/trpc/auth.login",
+      body: {
+        json: { email, password },
+      },
+    }).then((response) => {
+      expect(response.status).to.eq(200);
+    });
+  },
+);
 
 export {};
 ```
@@ -1523,8 +1526,8 @@ pnpm cypress:open
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "cypress run",
-    "cypress:open": "cypress open"
-  }
+    "cypress:open": "cypress open",
+  },
 }
 ```
 
@@ -1579,9 +1582,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready"
-          --health-interval=10s
-          --health-timeout=5s
+          --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s
           --health-retries=5
 
     steps:
@@ -1634,9 +1635,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready"
-          --health-interval=10s
-          --health-timeout=5s
+          --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s
           --health-retries=5
 
     steps:
@@ -1760,11 +1759,12 @@ it("returns user data with expected fields", async () => {
 
 ```typescript
 // BAD — Starts a full Fastify server for a utility test
-import { createTestServer } from "tests/helpers/create-test-server.js";
-const server = await createTestServer();
-
 // GOOD — Test the function directly
 import { formatDate } from "./format-date.js";
+import { createTestServer } from "tests/helpers/create-test-server.js";
+
+const server = await createTestServer();
+
 expect(formatDate("2025-01-01")).toBe("January 1, 2025");
 ```
 

@@ -2,8 +2,8 @@
 
 Scratchy provides a layered data-loading system that runs on the server during
 SSR, streams deferred data to the client, and revalidates automatically on
-navigation. Every loader is fully type-safe end-to-end — from the database
-query through tRPC to the component that renders the result.
+navigation. Every loader is fully type-safe end-to-end — from the database query
+through tRPC to the component that renders the result.
 
 ## Table of Contents
 
@@ -92,9 +92,9 @@ dependencies concurrently, reducing the overall waterfall.
 // routes/dashboard/index.tsx
 import { component$ } from "@builder.io/qwik";
 import { routeLoader$ } from "@builder.io/qwik-city";
+import { findNotifications } from "~/db/queries/notifications.js";
 import { findRecentOrders } from "~/db/queries/orders.js";
 import { findUserStats } from "~/db/queries/stats.js";
-import { findNotifications } from "~/db/queries/notifications.js";
 
 // These three loaders run in parallel — no dependency between them
 export const useRecentOrders = routeLoader$(async ({ sharedMap }) => {
@@ -143,9 +143,9 @@ export default component$(() => {
 
 ## Loader Dependencies
 
-When one loader needs data from another, call the dependent loader's hook
-inside the second loader. Scratchy resolves the dependency graph and executes
-them in the correct order.
+When one loader needs data from another, call the dependent loader's hook inside
+the second loader. Scratchy resolves the dependency graph and executes them in
+the correct order.
 
 ```tsx
 // routes/courses/[courseId]/index.tsx
@@ -205,9 +205,9 @@ using `routeLoader$` as the data-fetching entry point for the UI.
 
 ```typescript
 // lib/trpc.server.ts
-import { appRouter } from "~/routers/index.js";
-import { createContext } from "~/context.js";
 import type { CreateFastifyContextOptions } from "@trpc/server/adapters/fastify";
+import { createContext } from "~/context.js";
+import { appRouter } from "~/routers/index.js";
 
 export function createServerCaller(opts: CreateFastifyContextOptions) {
   const caller = appRouter.createCaller(createContext(opts));
@@ -250,7 +250,12 @@ For client-driven data loading (search-as-you-type, infinite scroll), use the
 tRPC client combined with `useResource$`:
 
 ```tsx
-import { component$, useSignal, useResource$, Resource } from "@builder.io/qwik";
+import {
+  Resource,
+  component$,
+  useResource$,
+  useSignal,
+} from "@builder.io/qwik";
 import { trpc } from "~/lib/trpc.client";
 
 export default component$(() => {
@@ -274,7 +279,9 @@ export default component$(() => {
       <Resource
         value={searchResults}
         onPending={() => <p class="text-gray-500">Searching...</p>}
-        onRejected={(error) => <p class="text-red-600">Error: {error.message}</p>}
+        onRejected={(error) => (
+          <p class="text-red-600">Error: {error.message}</p>
+        )}
         onResolved={(products) => (
           <ul class="mt-4 space-y-2">
             {products.map((p) => (
@@ -292,8 +299,8 @@ export default component$(() => {
 
 ## Caching Strategies
 
-Scratchy supports multiple caching layers. Use Redis (or DragonflyDB) for
-shared caches and in-memory caches for single-instance data.
+Scratchy supports multiple caching layers. Use Redis (or DragonflyDB) for shared
+caches and in-memory caches for single-instance data.
 
 ### Redis Cache Helper
 
@@ -351,7 +358,8 @@ async function revalidateCache<T>(
   options: CacheOptions,
 ): Promise<T> {
   const data = await fetcher();
-  const totalTtl = options.ttlSeconds + (options.staleWhileRevalidateSeconds ?? 0);
+  const totalTtl =
+    options.ttlSeconds + (options.staleWhileRevalidateSeconds ?? 0);
 
   const value: CachedValue<T> = { data, cachedAt: Date.now() };
   await redis.set(key, JSON.stringify(value), "EX", totalTtl);
@@ -364,9 +372,9 @@ async function revalidateCache<T>(
 
 ```tsx
 import { routeLoader$ } from "@builder.io/qwik-city";
+import { findFeaturedProducts } from "~/db/queries/products.js";
 import { cached } from "~/lib/cache.js";
 import { redis } from "~/lib/redis.js";
-import { findFeaturedProducts } from "~/db/queries/products.js";
 
 export const useFeaturedProducts = routeLoader$(async () => {
   return cached(
@@ -380,12 +388,12 @@ export const useFeaturedProducts = routeLoader$(async () => {
 
 ### TTL-Based Cache Tiers
 
-| Data Type         | TTL      | Stale Window | Example                     |
-| ----------------- | -------- | ------------ | --------------------------- |
-| Static content    | 1 hour   | 24 hours     | Marketing pages, FAQs       |
-| Product listings  | 1 minute | 5 minutes    | Category pages, search      |
-| User-specific     | 30 sec   | 2 minutes    | Dashboard, preferences      |
-| Real-time         | 0        | 0            | Notifications, live prices  |
+| Data Type        | TTL      | Stale Window | Example                    |
+| ---------------- | -------- | ------------ | -------------------------- |
+| Static content   | 1 hour   | 24 hours     | Marketing pages, FAQs      |
+| Product listings | 1 minute | 5 minutes    | Category pages, search     |
+| User-specific    | 30 sec   | 2 minutes    | Dashboard, preferences     |
+| Real-time        | 0        | 0            | Notifications, live prices |
 
 ---
 
@@ -402,8 +410,8 @@ background.
 // routes/analytics/index.tsx
 import { component$ } from "@builder.io/qwik";
 import { routeLoader$ } from "@builder.io/qwik-city";
-import { findSummaryStats } from "~/db/queries/stats.js";
 import { findDetailedReport } from "~/db/queries/reports.js";
+import { findSummaryStats } from "~/db/queries/stats.js";
 
 // Fast query — included in the initial HTML
 export const useSummary = routeLoader$(async ({ sharedMap }) => {
@@ -478,9 +486,9 @@ export default component$(() => {
 
 ## Revalidation
 
-Control when loaders re-run on client-side navigation with
-`shouldRevalidate()`. By default, every loader re-runs on every navigation to
-the route. Override this for performance-sensitive routes.
+Control when loaders re-run on client-side navigation with `shouldRevalidate()`.
+By default, every loader re-runs on every navigation to the route. Override this
+for performance-sensitive routes.
 
 ```tsx
 // routes/settings/index.tsx
@@ -494,7 +502,11 @@ export const useSettings = routeLoader$(async ({ sharedMap }) => {
 });
 
 // Only revalidate when navigating from a route that might have changed settings
-export const shouldRevalidate: ShouldRevalidate = ({ defaultShouldRevalidate, url, prevUrl }) => {
+export const shouldRevalidate: ShouldRevalidate = ({
+  defaultShouldRevalidate,
+  url,
+  prevUrl,
+}) => {
   // Always revalidate if the URL changed
   if (url.pathname !== prevUrl.pathname) {
     return defaultShouldRevalidate;
@@ -612,61 +624,67 @@ Scratchy supports prefetching on hover, focus, and viewport intersection.
 
 ### Link Prefetching
 
-Qwik City prefetches modules automatically on link visibility. Combine this
-with data prefetching by warming the cache:
+Qwik City prefetches modules automatically on link visibility. Combine this with
+data prefetching by warming the cache:
 
 ```tsx
 import { component$ } from "@builder.io/qwik";
 import { Link } from "@builder.io/qwik-city";
 
-export const ProductCard = component$(({ id, name }: { id: string; name: string }) => {
-  return (
-    <Link
-      href={`/products/${id}`}
-      prefetch
-      class="block rounded-lg border p-4 transition-shadow hover:shadow-md"
-    >
-      <h3 class="font-semibold">{name}</h3>
-    </Link>
-  );
-});
+export const ProductCard = component$(
+  ({ id, name }: { id: string; name: string }) => {
+    return (
+      <Link
+        href={`/products/${id}`}
+        prefetch
+        class="block rounded-lg border p-4 transition-shadow hover:shadow-md"
+      >
+        <h3 class="font-semibold">{name}</h3>
+      </Link>
+    );
+  },
+);
 ```
 
 ### Programmatic Prefetching with server$()
 
-For eager prefetching (e.g., on mouse enter), fire a server function that
-warms the Redis cache so the subsequent navigation hits warm data:
+For eager prefetching (e.g., on mouse enter), fire a server function that warms
+the Redis cache so the subsequent navigation hits warm data:
 
 ```tsx
-import { component$, $ } from "@builder.io/qwik";
+import { $, component$ } from "@builder.io/qwik";
 import { server$ } from "@builder.io/qwik-city";
+import { findProductById } from "~/db/queries/products.js";
 import { cached } from "~/lib/cache.js";
 import { redis } from "~/lib/redis.js";
-import { findProductById } from "~/db/queries/products.js";
 
 const warmProductCache = server$(async function (productId: string) {
-  await cached(redis, `product:${productId}`, () =>
-    findProductById.execute({ id: productId }),
+  await cached(
+    redis,
+    `product:${productId}`,
+    () => findProductById.execute({ id: productId }),
     { ttlSeconds: 60 },
   );
 });
 
-export const ProductLink = component$(({ id, name }: { id: string; name: string }) => {
-  const prefetch = $(() => {
-    void warmProductCache(id);
-  });
+export const ProductLink = component$(
+  ({ id, name }: { id: string; name: string }) => {
+    const prefetch = $(() => {
+      void warmProductCache(id);
+    });
 
-  return (
-    <a
-      href={`/products/${id}`}
-      onMouseEnter$={prefetch}
-      onFocus$={prefetch}
-      class="text-primary-600 underline hover:text-primary-700"
-    >
-      {name}
-    </a>
-  );
-});
+    return (
+      <a
+        href={`/products/${id}`}
+        onMouseEnter$={prefetch}
+        onFocus$={prefetch}
+        class="text-primary-600 hover:text-primary-700 underline"
+      >
+        {name}
+      </a>
+    );
+  },
+);
 ```
 
 ---
@@ -687,7 +705,9 @@ const getRelatedProducts = server$(async function (productId: string) {
 });
 
 export default component$(() => {
-  const related = useSignal<Awaited<ReturnType<typeof getRelatedProducts>> | null>(null);
+  const related = useSignal<Awaited<
+    ReturnType<typeof getRelatedProducts>
+  > | null>(null);
 
   return (
     <div>
@@ -695,7 +715,7 @@ export default component$(() => {
         onClick$={async () => {
           related.value = await getRelatedProducts("product-123");
         }}
-        class="rounded-lg bg-primary-600 px-4 py-2 text-white"
+        class="bg-primary-600 rounded-lg px-4 py-2 text-white"
       >
         Show Related
       </button>
@@ -730,7 +750,10 @@ export const useProtectedData = routeLoader$(async (event) => {
   const user = event.sharedMap.get("user");
   if (!user) {
     // 302 redirect to login
-    throw event.redirect(302, `/login?redirect=${encodeURIComponent(event.url.pathname)}`);
+    throw event.redirect(
+      302,
+      `/login?redirect=${encodeURIComponent(event.url.pathname)}`,
+    );
   }
   return fetchProtectedData(user.id);
 });
@@ -800,7 +823,10 @@ Loaders can set response headers for CDN and browser caching. Use the
 ```tsx
 // routes/blog/[slug]/index.tsx
 import { routeLoader$ } from "@builder.io/qwik-city";
-import type { DocumentHead, StaticGenerateHandler } from "@builder.io/qwik-city";
+import type {
+  DocumentHead,
+  StaticGenerateHandler,
+} from "@builder.io/qwik-city";
 import { findPostBySlug } from "~/db/queries/posts.js";
 
 export const usePost = routeLoader$(async ({ params, status, headers }) => {
@@ -823,22 +849,20 @@ export const head: DocumentHead = ({ resolveValue }) => {
   const post = resolveValue(usePost);
   return {
     title: post?.title ?? "Not Found",
-    meta: [
-      { name: "description", content: post?.excerpt ?? "" },
-    ],
+    meta: [{ name: "description", content: post?.excerpt ?? "" }],
   };
 };
 ```
 
 ### Cache-Control Cheat Sheet
 
-| Scenario                | Cache-Control Header                                          |
-| ----------------------- | ------------------------------------------------------------- |
-| Public static page      | `public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400` |
-| Authenticated data      | `private, no-store`                                           |
-| Semi-static (blog)      | `public, max-age=60, s-maxage=60, stale-while-revalidate=600`|
-| API response            | `public, max-age=10, stale-while-revalidate=30`              |
-| Never cache             | `no-store, no-cache, must-revalidate, private`               |
+| Scenario           | Cache-Control Header                                                 |
+| ------------------ | -------------------------------------------------------------------- |
+| Public static page | `public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400` |
+| Authenticated data | `private, no-store`                                                  |
+| Semi-static (blog) | `public, max-age=60, s-maxage=60, stale-while-revalidate=600`        |
+| API response       | `public, max-age=10, stale-while-revalidate=30`                      |
+| Never cache        | `no-store, no-cache, must-revalidate, private`                       |
 
 ---
 
@@ -846,13 +870,13 @@ export const head: DocumentHead = ({ resolveValue }) => {
 
 ### Cursor-Based Pagination
 
-Cursor-based pagination is more efficient for large datasets and works well
-with real-time data that can shift between pages.
+Cursor-based pagination is more efficient for large datasets and works well with
+real-time data that can shift between pages.
 
 ```tsx
 // routes/posts/index.tsx
 import { component$ } from "@builder.io/qwik";
-import { routeLoader$, useLocation, Link } from "@builder.io/qwik-city";
+import { Link, routeLoader$, useLocation } from "@builder.io/qwik-city";
 import { gt } from "drizzle-orm";
 import { db } from "~/db/index.js";
 import { post } from "~/db/schema/post.js";
@@ -862,26 +886,28 @@ interface PaginatedPosts {
   nextCursor: string | null;
 }
 
-export const usePosts = routeLoader$(async ({ url }): Promise<PaginatedPosts> => {
-  const cursor = url.searchParams.get("cursor");
-  const limit = 20;
+export const usePosts = routeLoader$(
+  async ({ url }): Promise<PaginatedPosts> => {
+    const cursor = url.searchParams.get("cursor");
+    const limit = 20;
 
-  const query = db
-    .select()
-    .from(post)
-    .orderBy(post.createdAt)
-    .limit(limit + 1); // Fetch one extra to detect next page
+    const query = db
+      .select()
+      .from(post)
+      .orderBy(post.createdAt)
+      .limit(limit + 1); // Fetch one extra to detect next page
 
-  const items = cursor
-    ? await query.where(gt(post.id, cursor))
-    : await query;
+    const items = cursor ? await query.where(gt(post.id, cursor)) : await query;
 
-  const hasMore = items.length > limit;
-  const pageItems = hasMore ? items.slice(0, limit) : items;
-  const nextCursor = hasMore ? pageItems[pageItems.length - 1]?.id ?? null : null;
+    const hasMore = items.length > limit;
+    const pageItems = hasMore ? items.slice(0, limit) : items;
+    const nextCursor = hasMore
+      ? (pageItems[pageItems.length - 1]?.id ?? null)
+      : null;
 
-  return { items: pageItems, nextCursor };
-});
+    return { items: pageItems, nextCursor };
+  },
+);
 
 export default component$(() => {
   const data = usePosts();
@@ -890,7 +916,10 @@ export default component$(() => {
     <div>
       <ul class="space-y-4">
         {data.value.items.map((p) => (
-          <li key={p.id} class="rounded-lg border p-4">
+          <li
+            key={p.id}
+            class="rounded-lg border p-4"
+          >
             <h2 class="font-semibold">{p.title}</h2>
           </li>
         ))}
@@ -899,7 +928,7 @@ export default component$(() => {
       {data.value.nextCursor && (
         <Link
           href={`/posts?cursor=${data.value.nextCursor}`}
-          class="mt-4 inline-block rounded-lg bg-primary-600 px-4 py-2 text-white"
+          class="bg-primary-600 mt-4 inline-block rounded-lg px-4 py-2 text-white"
         >
           Load More
         </Link>
@@ -927,25 +956,27 @@ interface PaginatedProducts {
   totalPages: number;
 }
 
-export const useProducts = routeLoader$(async ({ url }): Promise<PaginatedProducts> => {
-  const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
-  const limit = 20;
-  const offset = (page - 1) * limit;
+export const useProducts = routeLoader$(
+  async ({ url }): Promise<PaginatedProducts> => {
+    const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
+    const limit = 20;
+    const offset = (page - 1) * limit;
 
-  const [items, countResult] = await Promise.all([
-    db.select().from(product).limit(limit).offset(offset),
-    db.select({ count: sql<number>`count(*)` }).from(product),
-  ]);
+    const [items, countResult] = await Promise.all([
+      db.select().from(product).limit(limit).offset(offset),
+      db.select({ count: sql<number>`count(*)` }).from(product),
+    ]);
 
-  const total = countResult[0]?.count ?? 0;
+    const total = countResult[0]?.count ?? 0;
 
-  return {
-    items,
-    total,
-    page,
-    totalPages: Math.ceil(total / limit),
-  };
-});
+    return {
+      items,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  },
+);
 ```
 
 ---
@@ -959,8 +990,13 @@ triggers loader re-runs automatically.
 ```tsx
 // routes/products/index.tsx
 import { component$, useSignal } from "@builder.io/qwik";
-import { routeLoader$, useLocation, useNavigate, Form } from "@builder.io/qwik-city";
-import { and, eq, ilike, desc, asc } from "drizzle-orm";
+import {
+  Form,
+  routeLoader$,
+  useLocation,
+  useNavigate,
+} from "@builder.io/qwik-city";
+import { and, asc, desc, eq, ilike } from "drizzle-orm";
 import { db } from "~/db/index.js";
 import { product } from "~/db/schema/product.js";
 
@@ -1004,7 +1040,11 @@ export default component$(() => {
 
   return (
     <div>
-      <Form action={loc.url.pathname} method="get" class="flex gap-4">
+      <Form
+        action={loc.url.pathname}
+        method="get"
+        class="flex gap-4"
+      >
         <input
           name="q"
           type="search"
@@ -1021,14 +1061,20 @@ export default component$(() => {
           <option value="clothing">Clothing</option>
           <option value="books">Books</option>
         </select>
-        <button type="submit" class="rounded-lg bg-primary-600 px-6 py-2 text-white">
+        <button
+          type="submit"
+          class="bg-primary-600 rounded-lg px-6 py-2 text-white"
+        >
           Search
         </button>
       </Form>
 
       <ul class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.value.items.map((p) => (
-          <li key={p.id} class="rounded-lg border p-4">
+          <li
+            key={p.id}
+            class="rounded-lg border p-4"
+          >
             <h3 class="font-semibold">{p.name}</h3>
             <p class="text-gray-600">${p.price}</p>
           </li>
@@ -1075,8 +1121,8 @@ export default component$(() => {
    `Cache-Control` headers so CDNs and browsers can cache the response.
 
 9. **Handle errors explicitly** — always check for missing data and use
-   `status()`, `fail()`, or `redirect()` instead of letting errors propagate
-   as unhandled exceptions.
+   `status()`, `fail()`, or `redirect()` instead of letting errors propagate as
+   unhandled exceptions.
 
 10. **Type everything** — use `$inferSelect` and `$inferInsert` from Drizzle
     schemas, and let TypeScript infer loader return types. Never use `any`.
@@ -1182,10 +1228,14 @@ export const useOrders = routeLoader$(async ({ sharedMap }) => {
 
 ```tsx
 // BAD — All users see the same cached dashboard
-return cached(redis, "dashboard", () => fetchDashboard(userId), { ttlSeconds: 60 });
+return cached(redis, "dashboard", () => fetchDashboard(userId), {
+  ttlSeconds: 60,
+});
 
 // GOOD — Cache key includes the user ID
-return cached(redis, `dashboard:${userId}`, () => fetchDashboard(userId), { ttlSeconds: 60 });
+return cached(redis, `dashboard:${userId}`, () => fetchDashboard(userId), {
+  ttlSeconds: 60,
+});
 ```
 
 ---

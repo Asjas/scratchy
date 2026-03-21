@@ -101,9 +101,9 @@ Both approaches validate input with **Zod** and are fully type-safe.
 
 ### Defining a routeAction$
 
-A `routeAction$()` defines a server-side handler that runs when the user
-submits a `<Form>`. The action has access to the request context and returns
-data that the component can read reactively.
+A `routeAction$()` defines a server-side handler that runs when the user submits
+a `<Form>`. The action has access to the request context and returns data that
+the component can read reactively.
 
 ```typescript
 // routes/posts/create/index.tsx
@@ -180,8 +180,8 @@ validation fails, Scratchy **short-circuits** — the action handler never runs,
 and field errors are returned immediately.
 
 ```typescript
-import { z } from "zod";
 import { zod$ } from "@builder.io/qwik-city";
+import { z } from "zod";
 
 const updateProfileValidator = zod$({
   name: z.string().min(1, "Name is required").max(100),
@@ -221,22 +221,22 @@ export const useUpdateEmail = routeAction$(
 
 `fail()` accepts two arguments:
 
-| Argument     | Type     | Description                                           |
-| ------------ | -------- | ----------------------------------------------------- |
-| `statusCode` | `number` | HTTP status code (400, 409, 422, 500, etc.)           |
-| `data`       | `object` | Arbitrary error data returned to the component        |
+| Argument     | Type     | Description                                    |
+| ------------ | -------- | ---------------------------------------------- |
+| `statusCode` | `number` | HTTP status code (400, 409, 422, 500, etc.)    |
+| `data`       | `object` | Arbitrary error data returned to the component |
 
 ### Action State Tracking
 
 Every `routeAction$` returns an action object with reactive properties:
 
-| Property     | Type                    | Description                                         |
-| ------------ | ----------------------- | --------------------------------------------------- |
-| `value`      | `T \| undefined`        | Return value from the action handler or `fail()`    |
-| `formData`   | `FormData \| undefined` | The raw `FormData` submitted by the user            |
-| `submitted`  | `boolean`               | `true` after first submission                       |
-| `isRunning`  | `boolean`               | `true` while the server is processing               |
-| `status`     | `number \| undefined`   | HTTP status code (200 on success, or fail code)     |
+| Property    | Type                    | Description                                      |
+| ----------- | ----------------------- | ------------------------------------------------ |
+| `value`     | `T \| undefined`        | Return value from the action handler or `fail()` |
+| `formData`  | `FormData \| undefined` | The raw `FormData` submitted by the user         |
+| `submitted` | `boolean`               | `true` after first submission                    |
+| `isRunning` | `boolean`               | `true` while the server is processing            |
+| `status`    | `number \| undefined`   | HTTP status code (200 on success, or fail code)  |
 
 ```typescript
 export default component$(() => {
@@ -262,10 +262,10 @@ export default component$(() => {
 
 ### Progressive Enhancement
 
-The `<Form>` component renders a standard HTML `<form>` element. When
-JavaScript is available it intercepts the submission and sends the data as an
-SPA fetch. When JavaScript is disabled it falls back to a traditional full-page
-POST — the form works either way.
+The `<Form>` component renders a standard HTML `<form>` element. When JavaScript
+is available it intercepts the submission and sends the data as an SPA fetch.
+When JavaScript is disabled it falls back to a traditional full-page POST — the
+form works either way.
 
 ```typescript
 import { Form } from "@builder.io/qwik-city";
@@ -280,13 +280,13 @@ import { Form } from "@builder.io/qwik-city";
 
 **Key props:**
 
-| Prop                  | Type         | Description                                      |
-| --------------------- | ------------ | ------------------------------------------------ |
-| `action`              | `ActionStore`| The `routeAction$` to submit to                  |
-| `method`              | `string`     | HTTP method (defaults to `"post"`)               |
-| `spaReset`            | `boolean`    | Reset form fields after successful SPA submission|
-| `reloadDocument`      | `boolean`    | Force a full-page submission (skip SPA)          |
-| `onSubmitCompleted$`  | `QRL`        | Callback fired after the server responds         |
+| Prop                 | Type          | Description                                       |
+| -------------------- | ------------- | ------------------------------------------------- |
+| `action`             | `ActionStore` | The `routeAction$` to submit to                   |
+| `method`             | `string`      | HTTP method (defaults to `"post"`)                |
+| `spaReset`           | `boolean`     | Reset form fields after successful SPA submission |
+| `reloadDocument`     | `boolean`     | Force a full-page submission (skip SPA)           |
+| `onSubmitCompleted$` | `QRL`         | Callback fired after the server responds          |
 
 ### SPA Reset
 
@@ -294,8 +294,14 @@ When `spaReset` is present, the form fields reset to their default values after
 a successful submission. This is useful for "add another" workflows:
 
 ```tsx
-<Form action={addComment} spaReset>
-  <textarea name="body" placeholder="Write a comment…" />
+<Form
+  action={addComment}
+  spaReset
+>
+  <textarea
+    name="body"
+    placeholder="Write a comment…"
+  />
   <button type="submit">Post Comment</button>
 </Form>
 ```
@@ -320,7 +326,10 @@ export default component$(() => {
   });
 
   return (
-    <Form action={action} onSubmitCompleted$={onCompleted}>
+    <Form
+      action={action}
+      onSubmitCompleted$={onCompleted}
+    >
       {/* fields */}
     </Form>
   );
@@ -343,18 +352,30 @@ export default component$(() => {
   return (
     <Form action={action}>
       <div>
-        <input name="email" type="email" />
+        <input
+          name="email"
+          type="email"
+        />
         {action.value?.fieldErrors?.email && (
-          <p class="text-sm text-red-600" role="alert">
+          <p
+            class="text-sm text-red-600"
+            role="alert"
+          >
             {action.value.fieldErrors.email}
           </p>
         )}
       </div>
 
       <div>
-        <input name="password" type="password" />
+        <input
+          name="password"
+          type="password"
+        />
         {action.value?.fieldErrors?.password && (
-          <p class="text-sm text-red-600" role="alert">
+          <p
+            class="text-sm text-red-600"
+            role="alert"
+          >
             {action.value.fieldErrors.password}
           </p>
         )}
@@ -398,8 +419,8 @@ export const useRegister = routeAction$(
 
 ### Reusable Schemas
 
-Define schemas in a shared module so both `routeAction$` and tRPC procedures
-can reuse them:
+Define schemas in a shared module so both `routeAction$` and tRPC procedures can
+reuse them:
 
 ```typescript
 // lib/schemas/post.ts
@@ -512,8 +533,8 @@ export default fp(async function multipart(fastify) {
   await fastify.register(import("@fastify/multipart"), {
     limits: {
       fileSize: 10 * 1024 * 1024, // 10 MB per file
-      files: 5,                    // max 5 files per request
-      fieldSize: 1024 * 1024,      // 1 MB per field value
+      files: 5, // max 5 files per request
+      fieldSize: 1024 * 1024, // 1 MB per field value
     },
   });
 });
@@ -532,7 +553,12 @@ import { pipeline } from "node:stream/promises";
 import { ulid } from "ulid";
 
 const UPLOAD_DIR = "/var/data/uploads";
-const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+const ALLOWED_MIME = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+]);
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 const routes: FastifyPluginAsync = async function (fastify) {
@@ -616,11 +642,15 @@ export const AvatarUpload = component$(() => {
         }
       }}
     >
-      <input name="avatar" type="file" accept="image/*" />
+      <input
+        name="avatar"
+        type="file"
+        accept="image/*"
+      />
       <button
         type="submit"
         disabled={status.value === "uploading"}
-        class="rounded-lg bg-primary-600 px-4 py-2 text-white"
+        class="bg-primary-600 rounded-lg px-4 py-2 text-white"
       >
         {status.value === "uploading" ? "Uploading…" : "Upload Avatar"}
       </button>
@@ -634,12 +664,12 @@ export const AvatarUpload = component$(() => {
 
 ### Size Limits and Validation
 
-| Limit        | Default    | Configured In                 |
-| ------------ | ---------- | ----------------------------- |
-| Per file     | 10 MB      | `@fastify/multipart` `limits` |
-| Total files  | 5          | `@fastify/multipart` `limits` |
-| Field value  | 1 MB       | `@fastify/multipart` `limits` |
-| MIME types   | Allowlist  | Route handler validation      |
+| Limit       | Default   | Configured In                 |
+| ----------- | --------- | ----------------------------- |
+| Per file    | 10 MB     | `@fastify/multipart` `limits` |
+| Total files | 5         | `@fastify/multipart` `limits` |
+| Field value | 1 MB      | `@fastify/multipart` `limits` |
+| MIME types  | Allowlist | Route handler validation      |
 
 Always validate MIME types server-side — client-side `accept` attributes are
 suggestions, not enforcement.
@@ -660,10 +690,11 @@ export default component$(() => {
   return (
     <Form action={action}>
       <fieldset disabled={action.isRunning}>
-        <input name="name" value={action.formData?.get("name")?.toString() ?? ""} />
-        <button type="submit">
-          {action.isRunning ? "Saving…" : "Save"}
-        </button>
+        <input
+          name="name"
+          value={action.formData?.get("name")?.toString() ?? ""}
+        />
+        <button type="submit">{action.isRunning ? "Saving…" : "Save"}</button>
       </fieldset>
     </Form>
   );
@@ -676,7 +707,7 @@ For instant visual feedback before the server responds, apply the change locally
 and roll back on failure:
 
 ```tsx
-import { component$, useSignal, $ } from "@builder.io/qwik";
+import { $, component$, useSignal } from "@builder.io/qwik";
 import { server$ } from "@builder.io/qwik-city";
 
 const toggleBookmark = server$(async function (postId: string) {
@@ -708,7 +739,10 @@ export const BookmarkButton = component$<{ postId: string; saved: boolean }>(
     });
 
     return (
-      <button onClick$={handleClick} disabled={isPending.value}>
+      <button
+        onClick$={handleClick}
+        disabled={isPending.value}
+      >
         {isSaved.value ? "★ Saved" : "☆ Save"}
       </button>
     );
@@ -723,12 +757,12 @@ export const BookmarkButton = component$<{ postId: string; saved: boolean }>(
 ### Non-Navigation Mutations
 
 Not every mutation navigates to a new page. The **fetcher pattern** wraps
-`server$()` in a reusable hook that tracks submission state — similar to
-Remix's `useFetcher()`:
+`server$()` in a reusable hook that tracks submission state — similar to Remix's
+`useFetcher()`:
 
 ```typescript
 // hooks/use-fetcher.ts
-import { useSignal, $ } from "@builder.io/qwik";
+import { $, useSignal } from "@builder.io/qwik";
 
 interface FetcherState<T> {
   data: T | undefined;
@@ -927,8 +961,8 @@ export default fp(async function csrf(fastify) {
 
 ### Embedding Tokens in Forms
 
-Include the CSRF token as a hidden field so forms work without JavaScript.
-When JavaScript is available, the `<Form>` component sends it as a header
+Include the CSRF token as a hidden field so forms work without JavaScript. When
+JavaScript is available, the `<Form>` component sends it as a header
 automatically:
 
 ```tsx
@@ -945,8 +979,15 @@ export default component$(() => {
 
   return (
     <Form action={action}>
-      <input type="hidden" name="_csrf" value={csrf.value} />
-      <button type="submit" class="text-red-600">
+      <input
+        type="hidden"
+        name="_csrf"
+        value={csrf.value}
+      />
+      <button
+        type="submit"
+        class="text-red-600"
+      >
         Delete my account
       </button>
     </Form>
@@ -964,8 +1005,8 @@ Use `useStore` to track the current step and accumulated form data. Each step
 validates its own slice before advancing:
 
 ```tsx
-import { component$, useStore, $ } from "@builder.io/qwik";
-import { routeAction$, Form, zod$, z } from "@builder.io/qwik-city";
+import { $, component$, useStore } from "@builder.io/qwik";
+import { Form, routeAction$, z, zod$ } from "@builder.io/qwik-city";
 
 interface WizardState {
   step: number;
@@ -1012,9 +1053,16 @@ export default component$(() => {
 
   return (
     <div>
-      <nav class="flex gap-4 text-sm text-gray-500" aria-label="Progress">
-        <span class={wizard.step >= 1 ? "font-bold text-primary-600" : ""}>1. Account</span>
-        <span class={wizard.step >= 2 ? "font-bold text-primary-600" : ""}>2. Profile</span>
+      <nav
+        class="flex gap-4 text-sm text-gray-500"
+        aria-label="Progress"
+      >
+        <span class={wizard.step >= 1 ? "text-primary-600 font-bold" : ""}>
+          1. Account
+        </span>
+        <span class={wizard.step >= 2 ? "text-primary-600 font-bold" : ""}>
+          2. Profile
+        </span>
       </nav>
 
       {wizard.step === 1 && (
@@ -1035,17 +1083,31 @@ export default component$(() => {
             onInput$={(_, el) => (wizard.account.password = el.value)}
             class="block w-full rounded-lg border px-3 py-2"
           />
-          <button onClick$={nextStep} class="rounded-lg bg-primary-600 px-4 py-2 text-white">
+          <button
+            onClick$={nextStep}
+            class="bg-primary-600 rounded-lg px-4 py-2 text-white"
+          >
             Next →
           </button>
         </div>
       )}
 
       {wizard.step === 2 && (
-        <Form action={action} class="mt-6 space-y-4">
+        <Form
+          action={action}
+          class="mt-6 space-y-4"
+        >
           {/* Carry forward step 1 data as hidden fields */}
-          <input type="hidden" name="email" value={wizard.account.email} />
-          <input type="hidden" name="password" value={wizard.account.password} />
+          <input
+            type="hidden"
+            name="email"
+            value={wizard.account.email}
+          />
+          <input
+            type="hidden"
+            name="password"
+            value={wizard.account.password}
+          />
 
           <input
             name="name"
@@ -1063,13 +1125,17 @@ export default component$(() => {
           />
 
           <div class="flex gap-4">
-            <button type="button" onClick$={prevStep} class="rounded-lg border px-4 py-2">
+            <button
+              type="button"
+              onClick$={prevStep}
+              class="rounded-lg border px-4 py-2"
+            >
               ← Back
             </button>
             <button
               type="submit"
               disabled={action.isRunning}
-              class="rounded-lg bg-primary-600 px-4 py-2 text-white"
+              class="bg-primary-600 rounded-lg px-4 py-2 text-white"
             >
               {action.isRunning ? "Creating Account…" : "Complete Signup"}
             </button>
@@ -1106,7 +1172,9 @@ export const useStepOne = routeAction$(
 export const useStepTwo = routeAction$(
   async (data, { sharedMap, fail }) => {
     const session = sharedMap.get("session") as SessionInstance;
-    const step1 = session.get("wizardStep1") as { email: string; password: string } | undefined;
+    const step1 = session.get("wizardStep1") as
+      | { email: string; password: string }
+      | undefined;
 
     if (!step1) {
       return fail(400, { message: "Please complete step 1 first" });

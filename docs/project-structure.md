@@ -200,14 +200,14 @@ scratchy/
 Scratchy uses special file names in `src/client/routes/` inspired by Next.js App
 Router and Qwik City conventions:
 
-| File              | Purpose                                              | Pattern Source |
-| ----------------- | ---------------------------------------------------- | -------------- |
-| `index.tsx`       | Page component for the route                         | Qwik City      |
-| `layout.tsx`      | Shared layout wrapping child routes                  | Qwik City      |
-| `loading.tsx`     | Loading skeleton shown while page data loads         | Next.js        |
-| `error.tsx`       | Error boundary for the route segment                 | Next.js        |
-| `not-found.tsx`   | 404 page when `notFound()` is thrown                 | Next.js        |
-| `global-error.tsx`| Fatal error fallback (root layout failure)           | Next.js        |
+| File               | Purpose                                      | Pattern Source |
+| ------------------ | -------------------------------------------- | -------------- |
+| `index.tsx`        | Page component for the route                 | Qwik City      |
+| `layout.tsx`       | Shared layout wrapping child routes          | Qwik City      |
+| `loading.tsx`      | Loading skeleton shown while page data loads | Next.js        |
+| `error.tsx`        | Error boundary for the route segment         | Next.js        |
+| `not-found.tsx`    | 404 page when `notFound()` is thrown         | Next.js        |
+| `global-error.tsx` | Fatal error fallback (root layout failure)   | Next.js        |
 
 ### Route Module Exports
 
@@ -221,7 +221,9 @@ export const useProductData = routeLoader$(async (event) => {
 
 // Server actions (handle form submissions)
 export const useAddToCart = routeAction$(
-  async (data, event) => { /* ... */ },
+  async (data, event) => {
+    /* ... */
+  },
   zod$({ productId: z.string(), quantity: z.number().min(1) }),
 );
 
@@ -232,8 +234,12 @@ export const onRequest: RequestHandler = async (event) => {
 };
 
 // HTTP method-specific middleware
-export const onGet: RequestHandler = async (event) => { /* ... */ };
-export const onPost: RequestHandler = async (event) => { /* ... */ };
+export const onGet: RequestHandler = async (event) => {
+  /* ... */
+};
+export const onPost: RequestHandler = async (event) => {
+  /* ... */
+};
 
 // Page metadata
 export const head: DocumentHead = {

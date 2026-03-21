@@ -273,9 +273,11 @@ const userData = await redis.get(`user:${userId}`);
 
 Scratchy supports streaming HTML responses for faster Time to First Byte (TTFB).
 Instead of waiting for the entire page to render, the server sends HTML chunks
-as they become available. See [streaming.md](streaming.md) for detailed patterns.
+as they become available. See [streaming.md](streaming.md) for detailed
+patterns.
 
 Key streaming features:
+
 - **Progressive rendering**: Shell → content → interactive (defer + Await)
 - **loading.tsx**: Route-level loading skeletons shown while data loads
 - **Out-of-order streaming**: Placeholder slots filled as data resolves
@@ -338,7 +340,10 @@ Track these metrics for the rendering pipeline:
 
 ## Related Documentation
 
-- [streaming.md](streaming.md) — Streaming SSR, progressive rendering, defer/Await
+- [streaming.md](streaming.md) — Streaming SSR, progressive rendering,
+  defer/Await
 - [data-loading.md](data-loading.md) — routeLoader$, caching, revalidation
-- [error-handling.md](error-handling.md) — Error handling in workers and rendering
-- [worker-communication.md](worker-communication.md) — SharedArrayBuffer and Redis patterns
+- [error-handling.md](error-handling.md) — Error handling in workers and
+  rendering
+- [worker-communication.md](worker-communication.md) — SharedArrayBuffer and
+  Redis patterns

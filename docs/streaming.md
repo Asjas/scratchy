@@ -42,7 +42,9 @@ interface StreamTask {
   props?: Record<string, unknown>;
 }
 
-export default async function handler(task: StreamTask): Promise<{ done: true }> {
+export default async function handler(
+  task: StreamTask,
+): Promise<{ done: true }> {
   const port = parentPort;
   if (!port) {
     throw new Error("Worker must run inside a worker thread");
@@ -122,12 +124,12 @@ on the client without replaying component code.
 
 The key difference from hydration:
 
-| Aspect              | Hydration (React/Next.js)        | Resumability (Qwik)               |
-| ------------------- | -------------------------------- | --------------------------------- |
-| JS on initial load  | All component code downloaded    | Zero JS until interaction         |
-| Time to interactive | After hydration completes        | Instant (lazy per interaction)    |
-| Serialization       | State lives in JS bundles        | State embedded in HTML attributes |
-| Scaling             | More components → more JS        | More components → same JS (zero)  |
+| Aspect              | Hydration (React/Next.js)     | Resumability (Qwik)               |
+| ------------------- | ----------------------------- | --------------------------------- |
+| JS on initial load  | All component code downloaded | Zero JS until interaction         |
+| Time to interactive | After hydration completes     | Instant (lazy per interaction)    |
+| Serialization       | State lives in JS bundles     | State embedded in HTML attributes |
+| Scaling             | More components → more JS     | More components → same JS (zero)  |
 
 ### Serialization Model
 
@@ -144,11 +146,7 @@ export const Counter = component$(() => {
 
   // This handler is a QRL — a lazy-loadable reference.
   // It is NOT shipped to the client until the user clicks.
-  return (
-    <button onClick$={() => count.value++}>
-      Count: {count.value}
-    </button>
-  );
+  return <button onClick$={() => count.value++}>Count: {count.value}</button>;
 });
 ```
 
@@ -197,7 +195,9 @@ const SHELL_CLOSE = `</main>
 </body>
 </html>`;
 
-export function createShellStream(contentStream: ReadableStream<string>): ReadableStream<string> {
+export function createShellStream(
+  contentStream: ReadableStream<string>,
+): ReadableStream<string> {
   return new ReadableStream({
     async start(controller) {
       // Flush the shell immediately
@@ -219,9 +219,9 @@ export function createShellStream(contentStream: ReadableStream<string>): Readab
 
 ## Deferred Data with `defer()` and `<Await>`
 
-Inspired by Remix's `defer()` pattern, Scratchy allows route loaders to return
-a mix of resolved and pending data. Resolved data is included in the initial
-HTML; pending data streams in later and replaces a placeholder.
+Inspired by Remix's `defer()` pattern, Scratchy allows route loaders to return a
+mix of resolved and pending data. Resolved data is included in the initial HTML;
+pending data streams in later and replaces a placeholder.
 
 ### Route Loader with Deferred Data
 
@@ -280,7 +280,12 @@ export default component$(() => {
 
 ```tsx
 // components/qwik/await.tsx
-import { component$, useResource$, Resource, type Signal } from "@builder.io/qwik";
+import {
+  Resource,
+  type Signal,
+  component$,
+  useResource$,
+} from "@builder.io/qwik";
 import type { JSXOutput } from "@builder.io/qwik";
 
 interface AwaitProps<T> {
@@ -372,7 +377,9 @@ interface RouteRenderTask {
   props: Record<string, unknown>;
 }
 
-async function renderRouteWithLoading(task: RouteRenderTask): Promise<ReadableStream<string>> {
+async function renderRouteWithLoading(
+  task: RouteRenderTask,
+): Promise<ReadableStream<string>> {
   if (!task.hasLoadingState) {
     return renderRouteToStream(task.route, task.props);
   }
@@ -405,13 +412,13 @@ async function renderRouteWithLoading(task: RouteRenderTask): Promise<ReadableSt
 ## Suspense Boundaries
 
 Place Suspense boundaries around independently-loadable sections of the page.
-Each boundary streams its fallback immediately and replaces it with content
-when ready. This lets different parts of the page resolve at different times.
+Each boundary streams its fallback immediately and replaces it with content when
+ready. This lets different parts of the page resolve at different times.
 
 ### Boundary Placement Guidelines
 
 ```tsx
-import { component$, useResource$, Resource } from "@builder.io/qwik";
+import { Resource, component$, useResource$ } from "@builder.io/qwik";
 
 export default component$(() => {
   return (
@@ -490,13 +497,18 @@ const SuspendedComments = component$(() => {
 
 ## Resource Component: `useResource$`
 
-Qwik's `useResource$` is the primary mechanism for async data in components.
-It tracks reactive dependencies and re-fetches when they change.
+Qwik's `useResource$` is the primary mechanism for async data in components. It
+tracks reactive dependencies and re-fetches when they change.
 
 ### Basic Usage
 
 ```tsx
-import { component$, useSignal, useResource$, Resource } from "@builder.io/qwik";
+import {
+  Resource,
+  component$,
+  useResource$,
+  useSignal,
+} from "@builder.io/qwik";
 
 interface Product {
   id: string;
@@ -516,9 +528,12 @@ export const ProductList = component$(() => {
     const controller = new AbortController();
     cleanup(() => controller.abort());
 
-    const response = await fetch(`/trpc/products.list?category=${cat}&page=${p}`, {
-      signal: controller.signal,
-    });
+    const response = await fetch(
+      `/trpc/products.list?category=${cat}&page=${p}`,
+      {
+        signal: controller.signal,
+      },
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to load products: ${response.statusText}`);
@@ -549,7 +564,10 @@ export const ProductList = component$(() => {
         onResolved={(items) => (
           <ul class="space-y-2">
             {items.map((item) => (
-              <li key={item.id} class="rounded border p-3">
+              <li
+                key={item.id}
+                class="rounded border p-3"
+              >
                 {item.name} — ${item.price}
               </li>
             ))}
@@ -708,7 +726,10 @@ export function createBufferedStream(
         const elapsed = performance.now() - lastFlush;
         const byteLength = encoder.encode(buffer).byteLength;
 
-        if (byteLength >= config.minChunkBytes || elapsed >= config.maxBufferMs) {
+        if (
+          byteLength >= config.minChunkBytes ||
+          elapsed >= config.maxBufferMs
+        ) {
           controller.enqueue(buffer);
           buffer = "";
           lastFlush = performance.now();
@@ -870,7 +891,7 @@ export function createOutOfOrderStream(
         const content = await slot.resolve();
         controller.enqueue(
           `<template id="c-${slot.id}">${content}</template>` +
-          `<script>$rs("${slot.id}")</script>`,
+            `<script>$rs("${slot.id}")</script>`,
         );
       });
 
@@ -907,11 +928,11 @@ const stream = createOutOfOrderStream(shellHtml, [
 
 ### Key Metrics
 
-| Metric                    | Target   | Measurement Point                         |
-| ------------------------- | -------- | ----------------------------------------- |
-| Time to First Byte (TTFB) | < 100ms  | First byte of the response reaches client |
-| First Contentful Paint    | < 200ms  | Shell + loading skeletons painted          |
-| Largest Contentful Paint  | < 1.0s   | Primary content visible                   |
+| Metric                    | Target    | Measurement Point                         |
+| ------------------------- | --------- | ----------------------------------------- |
+| Time to First Byte (TTFB) | < 100ms   | First byte of the response reaches client |
+| First Contentful Paint    | < 200ms   | Shell + loading skeletons painted         |
+| Largest Contentful Paint  | < 1.0s    | Primary content visible                   |
 | Time to Interactive       | On-demand | Qwik loads handler on first interaction   |
 
 ### Server-Side Timing
@@ -1014,16 +1035,16 @@ export function handleStreamError(
     // Shell not sent yet — we can still send a proper error page
     controller.enqueue(
       `<!DOCTYPE html><html><body>` +
-      `<h1>500 — Server Error</h1>` +
-      `<p>The page could not be rendered.</p>` +
-      `</body></html>`,
+        `<h1>500 — Server Error</h1>` +
+        `<p>The page could not be rendered.</p>` +
+        `</body></html>`,
     );
   } else {
     // Shell already sent — inject an error notice into the stream
     controller.enqueue(
       `<div style="position:fixed;bottom:1rem;right:1rem;background:#fee;border:1px solid #f00;padding:1rem;border-radius:0.5rem;z-index:9999">` +
-      `<strong>Rendering error</strong><br>Part of this page failed to load.` +
-      `</div>`,
+        `<strong>Rendering error</strong><br>Part of this page failed to load.` +
+        `</div>`,
     );
   }
 
@@ -1084,6 +1105,7 @@ export default async function handler(task: StreamTask): Promise<void> {
 
 3. **Set task timeouts on workers.** A runaway render should not hold a worker
    indefinitely. Use Piscina's `taskTimeout` option:
+
    ```typescript
    {
      taskTimeout: 10_000, // 10 seconds max per render

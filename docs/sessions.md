@@ -52,12 +52,15 @@ the descriptor to a session storage factory or use it directly in a route.
 import { createCookie } from "~/session/cookie.js";
 
 export const themeCookie = createCookie("theme", {
-  httpOnly: false,          // client JS may read the theme
+  httpOnly: false, // client JS may read the theme
   secure: true,
   sameSite: "lax",
   path: "/",
   maxAge: 60 * 60 * 24 * 365, // 1 year in seconds
-  secrets: [process.env.COOKIE_SECRET_CURRENT!, process.env.COOKIE_SECRET_PREVIOUS!],
+  secrets: [
+    process.env.COOKIE_SECRET_CURRENT!,
+    process.env.COOKIE_SECRET_PREVIOUS!,
+  ],
 });
 
 export const sessionCookie = createCookie("__session", {
@@ -66,7 +69,10 @@ export const sessionCookie = createCookie("__session", {
   sameSite: "lax",
   path: "/",
   maxAge: 60 * 60 * 24 * 7, // 1 week
-  secrets: [process.env.COOKIE_SECRET_CURRENT!, process.env.COOKIE_SECRET_PREVIOUS!],
+  secrets: [
+    process.env.COOKIE_SECRET_CURRENT!,
+    process.env.COOKIE_SECRET_PREVIOUS!,
+  ],
 });
 ```
 
@@ -98,8 +104,8 @@ every active session at once.
 
 export const sessionCookie = createCookie("__session", {
   secrets: [
-    process.env.COOKIE_SECRET_NEW!,      // signs outgoing cookies
-    process.env.COOKIE_SECRET_PREVIOUS!,  // still verifies incoming cookies
+    process.env.COOKIE_SECRET_NEW!, // signs outgoing cookies
+    process.env.COOKIE_SECRET_PREVIOUS!, // still verifies incoming cookies
   ],
   // ...other options
 });
@@ -112,11 +118,16 @@ The signing and verification implementation:
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export function sign(value: string, secret: string): string {
-  const signature = createHmac("sha256", secret).update(value).digest("base64url");
+  const signature = createHmac("sha256", secret)
+    .update(value)
+    .digest("base64url");
   return `${value}.${signature}`;
 }
 
-export function unsign(signed: string, secrets: readonly string[]): string | null {
+export function unsign(
+  signed: string,
+  secrets: readonly string[],
+): string | null {
   const lastDot = signed.lastIndexOf(".");
   if (lastDot === -1) return null;
 
@@ -124,7 +135,9 @@ export function unsign(signed: string, secrets: readonly string[]): string | nul
   const providedSig = signed.slice(lastDot + 1);
 
   for (const secret of secrets) {
-    const expected = createHmac("sha256", secret).update(value).digest("base64url");
+    const expected = createHmac("sha256", secret)
+      .update(value)
+      .digest("base64url");
     if (
       providedSig.length === expected.length &&
       timingSafeEqual(Buffer.from(providedSig), Buffer.from(expected))
@@ -178,15 +191,15 @@ export default routes;
 
 ### Cookie Options Reference
 
-| Option     | Type                                   | Default     | Description                                                   |
-| ---------- | -------------------------------------- | ----------- | ------------------------------------------------------------- |
-| `httpOnly` | `boolean`                              | `true`      | Prevent client-side JavaScript from reading the cookie.       |
-| `secure`   | `boolean`                              | `true`      | Send cookie only over HTTPS.                                  |
-| `sameSite` | `"strict" \| "lax" \| "none"`         | `"lax"`     | CSRF mitigation. Use `"strict"` for sensitive cookies.        |
-| `maxAge`   | `number`                               | `undefined` | Lifetime in seconds. Omit for session (browser-close) cookie. |
-| `path`     | `string`                               | `"/"`       | URL path scope.                                               |
-| `domain`   | `string`                               | `undefined` | Cookie domain scope. Omit to default to the request host.     |
-| `secrets`  | `string[]`                             | `[]`        | HMAC-SHA256 signing secrets; first signs, all verify.         |
+| Option     | Type                          | Default     | Description                                                   |
+| ---------- | ----------------------------- | ----------- | ------------------------------------------------------------- |
+| `httpOnly` | `boolean`                     | `true`      | Prevent client-side JavaScript from reading the cookie.       |
+| `secure`   | `boolean`                     | `true`      | Send cookie only over HTTPS.                                  |
+| `sameSite` | `"strict" \| "lax" \| "none"` | `"lax"`     | CSRF mitigation. Use `"strict"` for sensitive cookies.        |
+| `maxAge`   | `number`                      | `undefined` | Lifetime in seconds. Omit for session (browser-close) cookie. |
+| `path`     | `string`                      | `"/"`       | URL path scope.                                               |
+| `domain`   | `string`                      | `undefined` | Cookie domain scope. Omit to default to the request host.     |
+| `secrets`  | `string[]`                    | `[]`        | HMAC-SHA256 signing secrets; first signs, all verify.         |
 
 ### Cookie Serialization
 
@@ -195,7 +208,7 @@ For simple string values you can opt out of JSON to save bytes:
 
 ```typescript
 export const langCookie = createCookie("lang", {
-  serialize: "raw",  // store the string as-is; no JSON wrapping
+  serialize: "raw", // store the string as-is; no JSON wrapping
   httpOnly: false,
   secure: true,
   sameSite: "lax",
@@ -215,8 +228,8 @@ swap backends without changing application code:
 ```typescript
 interface SessionStorage {
   getSession(cookieHeader: string | null): Promise<Session>;
-  commitSession(session: Session): Promise<string>;   // returns Set-Cookie header
-  destroySession(session: Session): Promise<string>;  // returns Set-Cookie header
+  commitSession(session: Session): Promise<string>; // returns Set-Cookie header
+  destroySession(session: Session): Promise<string>; // returns Set-Cookie header
 }
 ```
 
@@ -227,8 +240,8 @@ dependencies — but limited to **~4 KB** of data.
 
 ```typescript
 // lib/session.ts
-import { createCookieSessionStorage } from "~/session/cookie-storage.js";
 import { sessionCookie } from "~/lib/cookies.js";
+import { createCookieSessionStorage } from "~/session/cookie-storage.js";
 
 export const { getSession, commitSession, destroySession } =
   createCookieSessionStorage({
@@ -246,9 +259,9 @@ keyed by a random session ID. Only the ID travels in the cookie.
 
 ```typescript
 // lib/session.ts
-import { createRedisSessionStorage } from "~/session/redis-storage.js";
-import { sessionCookie } from "~/lib/cookies.js";
 import { Redis } from "ioredis";
+import { sessionCookie } from "~/lib/cookies.js";
+import { createRedisSessionStorage } from "~/session/redis-storage.js";
 
 const redis = new Redis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: 3,
@@ -268,10 +281,10 @@ Implementation sketch:
 
 ```typescript
 // session/redis-storage.ts
-import { randomUUID } from "node:crypto";
 import type { Redis } from "ioredis";
-import type { Cookie, Session, SessionStorage } from "~/session/types.js";
+import { randomUUID } from "node:crypto";
 import { createSession } from "~/session/session.js";
+import type { Cookie, Session, SessionStorage } from "~/session/types.js";
 
 interface RedisSessionStorageOptions {
   cookie: Cookie;
@@ -337,9 +350,9 @@ export const sessionStore = mySchema.table("session_store", {
 
 ```typescript
 // lib/session.ts
-import { createPostgresSessionStorage } from "~/session/pg-storage.js";
-import { sessionCookie } from "~/lib/cookies.js";
 import { db } from "~/db/index.js";
+import { sessionCookie } from "~/lib/cookies.js";
+import { createPostgresSessionStorage } from "~/session/pg-storage.js";
 
 export const { getSession, commitSession, destroySession } =
   createPostgresSessionStorage({
@@ -354,12 +367,12 @@ Implementation sketch:
 
 ```typescript
 // session/pg-storage.ts
-import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { randomUUID } from "node:crypto";
 import { sessionStore } from "~/db/schema/session-store.js";
-import type { Cookie, Session, SessionStorage } from "~/session/types.js";
 import { createSession } from "~/session/session.js";
+import type { Cookie, Session, SessionStorage } from "~/session/types.js";
 
 interface PgSessionStorageOptions {
   cookie: Cookie;
@@ -415,8 +428,8 @@ restart.
 
 ```typescript
 // lib/session.dev.ts
-import { createMemorySessionStorage } from "~/session/memory-storage.js";
 import { sessionCookie } from "~/lib/cookies.js";
+import { createMemorySessionStorage } from "~/session/memory-storage.js";
 
 export const { getSession, commitSession, destroySession } =
   createMemorySessionStorage({
@@ -427,8 +440,8 @@ export const { getSession, commitSession, destroySession } =
 ```typescript
 // session/memory-storage.ts
 import { randomUUID } from "node:crypto";
-import type { Cookie, Session, SessionStorage } from "~/session/types.js";
 import { createSession } from "~/session/session.js";
+import type { Cookie, Session, SessionStorage } from "~/session/types.js";
 
 interface MemorySessionStorageOptions {
   cookie: Cookie;
@@ -438,7 +451,10 @@ export function createMemorySessionStorage(
   opts: MemorySessionStorageOptions,
 ): SessionStorage {
   const { cookie } = opts;
-  const store = new Map<string, { data: Record<string, unknown>; expiresAt: number }>();
+  const store = new Map<
+    string,
+    { data: Record<string, unknown>; expiresAt: number }
+  >();
 
   return {
     async getSession(cookieHeader) {
@@ -618,12 +634,12 @@ export function createSession(
 
 ### Session Lifecycle
 
-| Method            | Purpose                                              |
-| ----------------- | ---------------------------------------------------- |
-| `getSession()`    | Parse the cookie header, load or create a session.   |
-| `commitSession()` | Persist changes and return a `Set-Cookie` header.    |
-| `destroySession()`| Delete server-side data, return an expiring cookie.  |
-| `regenerateId()`  | Replace the session ID (fixation prevention).        |
+| Method             | Purpose                                             |
+| ------------------ | --------------------------------------------------- |
+| `getSession()`     | Parse the cookie header, load or create a session.  |
+| `commitSession()`  | Persist changes and return a `Set-Cookie` header.   |
+| `destroySession()` | Delete server-side data, return an expiring cookie. |
+| `regenerateId()`   | Replace the session ID (fixation prevention).       |
 
 ---
 
@@ -648,7 +664,7 @@ export default fp(async function cookiePlugin(fastify) {
 ```typescript
 // plugins/app/session.ts
 import fp from "fastify-plugin";
-import { getSession, commitSession } from "~/lib/session.js";
+import { commitSession, getSession } from "~/lib/session.js";
 
 export default fp(async function sessionPlugin(fastify) {
   // Decorate the request with a session getter
@@ -789,7 +805,7 @@ export default fp(async function csrfHook(fastify) {
 
     const token =
       (request.headers["x-csrf-token"] as string) ??
-      (request.body as Record<string, unknown>)?._csrf as string | undefined;
+      ((request.body as Record<string, unknown>)?._csrf as string | undefined);
 
     if (!token || !validateCsrfToken(request.session, token)) {
       return reply.status(403).send({ error: "Invalid CSRF token" });
@@ -835,8 +851,8 @@ fixation attacks:
 ```typescript
 // routers/auth/mutations.ts
 import { z } from "zod";
-import { publicProcedure } from "~/router.js";
 import { commitSession } from "~/lib/session.js";
+import { publicProcedure } from "~/router.js";
 
 export const authMutations = {
   login: publicProcedure
@@ -849,7 +865,10 @@ export const authMutations = {
     .mutation(async ({ input, ctx }) => {
       const user = await verifyCredentials(input.email, input.password);
       if (!user) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid credentials" });
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid credentials",
+        });
       }
 
       // Regenerate session ID to prevent fixation
@@ -907,18 +926,20 @@ import { text, timestamp } from "drizzle-orm/pg-core";
 import { mySchema } from "~/db/my-schema.js";
 
 export const rememberToken = mySchema.table("remember_token", {
-  id: text().primaryKey(),          // ULID
-  userId: text().notNull().references(() => user.id, { onDelete: "cascade" }),
-  tokenHash: text().notNull(),      // SHA-256 of the raw token
+  id: text().primaryKey(), // ULID
+  userId: text()
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  tokenHash: text().notNull(), // SHA-256 of the raw token
   expiresAt: timestamp({ withTimezone: true }).notNull(),
 });
 ```
 
 ```typescript
 // lib/remember-me.ts
-import { randomBytes, createHash } from "node:crypto";
-import { ulid } from "ulid";
 import { eq } from "drizzle-orm";
+import { createHash, randomBytes } from "node:crypto";
+import { ulid } from "ulid";
 import { db } from "~/db/index.js";
 import { rememberToken } from "~/db/schema/remember-token.js";
 import { rememberMeCookie } from "~/lib/cookies.js";
@@ -976,8 +997,11 @@ Middleware that checks the remember-me token when no active session exists:
 ```typescript
 // hooks/remember-me.ts
 import fp from "fastify-plugin";
-import { getSession, commitSession } from "~/lib/session.js";
-import { consumeRememberMeToken, issueRememberMeToken } from "~/lib/remember-me.js";
+import {
+  consumeRememberMeToken,
+  issueRememberMeToken,
+} from "~/lib/remember-me.js";
+import { commitSession, getSession } from "~/lib/session.js";
 
 export default fp(async function rememberMeHook(fastify) {
   fastify.addHook("onRequest", async (request, reply) => {
@@ -1020,8 +1044,8 @@ Piscina worker task or a cron job:
 // tasks/session-cleanup.ts
 import { lt } from "drizzle-orm";
 import { db } from "~/db/index.js";
-import { sessionStore } from "~/db/schema/session-store.js";
 import { rememberToken } from "~/db/schema/remember-token.js";
+import { sessionStore } from "~/db/schema/session-store.js";
 
 export async function cleanupExpiredSessions(): Promise<{ deleted: number }> {
   const now = new Date();
@@ -1082,8 +1106,8 @@ server.addHook("onClose", async () => {
 4. **Always set `secure: true`** in production. Session cookies must only travel
    over HTTPS.
 
-5. **Use `sameSite: "lax"` or `"strict"`** — `"lax"` is the recommended
-   default; use `"strict"` for highly sensitive operations.
+5. **Use `sameSite: "lax"` or `"strict"`** — `"lax"` is the recommended default;
+   use `"strict"` for highly sensitive operations.
 
 6. **Sign every cookie** — pass at least one secret to `createCookie()`. Never
    store unsigned session IDs.
@@ -1092,11 +1116,11 @@ server.addHook("onClose", async () => {
    rolling out a new one. Remove the old secret after one full `maxAge` cycle.
 
 8. **Set reasonable `maxAge` values** — short-lived sessions (hours) for
-   sensitive apps, longer (days/weeks) for low-risk apps. Pair with
-   remember-me tokens for convenience.
+   sensitive apps, longer (days/weeks) for low-risk apps. Pair with remember-me
+   tokens for convenience.
 
-9. **Store minimal data in sessions** — keep sessions small. Store a user ID
-   and look up the rest from the database. Large sessions hurt performance and
+9. **Store minimal data in sessions** — keep sessions small. Store a user ID and
+   look up the rest from the database. Large sessions hurt performance and
    create stale-data risks.
 
 10. **Use CSRF tokens on state-changing requests** — even with `sameSite`
@@ -1157,7 +1181,6 @@ reply.header("set-cookie", header);
 ```typescript
 // BAD — Data is lost on every restart and not shared across instances
 import { createMemorySessionStorage } from "~/session/memory-storage.js";
-
 // GOOD — Use Redis or PostgreSQL
 import { createRedisSessionStorage } from "~/session/redis-storage.js";
 ```
@@ -1191,11 +1214,14 @@ session.set("cartId", cart.id);
 ### ❌ Don't compare CSRF tokens with `===`
 
 ```typescript
-// BAD — Vulnerable to timing attacks
-if (expectedToken === providedToken) { /* ... */ }
-
 // GOOD — Constant-time comparison
 import { timingSafeEqual } from "node:crypto";
+
+// BAD — Vulnerable to timing attacks
+if (expectedToken === providedToken) {
+  /* ... */
+}
+
 const safe =
   expected.length === provided.length &&
   timingSafeEqual(Buffer.from(expected), Buffer.from(provided));

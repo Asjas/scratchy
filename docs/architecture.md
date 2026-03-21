@@ -189,16 +189,16 @@ Every incoming request passes through a layered pipeline inspired by Qwik City's
 Request → Fastify Hooks → Global Middleware → Route Middleware → Handler → Response
 ```
 
-| Stage                | Runs                                                    | Docs              |
-| -------------------- | ------------------------------------------------------- | ----------------- |
-| **onRequest**        | Auth, rate limiting, early rejection                    | middleware.md     |
-| **preValidation**    | CSRF token verification                                | security.md       |
-| **preHandler**       | Authorization, session loading                          | sessions.md       |
-| **handler**          | routeLoader$ / routeAction$ / route handler             | data-loading.md   |
-| **preSerialization** | Response transformation                                 | streaming.md      |
-| **onSend**           | Security headers, compression                           | security.md       |
-| **onResponse**       | Logging, metrics                                        | middleware.md     |
-| **onError**          | Error handler, error pages                              | error-handling.md |
+| Stage                | Runs                                        | Docs              |
+| -------------------- | ------------------------------------------- | ----------------- |
+| **onRequest**        | Auth, rate limiting, early rejection        | middleware.md     |
+| **preValidation**    | CSRF token verification                     | security.md       |
+| **preHandler**       | Authorization, session loading              | sessions.md       |
+| **handler**          | routeLoader$ / routeAction$ / route handler | data-loading.md   |
+| **preSerialization** | Response transformation                     | streaming.md      |
+| **onSend**           | Security headers, compression               | security.md       |
+| **onResponse**       | Logging, metrics                            | middleware.md     |
+| **onError**          | Error handler, error pages                  | error-handling.md |
 
 Route-level middleware uses Qwik City's `onRequest`, `onGet`, `onPost` exports:
 
@@ -219,14 +219,14 @@ See [middleware.md](middleware.md) for the full middleware architecture.
 Scratchy provides layered error handling inspired by Next.js error boundaries,
 Remix ErrorBoundary exports, and Nuxt's `createError()`:
 
-| Layer                | Pattern                               | Docs              |
-| -------------------- | ------------------------------------- | ----------------- |
-| **Route errors**     | `error.tsx` per route segment         | error-handling.md |
-| **Not found**        | `not-found.tsx` + `notFound()` helper | error-handling.md |
-| **Global errors**    | `global-error.tsx` root error page    | error-handling.md |
-| **API errors**       | TRPCError codes + JSON envelope       | api-design.md     |
-| **Worker errors**    | Piscina error propagation + fallback  | error-handling.md |
-| **Database errors**  | PostgreSQL error code mapping         | error-handling.md |
+| Layer               | Pattern                               | Docs              |
+| ------------------- | ------------------------------------- | ----------------- |
+| **Route errors**    | `error.tsx` per route segment         | error-handling.md |
+| **Not found**       | `not-found.tsx` + `notFound()` helper | error-handling.md |
+| **Global errors**   | `global-error.tsx` root error page    | error-handling.md |
+| **API errors**      | TRPCError codes + JSON envelope       | api-design.md     |
+| **Worker errors**   | Piscina error propagation + fallback  | error-handling.md |
+| **Database errors** | PostgreSQL error code mapping         | error-handling.md |
 
 See [error-handling.md](error-handling.md) for full patterns.
 
@@ -235,7 +235,8 @@ See [error-handling.md](error-handling.md) for full patterns.
 Session handling uses patterns from Remix's cookie/session packages:
 
 - **Signed cookies** with HMAC-SHA256 and secret rotation
-- **Multiple storage backends**: Redis (production), PostgreSQL (audit), Cookie (small data)
+- **Multiple storage backends**: Redis (production), PostgreSQL (audit), Cookie
+  (small data)
 - **Flash messages** for one-time notifications
 - **Session regeneration** on authentication state changes
 
@@ -251,7 +252,8 @@ See [sessions.md](sessions.md) for full patterns.
 6. **Authorization** — tRPC middleware (isAuthenticated, isOwner, isAdmin)
 7. **Input Validation** — Zod schemas on all inputs (tRPC and REST)
 8. **SQL Injection Prevention** — Drizzle ORM parameterized queries
-9. **CSP with Nonces** — Content Security Policy compatible with Qwik resumability
+9. **CSP with Nonces** — Content Security Policy compatible with Qwik
+   resumability
 
 See [security.md](security.md) for full security patterns.
 

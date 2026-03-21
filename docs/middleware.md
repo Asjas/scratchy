@@ -3,9 +3,9 @@
 ## Overview
 
 Scratchy uses a **layered middleware architecture** that combines Fastify's
-hook-based lifecycle with composable, route-aware middleware inspired by
-Qwik City, Remix, and RedwoodJS. Middleware runs on the main thread and
-intercepts requests before they reach route handlers or tRPC procedures.
+hook-based lifecycle with composable, route-aware middleware inspired by Qwik
+City, Remix, and RedwoodJS. Middleware runs on the main thread and intercepts
+requests before they reach route handlers or tRPC procedures.
 
 ```
                          Incoming Request
@@ -78,15 +78,15 @@ Request ──▶ onRequest
 
 ### Hook Reference
 
-| Hook               | Phase                  | Common Use Cases                              |
-| ------------------ | ---------------------- | --------------------------------------------- |
-| `onRequest`        | Before parsing         | Authentication, early rejection, request ID   |
-| `preParsing`       | Before body parsing    | Decompress body, transform raw stream         |
-| `preValidation`    | Before schema check    | Normalize input, attach defaults               |
-| `preHandler`       | Before route handler   | Authorization, rate limiting, feature flags    |
-| `preSerialization` | Before serialization   | Transform response data, strip fields          |
-| `onSend`           | Before sending         | Modify headers, compress response, add ETag    |
-| `onResponse`       | After response sent    | Logging, metrics, cleanup                      |
+| Hook               | Phase                | Common Use Cases                            |
+| ------------------ | -------------------- | ------------------------------------------- |
+| `onRequest`        | Before parsing       | Authentication, early rejection, request ID |
+| `preParsing`       | Before body parsing  | Decompress body, transform raw stream       |
+| `preValidation`    | Before schema check  | Normalize input, attach defaults            |
+| `preHandler`       | Before route handler | Authorization, rate limiting, feature flags |
+| `preSerialization` | Before serialization | Transform response data, strip fields       |
+| `onSend`           | Before sending       | Modify headers, compress response, add ETag |
+| `onResponse`       | After response sent  | Logging, metrics, cleanup                   |
 
 ### Registering Lifecycle Hooks
 
@@ -115,7 +115,12 @@ export default fp(async function requestTimer(fastify) {
   fastify.addHook("onResponse", async (request, reply) => {
     const duration = performance.now() - request.startTime;
     request.log.info(
-      { duration, statusCode: reply.statusCode, method: request.method, url: request.url },
+      {
+        duration,
+        statusCode: reply.statusCode,
+        method: request.method,
+        url: request.url,
+      },
       "request completed",
     );
   });
@@ -125,30 +130,30 @@ export default fp(async function requestTimer(fastify) {
 ## Route-Level Middleware
 
 Inspired by Qwik City, Scratchy supports exporting `onRequest`, `onGet`,
-`onPost`, and other HTTP-method handlers directly from route files. These run
-as middleware before the route handler.
+`onPost`, and other HTTP-method handlers directly from route files. These run as
+middleware before the route handler.
 
 ### RequestEvent
 
 Route-level middleware receives a `RequestEvent` object with methods for
 controlling the request:
 
-| Property / Method | Type                            | Description                                      |
-| ----------------- | ------------------------------- | ------------------------------------------------ |
-| `request`         | `FastifyRequest`                | The underlying Fastify request                   |
-| `reply`           | `FastifyReply`                  | The underlying Fastify reply                     |
-| `status()`        | `(code: number) => void`       | Set the HTTP response status code                |
-| `headers`         | `Headers`                       | Read/write response headers                      |
-| `cookie`          | `CookieAPI`                     | Get, set, and delete cookies                     |
-| `redirect()`      | `(url: string, status?: number) => void` | Redirect the request                  |
-| `next()`          | `() => Promise<void>`          | Continue to the next middleware or handler        |
-| `env`             | `Record<string, string>`        | Environment variables                            |
-| `parseBody()`     | `() => Promise<unknown>`       | Parse the request body                           |
-| `params`          | `Record<string, string>`        | URL route parameters                             |
-| `query`           | `Record<string, string>`        | URL query parameters                             |
-| `url`             | `URL`                           | Parsed request URL                               |
-| `method`          | `string`                        | HTTP method (GET, POST, etc.)                    |
-| `sharedMap`       | `Map<string, unknown>`          | Share data between middleware in the same request |
+| Property / Method | Type                                     | Description                                       |
+| ----------------- | ---------------------------------------- | ------------------------------------------------- |
+| `request`         | `FastifyRequest`                         | The underlying Fastify request                    |
+| `reply`           | `FastifyReply`                           | The underlying Fastify reply                      |
+| `status()`        | `(code: number) => void`                 | Set the HTTP response status code                 |
+| `headers`         | `Headers`                                | Read/write response headers                       |
+| `cookie`          | `CookieAPI`                              | Get, set, and delete cookies                      |
+| `redirect()`      | `(url: string, status?: number) => void` | Redirect the request                              |
+| `next()`          | `() => Promise<void>`                    | Continue to the next middleware or handler        |
+| `env`             | `Record<string, string>`                 | Environment variables                             |
+| `parseBody()`     | `() => Promise<unknown>`                 | Parse the request body                            |
+| `params`          | `Record<string, string>`                 | URL route parameters                              |
+| `query`           | `Record<string, string>`                 | URL query parameters                              |
+| `url`             | `URL`                                    | Parsed request URL                                |
+| `method`          | `string`                                 | HTTP method (GET, POST, etc.)                     |
+| `sharedMap`       | `Map<string, unknown>`                   | Share data between middleware in the same request |
 
 ### onRequest — Runs on All Methods
 
@@ -289,8 +294,8 @@ src/plugins/external/
 
 ## Scoped Middleware Arrays
 
-Inspired by RedwoodJS interruptors, scoped middleware arrays let you attach
-an ordered list of middleware functions to individual route definitions. Each
+Inspired by RedwoodJS interruptors, scoped middleware arrays let you attach an
+ordered list of middleware functions to individual route definitions. Each
 function in the array runs sequentially and can short-circuit the chain.
 
 ### Defining Middleware Functions
@@ -349,10 +354,10 @@ export function validateBody(schema: ZodSchema): MiddlewareFn {
 ```typescript
 // routes/api/admin/users/index.ts
 import type { RouteConfig } from "scratchy/server";
+import { createUserSchema } from "~/lib/schemas/user.js";
 import { requireAuth } from "~/middleware/require-auth.js";
 import { requireRole } from "~/middleware/require-role.js";
 import { validateBody } from "~/middleware/validate-body.js";
-import { createUserSchema } from "~/lib/schemas/user.js";
 
 export const config: RouteConfig = {
   middleware: [requireAuth, requireRole("admin")],
@@ -398,16 +403,16 @@ package is a factory function that returns a configured middleware.
 
 ### Available Middleware Packages
 
-| Package               | Purpose                               | Scope             |
-| --------------------- | ------------------------------------- | ----------------- |
-| `auth-middleware`      | Session and token authentication      | Global or route   |
-| `cors-middleware`      | Cross-Origin Resource Sharing headers | External routes   |
-| `csrf-middleware`      | Cross-Site Request Forgery protection | Form submissions  |
-| `rate-limit-middleware`| Request rate limiting                 | Global or route   |
-| `logger-middleware`    | Structured request/response logging   | Global            |
-| `session-middleware`   | Session management with cookies       | Global            |
-| `cache-middleware`     | Response caching with ETags           | Route             |
-| `compression-middleware`| Response compression (gzip, brotli) | Global            |
+| Package                  | Purpose                               | Scope            |
+| ------------------------ | ------------------------------------- | ---------------- |
+| `auth-middleware`        | Session and token authentication      | Global or route  |
+| `cors-middleware`        | Cross-Origin Resource Sharing headers | External routes  |
+| `csrf-middleware`        | Cross-Site Request Forgery protection | Form submissions |
+| `rate-limit-middleware`  | Request rate limiting                 | Global or route  |
+| `logger-middleware`      | Structured request/response logging   | Global           |
+| `session-middleware`     | Session management with cookies       | Global           |
+| `cache-middleware`       | Response caching with ETags           | Route            |
+| `compression-middleware` | Response compression (gzip, brotli)   | Global           |
 
 ### Using Composable Middleware
 
@@ -525,7 +530,7 @@ export default fp(async function rateLimit(fastify) {
     timeWindow: "1 minute",
     keyGenerator: (request) => {
       // Use API key for external routes, IP for others
-      return request.headers["x-api-key"] as string ?? request.ip;
+      return (request.headers["x-api-key"] as string) ?? request.ip;
     },
     errorResponseBuilder: (request, context) => ({
       error: "Too Many Requests",
@@ -553,7 +558,10 @@ export function strictRateLimit(max: number, windowMs: number): MiddlewareFn {
     if (entry && entry.resetAt > now) {
       if (entry.count >= max) {
         event.status(429);
-        event.headers.set("retry-after", String(Math.ceil((entry.resetAt - now) / 1000)));
+        event.headers.set(
+          "retry-after",
+          String(Math.ceil((entry.resetAt - now) / 1000)),
+        );
         return { error: "Too many requests" };
       }
       entry.count++;
@@ -644,15 +652,15 @@ chain stops and the response is sent.
 // Middleware A runs first
 export const middlewareA: MiddlewareFn = async (event) => {
   console.log("A: before");
-  await event.next();        // Pass to B
-  console.log("A: after");   // Runs after B completes
+  await event.next(); // Pass to B
+  console.log("A: after"); // Runs after B completes
 };
 
 // Middleware B runs second
 export const middlewareB: MiddlewareFn = async (event) => {
   console.log("B: before");
-  await event.next();        // Pass to handler
-  console.log("B: after");   // Runs after handler completes
+  await event.next(); // Pass to handler
+  console.log("B: after"); // Runs after handler completes
 };
 
 // Output order: A:before → B:before → handler → B:after → A:after
@@ -719,7 +727,10 @@ export const errorBoundary: MiddlewareFn = async (event) => {
     await event.next();
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    event.request.log.error({ err: error, url: event.url.pathname }, "middleware error");
+    event.request.log.error(
+      { err: error, url: event.url.pathname },
+      "middleware error",
+    );
     event.status(500);
     return { error: "Internal Server Error", message };
   }
@@ -769,7 +780,11 @@ export class MiddlewareError extends Error {
 export const requireSubscription: MiddlewareFn = async (event) => {
   const user = event.sharedMap.get("user");
   if (!user?.subscription?.active) {
-    throw new MiddlewareError(402, "Active subscription required", "SUBSCRIPTION_REQUIRED");
+    throw new MiddlewareError(
+      402,
+      "Active subscription required",
+      "SUBSCRIPTION_REQUIRED",
+    );
   }
   await event.next();
 };
@@ -784,7 +799,8 @@ export const requireSubscription: MiddlewareFn = async (event) => {
 - ✅ Return early on failure — don't call `next()` after sending a response
 - ✅ Use `event.sharedMap` to pass data between middleware
 - ✅ Put global middleware in `plugins/` and route middleware in `middleware/`
-- ✅ Use factory functions (like `requireRole("admin")`) for configurable middleware
+- ✅ Use factory functions (like `requireRole("admin")`) for configurable
+  middleware
 - ✅ Set timeouts on external calls made inside middleware
 - ✅ Use number-prefixed filenames for explicit plugin ordering
 - ✅ Register security middleware (helmet, CORS) before application middleware
@@ -814,7 +830,10 @@ export const badMiddleware: MiddlewareFn = async (event) => {
 
 // GOOD — Offload to worker threads
 export const goodMiddleware: MiddlewareFn = async (event) => {
-  const result = await event.request.server.runTask({ type: "ssr", route: event.url.pathname });
+  const result = await event.request.server.runTask({
+    type: "ssr",
+    route: event.url.pathname,
+  });
   event.sharedMap.set("html", result.html);
   await event.next();
 };
