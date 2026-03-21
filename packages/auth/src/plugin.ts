@@ -64,11 +64,16 @@ export default fp(
 
     fastify.addHook("onRequest", async (request) => {
       const authInstance = getAuthDecorator(fastify);
-      const session = await authInstance.api.getSession({
-        headers: fromNodeHeaders(request.headers),
-      });
+      try {
+        const session = await authInstance.api.getSession({
+          headers: fromNodeHeaders(request.headers),
+        });
 
-      request.session = session as AuthSession | null;
+        request.session = session as AuthSession | null;
+      } catch (error) {
+        request.log.warn({ err: error }, "failed to resolve auth session");
+        request.session = null;
+      }
     });
 
     fastify.log.info("auth plugin registered");
