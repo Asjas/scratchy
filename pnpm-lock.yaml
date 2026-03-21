@@ -2476,7 +2476,7 @@ packages:
 
   fastify-better-auth@1.2.0:
     resolution: {integrity: sha512-Jx27gm7caq6kd3gmTPpg9FsYtHIoDyjJ2L1/e0f8vxRP7W9PowwTxvm8dNuiGy0MZ3N2kUwfirqBf1HrlzjIgg==}
-    engines: {node: '>= 23.10.0'}
+    engines: {node: '>= 22.0.0'}
     peerDependencies:
       better-auth: 1.x
       fastify: 5.x
