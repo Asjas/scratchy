@@ -22,9 +22,6 @@
   "peerDependenciesMeta": {
     "@builder.io/qwik-react": {
       "optional": true
-    },
-    "@tailwindcss/vite": {
-      "optional": true
     }
   },
   "devDependencies": {
