@@ -1,0 +1,3 @@
+pnpm run check-format
+pnpm run lint
+pnpm run typecheck

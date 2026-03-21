@@ -1,0 +1,49 @@
+{
+  "name": "scratchy",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": "A-J Roos <asjasroos@proton.me>",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "dev": "pnpm run --parallel --filter \"./examples/**\" dev",
+    "build": "pnpm -r build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint --cache --cache-location .cache/eslint --cache-strategy content .",
+    "prettier": "prettier \"**/*.+(ts|tsx|json|md|yaml|yml)\"",
+    "format": "prettier \"**/*.+(ts|tsx|json|md|yaml|yml)\" --write --cache --cache-location .cache/prettier",
+    "check-format": "prettier \"**/*.+(ts|tsx|json|md|yaml|yml)\" --list-different --cache --cache-location .cache/prettier",
+    "typecheck": "tsc --noEmit",
+    "validate": "pnpm check-format && pnpm lint && pnpm typecheck",
+    "clean": "rimraf {packages,examples}/*/node_modules {packages,examples}/*/dist {packages,examples}/*/.cache {packages,examples}/*/*.tsbuildinfo node_modules/",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{html,js,jsx,ts,tsx,md,json,yaml,yml}": [
+      "prettier --write --cache --cache-location .cache/prettier",
+      "eslint --cache --cache-location .cache/eslint --cache-strategy content --fix"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.4",
+    "@trivago/prettier-plugin-sort-imports": "6.0.2",
+    "eslint": "9.39.4",
+    "eslint-plugin-n": "17.24.0",
+    "eslint-plugin-promise": "7.2.1",
+    "eslint-plugin-security": "4.0.0",
+    "eslint-plugin-unused-imports": "4.4.1",
+    "globals": "17.4.0",
+    "husky": "9.1.7",
+    "lint-staged": "16.4.0",
+    "prettier": "3.8.1",
+    "prettier-plugin-tailwindcss": "0.7.2",
+    "rimraf": "6.1.3",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.57.1",
+    "vitest": "3.2.4"
+  }
+}

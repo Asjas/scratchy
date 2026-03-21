@@ -34,7 +34,7 @@ have a consistent development environment.
 
 ### Tasks
 
-- [ ] Initialize pnpm workspace with `pnpm-workspace.yaml`
+- [x] Initialize pnpm workspace with `pnpm-workspace.yaml`
 
   ```yaml
   packages:
@@ -42,7 +42,7 @@ have a consistent development environment.
     - "examples/*"
   ```
 
-- [ ] Create root `package.json` with workspace scripts
+- [x] Create root `package.json` with workspace scripts
 
   ```jsonc
   {
@@ -50,19 +50,22 @@ have a consistent development environment.
     "private": true,
     "type": "module",
     "engines": { "node": ">=22" },
-    "packageManager": "pnpm@10.12.1",
+    "packageManager": "pnpm@10.32.1",
     "scripts": {
-      "dev": "pnpm --filter @scratchy/example dev",
+      "dev": "pnpm run --parallel --filter \"./examples/**\" dev",
       "build": "pnpm -r build",
-      "test": "pnpm -r test",
-      "typecheck": "pnpm -r typecheck",
-      "lint": "biome check .",
-      "format": "biome check --write ."
-    }
+      "test": "vitest run",
+      "lint": "eslint --cache --cache-location .cache/eslint --cache-strategy content .",
+      "format": "prettier \"**/*.+(ts|tsx|json|md|yaml|yml)\" --write --cache --cache-location .cache/prettier",
+      "check-format": "prettier \"**/*.+(ts|tsx|json|md|yaml|yml)\" --list-different --cache --cache-location .cache/prettier",
+      "typecheck": "tsc --noEmit",
+      "validate": "pnpm check-format && pnpm lint && pnpm typecheck",
+      "prepare": "husky",
+    },
   }
   ```
 
-- [ ] Create root `tsconfig.json` (base configuration shared by all packages)
+- [x] Create root `tsconfig.json` (base configuration shared by all packages)
 
   ```jsonc
   {
@@ -83,20 +86,29 @@ have a consistent development environment.
       "noUnusedParameters": true,
       "declaration": true,
       "declarationMap": true,
-      "sourceMap": true
-    }
+      "sourceMap": true,
+    },
   }
   ```
 
-- [ ] Set up Biome for linting and formatting (`biome.json`)
-- [ ] Set up Vitest as the test runner (root `vitest.workspace.ts`)
-- [ ] Create GitHub Actions CI workflow (`.github/workflows/ci.yml`)
-  - Lint, typecheck, build, and test on every push/PR
-  - Matrix: Node.js 22.x
-- [ ] Add `.npmrc` with `shamefully-hoist=false` and `strict-peer-dependencies=true`
-- [ ] Update `.gitignore` to include `node_modules/`, `dist/`, `coverage/`,
-  `.turbo/`, and `*.tsbuildinfo`
-- [ ] Create initial directory structure
+- [x] Set up ESLint for linting (`eslint.config.mjs` — flat config with
+      `typescript-eslint`, `eslint-plugin-n`, `eslint-plugin-promise`,
+      `eslint-plugin-security`, `eslint-plugin-unused-imports`)
+- [x] Set up Prettier for formatting (`.prettierrc` with
+      `@trivago/prettier-plugin-sort-imports` and `prettier-plugin-tailwindcss`)
+- [x] Set up Vitest as the test runner (root `vitest.config.ts`)
+- [x] Create GitHub Actions CI workflow (`.github/workflows/ci.yml`)
+  - Lint, format check, typecheck, and test on every push/PR
+  - Matrix: Node.js 22.x, 24.x
+  - Cache ESLint and Prettier results
+- [x] Add `.npmrc` with `audit=false`, `fund=false`, `save-exact=true`
+- [x] Add `.editorconfig` and `.gitattributes` for consistent formatting
+- [x] Add `.prettierignore` for files Prettier should skip
+- [x] Set up Husky + lint-staged for pre-commit hooks
+- [x] Add `.github/copilot-setup-steps.yml` for Copilot coding agent
+- [x] Update `.gitignore` for monorepo (node_modules, dist, coverage, .cache,
+      etc.)
+- [x] Create initial directory structure
 
   ```
   packages/
@@ -113,9 +125,10 @@ have a consistent development environment.
 ### Acceptance Criteria
 
 - `pnpm install` succeeds with no errors
-- `pnpm lint` and `pnpm format` run across all packages
+- `pnpm check-format` passes (Prettier finds no formatting issues)
+- `pnpm lint` passes (ESLint finds no errors)
 - `pnpm typecheck` passes (no TypeScript errors)
-- `pnpm test` runs Vitest (even if no tests exist yet)
+- `pnpm test` runs Vitest and passes
 - GitHub Actions CI pipeline is green
 
 ---
@@ -134,8 +147,8 @@ package registers into.
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./plugins/*": "./src/plugins/*.ts"
-  }
+    "./plugins/*": "./src/plugins/*.ts",
+  },
 }
 ```
 
@@ -221,8 +234,8 @@ helpers, and patterns for prepared statements and migrations.
   "exports": {
     ".": "./src/index.ts",
     "./helpers": "./src/helpers.ts",
-    "./plugin": "./src/plugin.ts"
-  }
+    "./plugin": "./src/plugin.ts",
+  },
 }
 ```
 
@@ -250,7 +263,8 @@ helpers, and patterns for prepared statements and migrations.
 - [ ] Create `drizzle.config.ts` factory (`src/drizzle-config.ts`)
   - Export a helper function that generates the Drizzle Kit config
   - Enforce `casing: "snake_case"` and the custom schema
-- [ ] Document the prepared-statement pattern (module-scoped `db.select().prepare()`)
+- [ ] Document the prepared-statement pattern (module-scoped
+      `db.select().prepare()`)
   - Provide example in the package README
 - [ ] Write unit tests
   - Pool factory creates a pool with correct options
@@ -292,8 +306,8 @@ authorization middleware, and Fastify adapter registration.
     ".": "./src/index.ts",
     "./middleware": "./src/middleware.ts",
     "./plugin": "./src/plugin.ts",
-    "./client": "./src/client.ts"
-  }
+    "./client": "./src/client.ts",
+  },
 }
 ```
 
@@ -352,7 +366,8 @@ fastify-plugin
 ## Phase 4 — Renderer Package (`packages/renderer`)
 
 **Goal:** Implement the Piscina worker pool for SSR and SSG, the worker entry
-point, HTML shell templates, and SharedArrayBuffer/Redis communication utilities.
+point, HTML shell templates, and SharedArrayBuffer/Redis communication
+utilities.
 
 ### Package Identity
 
@@ -364,8 +379,8 @@ point, HTML shell templates, and SharedArrayBuffer/Redis communication utilities
     ".": "./src/index.ts",
     "./worker": "./src/worker.ts",
     "./plugin": "./src/plugin.ts",
-    "./shared-buffer": "./src/shared-buffer.ts"
-  }
+    "./shared-buffer": "./src/shared-buffer.ts",
+  },
 }
 ```
 
@@ -373,7 +388,8 @@ point, HTML shell templates, and SharedArrayBuffer/Redis communication utilities
 
 - [ ] Create Piscina worker pool Fastify plugin (`src/plugin.ts`)
   - Register `fastify-piscina` with configurable thread counts
-  - Default: `minThreads: 2`, `maxThreads: Math.max(4, os.availableParallelism())`
+  - Default: `minThreads: 2`,
+    `maxThreads: Math.max(4, os.availableParallelism())`
   - Set `idleTimeout`, `taskTimeout`, and `resourceLimits`
   - Provide `declare module "fastify"` augmentation for `fastify.runTask`
   - Drain pool on `onClose` hook
@@ -437,8 +453,8 @@ code with Qwik, React interop, and Tailwind CSS.
   "name": "@scratchy/vite-plugin",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
-  }
+    ".": "./src/index.ts",
+  },
 }
 ```
 
@@ -455,7 +471,8 @@ code with Qwik, React interop, and Tailwind CSS.
   - Set `build.target` to `es2022`
   - Enable source maps in development
 - [ ] Support optional React interop
-  - If the user opts in, include `qwikReact()` from `@builder.io/qwik-react/vite`
+  - If the user opts in, include `qwikReact()` from
+    `@builder.io/qwik-react/vite`
 - [ ] Support manual chunk splitting
   - Separate `vendor-qwik`, `vendor-react` (if applicable), and `vendor` chunks
 - [ ] Create default Tailwind CSS configuration helper
@@ -489,8 +506,8 @@ vite-tsconfig-paths
 
 ## Phase 6 — CLI Package (`packages/cli`)
 
-**Goal:** Build the `scratchy` CLI with scaffolding commands for models, routers,
-routes, components, pages, plugins, and full feature scaffolds.
+**Goal:** Build the `scratchy` CLI with scaffolding commands for models,
+routers, routes, components, pages, plugins, and full feature scaffolds.
 
 ### Package Identity
 
@@ -499,8 +516,8 @@ routes, components, pages, plugins, and full feature scaffolds.
   "name": "@scratchy/cli",
   "type": "module",
   "bin": {
-    "scratchy": "./src/index.ts"
-  }
+    "scratchy": "./src/index.ts",
+  },
 }
 ```
 
@@ -542,8 +559,8 @@ routes, components, pages, plugins, and full feature scaffolds.
   - Generate Fastify plugin in `src/plugins/app/`
   - Include `onClose` cleanup hook template
 - [ ] Implement `make:scaffold <Name>` command
-  - Run `make:model`, `make:router`, create list and detail pages, create
-    card and form components — all at once
+  - Run `make:model`, `make:router`, create list and detail pages, create card
+    and form components — all at once
 - [ ] Write unit tests
   - Each command generates files with the correct content
   - Handlebars templates render correctly with given context
@@ -580,7 +597,7 @@ package, and write integration and E2E tests to verify the entire stack.
 {
   "name": "@scratchy/example",
   "private": true,
-  "type": "module"
+  "type": "module",
 }
 ```
 
@@ -673,16 +690,16 @@ docker-compose (infrastructure)
 
 ## Milestones
 
-| Milestone | Phases    | Description                                | Target     |
-| --------- | --------- | ------------------------------------------ | ---------- |
-| **M0**    | Phase 0   | Monorepo bootstrapped, CI green            | Week 1     |
-| **M1**    | Phase 1   | Fastify server factory working             | Week 2–3   |
-| **M2**    | Phase 2–3 | Data layer + tRPC integrated               | Week 4–6   |
-| **M3**    | Phase 4   | SSR rendering via Worker Threads           | Week 7–8   |
-| **M4**    | Phase 5   | Vite bundling for client code              | Week 9     |
-| **M5**    | Phase 6   | CLI scaffolding commands                   | Week 10–11 |
-| **M6**    | Phase 7   | Example app with integration tests         | Week 12–13 |
-| **M7**    | —         | Documentation review and v0.1.0 release    | Week 14    |
+| Milestone | Phases    | Description                             | Target     |
+| --------- | --------- | --------------------------------------- | ---------- |
+| **M0**    | Phase 0   | Monorepo bootstrapped, CI green         | Week 1     |
+| **M1**    | Phase 1   | Fastify server factory working          | Week 2–3   |
+| **M2**    | Phase 2–3 | Data layer + tRPC integrated            | Week 4–6   |
+| **M3**    | Phase 4   | SSR rendering via Worker Threads        | Week 7–8   |
+| **M4**    | Phase 5   | Vite bundling for client code           | Week 9     |
+| **M5**    | Phase 6   | CLI scaffolding commands                | Week 10–11 |
+| **M6**    | Phase 7   | Example app with integration tests      | Week 12–13 |
+| **M7**    | —         | Documentation review and v0.1.0 release | Week 14    |
 
 ---
 
@@ -692,11 +709,11 @@ These apply to every phase and should be addressed continuously:
 
 ### Testing Strategy
 
-| Layer         | Tool        | Scope                                  |
-| ------------- | ----------- | -------------------------------------- |
-| Unit          | Vitest      | Individual functions, helpers, utils   |
-| Integration   | Vitest      | Package interactions, Fastify injection|
-| E2E           | Playwright  | Full browser-based user flows          |
+| Layer       | Tool       | Scope                                   |
+| ----------- | ---------- | --------------------------------------- |
+| Unit        | Vitest     | Individual functions, helpers, utils    |
+| Integration | Vitest     | Package interactions, Fastify injection |
+| E2E         | Playwright | Full browser-based user flows           |
 
 - Use `fastify.inject()` for integration testing HTTP endpoints without a
   running server

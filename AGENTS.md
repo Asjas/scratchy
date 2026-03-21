@@ -9,25 +9,27 @@ code in this repository.
 **Scratchy** is a full-stack TypeScript framework for building APIs and websites
 on hosted servers (not serverless). It combines:
 
-| Layer            | Technology                                              |
-| ---------------- | ------------------------------------------------------- |
-| Runtime          | Node.js (>=22) with Worker Threads                      |
-| API Framework    | Fastify 5                                               |
-| RPC Layer        | tRPC 11 (internal APIs) + RESTful endpoints (external)  |
-| Rendering        | Qwik (primary) with React support via `qwik-react`      |
-| Bundling         | Vite                                                    |
-| Data Layer       | Drizzle ORM with PostgreSQL                             |
-| Styling          | Tailwind CSS                                            |
-| Worker Pool      | Piscina (via `fastify-piscina`)                         |
-| Language         | TypeScript (strict mode, type stripping for Node.js)    |
+| Layer         | Technology                                             |
+| ------------- | ------------------------------------------------------ |
+| Runtime       | Node.js (>=22) with Worker Threads                     |
+| API Framework | Fastify 5                                              |
+| RPC Layer     | tRPC 11 (internal APIs) + RESTful endpoints (external) |
+| Rendering     | Qwik (primary) with React support via `qwik-react`     |
+| Bundling      | Vite                                                   |
+| Data Layer    | Drizzle ORM with PostgreSQL                            |
+| Styling       | Tailwind CSS                                           |
+| Worker Pool   | Piscina (via `fastify-piscina`)                        |
+| Language      | TypeScript (strict mode, type stripping for Node.js)   |
 
 **Design principles:**
 
 - Server-first — built for hosted/dedicated servers, not serverless
 - Worker-based rendering — SSR and SSG run in Worker Threads via Piscina
-- RPC-first, REST-capable — tRPC for internal use, RESTful for external with CORS
+- RPC-first, REST-capable — tRPC for internal use, RESTful for external with
+  CORS
 - Type-safe end-to-end — TypeScript from database schema to client components
-- Convention over configuration — CLI scaffolding for models, views, api, controllers
+- Convention over configuration — CLI scaffolding for models, views, api,
+  controllers
 
 ## Repository Structure
 
@@ -134,8 +136,8 @@ src/
   each with `queries.ts` and `mutations.ts`.
 - **REST routes**: Under `routes/external/` with CORS enabled for third-party
   consumers.
-- **Plugin registration**: Use `@fastify/autoload` with `encapsulate: false`
-  for shared scope.
+- **Plugin registration**: Use `@fastify/autoload` with `encapsulate: false` for
+  shared scope.
 
 ### Data Layer
 
@@ -149,7 +151,8 @@ src/db/
 └── mutations/             # Write operations
 ```
 
-- **Schema pattern**: `mySchema.table("name", { columns }, (table) => [indexes])`
+- **Schema pattern**:
+  `mySchema.table("name", { columns }, (table) => [indexes])`
 - **Relations**: Defined alongside tables using `relations()` from Drizzle
 - **Column helpers**: Shared timestamp columns via a `timestamps` spread object
 - **Casing**: Use `snake_case` in Drizzle config for database columns
@@ -163,10 +166,10 @@ src/renderer/
 └── templates/             # HTML shell templates
 ```
 
-- **Piscina pool**: Created at startup via `fastify-piscina`, kept alive for
-  the entire runtime.
-- **Communication**: SharedArrayBuffer + Atomics for zero-copy data sharing,
-  or Redis (DragonflyDB) for distributed scenarios.
+- **Piscina pool**: Created at startup via `fastify-piscina`, kept alive for the
+  entire runtime.
+- **Communication**: SharedArrayBuffer + Atomics for zero-copy data sharing, or
+  Redis (DragonflyDB) for distributed scenarios.
 - **Result**: Workers return rendered HTML to the main thread.
 
 ### Client Side
@@ -185,46 +188,46 @@ src/client/
 
 ## Coding Conventions
 
-- **TypeScript**: Strict mode, no `any`, double quotes, semicolons, `const`
-  over `let`.
+- **TypeScript**: Strict mode, no `any`, double quotes, semicolons, `const` over
+  `let`.
 - **Naming**: PascalCase for components, camelCase for variables/functions,
   snake_case for DB tables/columns.
 - **Components**: Use Qwik's `component$()` for Qwik components, ES5 function
   declarations for React components.
 - **Type exports**: `export type AllItems = Awaited<ReturnType<typeof fn>>`.
-- **Error handling**: Use `fastify.to(promise)` for `[err, result]` tuples
-  where available.
+- **Error handling**: Use `fastify.to(promise)` for `[err, result]` tuples where
+  available.
 
 ## Instruction Files
 
-Detailed coding patterns are in `.github/instructions/`, each scoped to
-specific file paths or technology areas:
+Detailed coding patterns are in `.github/instructions/`, each scoped to specific
+file paths or technology areas:
 
-| File                                    | Scope                                    |
-| --------------------------------------- | ---------------------------------------- |
-| `react.instructions.md`                 | React components in Qwik React interop   |
-| `qwik.instructions.md`                  | Qwik components, routing, and rendering  |
-| `drizzle.instructions.md`              | Drizzle ORM schemas, queries, migrations |
-| `trpc.instructions.md`                  | tRPC routers, procedures, middleware     |
-| `fastify.instructions.md`              | Fastify server, plugins, routes          |
-| `typescript.instructions.md`            | TypeScript config and patterns           |
-| `worker-threads.instructions.md`        | Worker Threads and Piscina patterns      |
-| `vite.instructions.md`                  | Vite bundling configuration              |
-| `tailwindcss.instructions.md`           | Tailwind CSS styling patterns            |
+| File                             | Scope                                    |
+| -------------------------------- | ---------------------------------------- |
+| `react.instructions.md`          | React components in Qwik React interop   |
+| `qwik.instructions.md`           | Qwik components, routing, and rendering  |
+| `drizzle.instructions.md`        | Drizzle ORM schemas, queries, migrations |
+| `trpc.instructions.md`           | tRPC routers, procedures, middleware     |
+| `fastify.instructions.md`        | Fastify server, plugins, routes          |
+| `typescript.instructions.md`     | TypeScript config and patterns           |
+| `worker-threads.instructions.md` | Worker Threads and Piscina patterns      |
+| `vite.instructions.md`           | Vite bundling configuration              |
+| `tailwindcss.instructions.md`    | Tailwind CSS styling patterns            |
 
 ## Reference Documentation
 
 Comprehensive guides are maintained in the `/docs` directory:
 
-| Document                  | Content                                           |
-| ------------------------- | ------------------------------------------------- |
-| `architecture.md`         | Framework architecture and design decisions       |
-| `getting-started.md`      | Setup guide and prerequisites                     |
-| `project-structure.md`    | Directory layout and code organization            |
-| `api-design.md`           | tRPC and RESTful API patterns                     |
-| `rendering.md`            | SSR, SSG, and Worker Thread rendering pipeline    |
-| `data-layer.md`           | Drizzle ORM, database patterns, and data flow     |
-| `cli.md`                  | CLI scaffolding commands                          |
-| `worker-communication.md` | SharedArrayBuffer, Atomics, and Redis patterns    |
-| `references.md`           | Links to all external documentation               |
-| `nitro-inspiration.md`    | Nitro v3 concepts adapted for Scratchy            |
+| Document                  | Content                                        |
+| ------------------------- | ---------------------------------------------- |
+| `architecture.md`         | Framework architecture and design decisions    |
+| `getting-started.md`      | Setup guide and prerequisites                  |
+| `project-structure.md`    | Directory layout and code organization         |
+| `api-design.md`           | tRPC and RESTful API patterns                  |
+| `rendering.md`            | SSR, SSG, and Worker Thread rendering pipeline |
+| `data-layer.md`           | Drizzle ORM, database patterns, and data flow  |
+| `cli.md`                  | CLI scaffolding commands                       |
+| `worker-communication.md` | SharedArrayBuffer, Atomics, and Redis patterns |
+| `references.md`           | Links to all external documentation            |
+| `nitro-inspiration.md`    | Nitro v3 concepts adapted for Scratchy         |

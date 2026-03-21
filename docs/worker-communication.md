@@ -2,8 +2,8 @@
 
 ## Overview
 
-Scratchy supports two communication patterns between the main Node.js thread
-and Worker Threads:
+Scratchy supports two communication patterns between the main Node.js thread and
+Worker Threads:
 
 1. **SharedArrayBuffer + Atomics** — for zero-copy, low-latency data sharing
    within a single server process
@@ -12,15 +12,15 @@ and Worker Threads:
 
 ## Choosing a Pattern
 
-| Criteria                   | SharedArrayBuffer | Redis             |
-| -------------------------- | ----------------- | ----------------- |
-| **Latency**                | ~0 (shared memory)| ~1ms (network)    |
-| **Serialization**          | Manual (binary)   | JSON (automatic)  |
-| **Multi-server support**   | ❌ Single process  | ✅ Any topology   |
-| **Data size limit**        | Pre-allocated     | Virtually unlimited|
-| **Complexity**             | Higher            | Lower             |
-| **Debugging**              | Harder            | Easier (inspect)  |
-| **Best for**               | Large payloads    | Cached/shared data|
+| Criteria                 | SharedArrayBuffer  | Redis               |
+| ------------------------ | ------------------ | ------------------- |
+| **Latency**              | ~0 (shared memory) | ~1ms (network)      |
+| **Serialization**        | Manual (binary)    | JSON (automatic)    |
+| **Multi-server support** | ❌ Single process  | ✅ Any topology     |
+| **Data size limit**      | Pre-allocated      | Virtually unlimited |
+| **Complexity**           | Higher             | Lower               |
+| **Debugging**            | Harder             | Easier (inspect)    |
+| **Best for**             | Large payloads     | Cached/shared data  |
 
 **Recommendation:**
 
@@ -34,8 +34,8 @@ and Worker Threads:
 ### Concept
 
 SharedArrayBuffer creates a region of memory that is shared between the main
-thread and worker threads. Changes made by one thread are immediately visible
-to others. Atomics provide synchronization primitives (wait, notify, locks) to
+thread and worker threads. Changes made by one thread are immediately visible to
+others. Atomics provide synchronization primitives (wait, notify, locks) to
 coordinate access.
 
 ### Buffer Layout Design
@@ -156,9 +156,11 @@ fastify.get("/page/:route", async (request, reply) => {
 
 ```typescript
 // renderer/worker.ts
-import { readFromBuffer, createSharedBuffer } from "~/lib/shared-buffer.js";
+import { createSharedBuffer, readFromBuffer } from "~/lib/shared-buffer.js";
 
-export default async function handler(task: { sharedBuffer: SharedArrayBuffer }) {
+export default async function handler(task: {
+  sharedBuffer: SharedArrayBuffer;
+}) {
   const HEADER_SIZE = 8;
   const shared = {
     buffer: task.sharedBuffer,
@@ -186,8 +188,8 @@ buffer with atomic read/write pointers:
 // lib/ring-buffer.ts
 export class SharedRingBuffer {
   private buffer: SharedArrayBuffer;
-  private writePos: Int32Array;  // Atomic write pointer
-  private readPos: Int32Array;   // Atomic read pointer
+  private writePos: Int32Array; // Atomic write pointer
+  private readPos: Int32Array; // Atomic read pointer
   private data: Uint8Array;
   private capacity: number;
 
@@ -261,8 +263,8 @@ export class SharedRingBuffer {
 
 ### Concept
 
-Use Redis as a shared key-value store that both the main thread and workers
-can read from and write to. This works across multiple server instances.
+Use Redis as a shared key-value store that both the main thread and workers can
+read from and write to. This works across multiple server instances.
 
 ### Implementation
 
@@ -291,8 +293,8 @@ redis.on("connect", () => {
 
 ```typescript
 // In a Fastify route handler
-import { redis } from "~/lib/redis.js";
 import { ulid } from "ulid";
+import { redis } from "~/lib/redis.js";
 
 fastify.get("/page/:route", async (request, reply) => {
   const requestId = ulid();
@@ -309,7 +311,8 @@ fastify.get("/page/:route", async (request, reply) => {
         ),
       ),
     }),
-    "EX", 60, // 60-second TTL
+    "EX",
+    60, // 60-second TTL
   );
 
   // Send request ID to worker
@@ -401,10 +404,7 @@ subscriber.on("message", async (channel, message) => {
 
 // Publish invalidation from any thread/server
 export async function invalidateCache(pattern: string) {
-  await publisher.publish(
-    "cache:invalidate",
-    JSON.stringify({ pattern }),
-  );
+  await publisher.publish("cache:invalidate", JSON.stringify({ pattern }));
 }
 
 // Usage after a mutation
@@ -432,28 +432,28 @@ No code changes are needed — DragonflyDB uses the same protocol as Redis.
 
 ### Why DragonflyDB?
 
-| Feature                | Redis              | DragonflyDB            |
-| ---------------------- | ------------------ | ---------------------- |
-| Threading model        | Single-threaded    | Multi-threaded         |
-| Memory efficiency      | Good               | Better (no jemalloc)   |
-| Max throughput         | ~1M ops/sec        | ~25M ops/sec           |
-| Snapshotting           | Fork-based (COW)   | Non-blocking           |
-| Compatibility          | —                  | Redis API compatible   |
+| Feature           | Redis            | DragonflyDB          |
+| ----------------- | ---------------- | -------------------- |
+| Threading model   | Single-threaded  | Multi-threaded       |
+| Memory efficiency | Good             | Better (no jemalloc) |
+| Max throughput    | ~1M ops/sec      | ~25M ops/sec         |
+| Snapshotting      | Fork-based (COW) | Non-blocking         |
+| Compatibility     | —                | Redis API compatible |
 
 ## Performance Comparison
 
 Benchmarks for different communication patterns (rendering a medium-complexity
 page):
 
-| Method                     | Latency (p50) | Latency (p99) | Throughput      |
-| -------------------------- | ------------- | ------------- | --------------- |
-| SharedArrayBuffer (64KB)   | 0.5ms         | 2ms           | Highest         |
-| Redis (local, DragonflyDB) | 1.5ms         | 5ms           | High            |
-| Redis (remote)             | 3ms           | 15ms          | Medium          |
-| JSON serialization (task)  | 2ms           | 8ms           | Medium-High     |
+| Method                     | Latency (p50) | Latency (p99) | Throughput  |
+| -------------------------- | ------------- | ------------- | ----------- |
+| SharedArrayBuffer (64KB)   | 0.5ms         | 2ms           | Highest     |
+| Redis (local, DragonflyDB) | 1.5ms         | 5ms           | High        |
+| Redis (remote)             | 3ms           | 15ms          | Medium      |
+| JSON serialization (task)  | 2ms           | 8ms           | Medium-High |
 
-*Note: These are approximate values. Actual performance depends on hardware,
-payload size, and network topology.*
+_Note: These are approximate values. Actual performance depends on hardware,
+payload size, and network topology._
 
 ## Best Practices
 
