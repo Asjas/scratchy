@@ -81,18 +81,22 @@ const routes: FastifyPluginAsync = async function (fastify) {
       "x-content-type-options": "nosniff",
     });
 
-    const worker = await fastify.piscina.run(
-      { type: "stream-ssr", route: request.url },
-      {
-        transferList: [],
-        signal: request.raw.signal,
-      },
-    );
+    // Stream the rendered HTML directly to the response.
+    const stream = await renderRouteToStream(request.url);
+    const reader = stream.getReader();
 
-    // Chunks arrive via the worker message channel and are
-    // written to the response in the message handler (see below).
-    // Once the worker resolves, end the response.
-    reply.raw.end();
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // `value` is typically a Uint8Array chunk of HTML.
+        reply.raw.write(value);
+      }
+    } finally {
+      // Always end the response once the stream finishes or errors.
+      reply.raw.end();
+    }
   });
 };
 
