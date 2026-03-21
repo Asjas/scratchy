@@ -154,40 +154,40 @@ package registers into.
 
 ### Tasks
 
-- [ ] Create the Fastify server factory (`src/server.ts`)
+- [x] Create the Fastify server factory (`src/server.ts`)
   - Accept a configuration object (port, host, logging level, trust proxy)
   - Register `fastify-type-provider-zod` for Zod-based schema validation
   - Set up Pino structured logging
   - Configure `routerOptions` (ignore trailing slash, max param length)
-- [ ] Create configuration loader (`src/config.ts`)
+- [x] Create configuration loader (`src/config.ts`)
   - Load from environment variables with Zod validation
   - Provide defaults for development
   - Export typed `Config` interface
-- [ ] Create plugin autoloading setup
+- [x] Create plugin autoloading setup
   - `src/plugins/external/` for third-party plugins (CORS, Helmet, Rate Limit)
   - `src/plugins/app/` for application plugins
   - Use `@fastify/autoload` with `encapsulate: false` for shared scope
-- [ ] Implement built-in plugins
+- [x] Implement built-in plugins
   - `src/plugins/external/helmet.ts` — `@fastify/helmet` with CSP
   - `src/plugins/external/rate-limit.ts` — `@fastify/rate-limit`
   - `src/plugins/external/sensible.ts` — `@fastify/sensible` for error helpers
-- [ ] Create error handler (`src/error-handler.ts`)
+- [x] Create error handler (`src/error-handler.ts`)
   - Handle Zod validation errors with structured messages
   - Handle Fastify HTTP errors
   - Log unexpected errors and return 500
   - 404 handler with rate limiting
-- [ ] Create health check route (`src/routes/health.ts`)
+- [x] Create health check route (`src/routes/health.ts`)
   - `GET /health` returning `{ status: "ok", timestamp: "<ISO>" }`
-- [ ] Set up graceful shutdown (`src/shutdown.ts`)
+- [x] Set up graceful shutdown (`src/shutdown.ts`)
   - Use `close-with-grace` for SIGTERM/SIGINT
   - Drain connections before exit
-- [ ] Create Fastify type augmentation file (`src/types/fastify.d.ts`)
+- [x] Create Fastify type augmentation file (`src/types/fastify.d.ts`)
   - Declare `config` decorator on `FastifyInstance`
-- [ ] Export public API from `src/index.ts`
+- [x] Export public API from `src/index.ts`
   - `createServer(config)` — the main factory
   - `definePlugin(fn)` — helper wrapping `fastify-plugin`
   - Re-export key types
-- [ ] Write unit tests
+- [x] Write unit tests
   - Server starts and responds to `/health`
   - Error handler returns proper error shapes
   - Config validation rejects invalid values
