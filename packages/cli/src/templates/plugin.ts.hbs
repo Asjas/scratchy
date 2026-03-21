@@ -1,0 +1,15 @@
+import type { FastifyInstance } from "fastify";
+import fp from "fastify-plugin";
+
+export default fp(
+  function {{camelName}}Plugin(fastify: FastifyInstance) {
+    // TODO: implement plugin logic
+
+    fastify.addHook("onClose", () => {
+      // TODO: cleanup resources
+    });
+  },
+  {
+    name: "{{kebabName}}",
+  },
+);

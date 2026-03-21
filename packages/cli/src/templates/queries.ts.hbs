@@ -1,0 +1,19 @@
+import { eq, sql } from "drizzle-orm";
+import { db } from "~/db/index.js";
+import { {{camelName}} } from "~/db/schema/{{kebabName}}.js";
+
+export type {{pascalName}}ById = Awaited<ReturnType<typeof find{{pascalName}}ById.execute>>;
+export type All{{pascalName}}s = Awaited<ReturnType<typeof findAll{{pascalName}}s.execute>>;
+
+export const find{{pascalName}}ById = db
+  .select()
+  .from({{camelName}})
+  .where(eq({{camelName}}.id, sql.placeholder("id")))
+  .prepare("find_{{snakeName}}_by_id");
+
+export const findAll{{pascalName}}s = db
+  .select()
+  .from({{camelName}})
+  .limit(sql.placeholder("limit"))
+  .offset(sql.placeholder("offset"))
+  .prepare("find_all_{{snakeName}}s");

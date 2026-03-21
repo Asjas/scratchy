@@ -1,0 +1,25 @@
+import { eq } from "drizzle-orm";
+import { ulid } from "ulid";
+import { db } from "~/db/index.js";
+import { {{camelName}}, type New{{pascalName}} } from "~/db/schema/{{kebabName}}.js";
+
+export async function create{{pascalName}}(data: Omit<New{{pascalName}}, "id">) {
+  const [result] = await db
+    .insert({{camelName}})
+    .values({ id: ulid(), ...data })
+    .returning();
+  return result;
+}
+
+export async function update{{pascalName}}(id: string, data: Partial<New{{pascalName}}>) {
+  const [result] = await db
+    .update({{camelName}})
+    .set(data)
+    .where(eq({{camelName}}.id, id))
+    .returning();
+  return result;
+}
+
+export async function delete{{pascalName}}(id: string) {
+  await db.delete({{camelName}}).where(eq({{camelName}}.id, id));
+}
