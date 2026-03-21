@@ -9,8 +9,8 @@
   },
   "packageManager": "pnpm@10.32.1",
   "scripts": {
-    "dev": "pnpm run --parallel --filter \"./examples/**\" dev",
-    "build": "pnpm -r build",
+    "dev": "pnpm run --parallel --filter \"./examples/**\" --if-present dev",
+    "build": "pnpm -r --if-present build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint --cache --cache-location .cache/eslint --cache-strategy content .",
