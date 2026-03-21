@@ -208,7 +208,17 @@ export class SharedRingBuffer {
     if (chunk.byteLength > available) return false; // Buffer full
 
     const offset = wp % this.capacity;
-    this.data.set(chunk, offset);
+    const spaceToEnd = this.capacity - offset;
+
+    if (chunk.byteLength <= spaceToEnd) {
+      // Chunk fits without wrapping
+      this.data.set(chunk, offset);
+    } else {
+      // Split write across the buffer boundary
+      this.data.set(chunk.subarray(0, spaceToEnd), offset);
+      this.data.set(chunk.subarray(spaceToEnd), 0);
+    }
+
     Atomics.store(this.writePos, 0, wp + chunk.byteLength);
     Atomics.notify(this.readPos, 0); // Wake reader
     return true;
@@ -223,7 +233,19 @@ export class SharedRingBuffer {
     const available = wp - rp;
     const readSize = Math.min(maxBytes, available);
     const offset = rp % this.capacity;
-    const chunk = this.data.slice(offset, offset + readSize);
+    const spaceToEnd = this.capacity - offset;
+
+    let chunk: Uint8Array;
+
+    if (readSize <= spaceToEnd) {
+      // Read fits without wrapping
+      chunk = this.data.slice(offset, offset + readSize);
+    } else {
+      // Split read across the buffer boundary
+      chunk = new Uint8Array(readSize);
+      chunk.set(this.data.subarray(offset, offset + spaceToEnd), 0);
+      chunk.set(this.data.subarray(0, readSize - spaceToEnd), spaceToEnd);
+    }
 
     Atomics.store(this.readPos, 0, rp + readSize);
     return chunk;
