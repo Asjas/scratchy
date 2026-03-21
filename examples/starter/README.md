@@ -116,8 +116,10 @@ pnpm test
 ```
 
 Integration tests use an in-memory tRPC router so they run in CI without a real
-database. To test against a live database, set `DATABASE_URL` and the tests will
-use the real Drizzle plugin.
+database. They do not currently exercise the Drizzle plugin or perform real
+database CRUD, even if `DATABASE_URL` is set. To test against a live database,
+add additional tests that boot the server with the Drizzle plugin enabled and
+run your desired CRUD assertions.
 
 ## Adding a New Domain
 
