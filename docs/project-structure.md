@@ -23,8 +23,6 @@ scratchy/
 │   ├── config.ts                  # Environment and configuration loading
 │   ├── router.ts                  # tRPC initialization, middleware, procedures
 │   ├── context.ts                 # tRPC context creation
-│   ├── drizzle.config.ts          # Drizzle Kit configuration
-│   │
 │   ├── db/                        # Database layer
 │   │   ├── index.ts               # Drizzle instance and connection pool
 │   │   ├── my-schema.ts           # PostgreSQL schema namespace
