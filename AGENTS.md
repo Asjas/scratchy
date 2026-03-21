@@ -195,8 +195,21 @@ src/client/
 - **Components**: Use Qwik's `component$()` for Qwik components, ES5 function
   declarations for React components.
 - **Type exports**: `export type AllItems = Awaited<ReturnType<typeof fn>>`.
+- **Function style**: Only add `async` when `await` is used inside the function.
+  Otherwise, use a regular (ES5) function declaration. `async` wraps the return
+  in a Promise — an unnecessary allocation when no `await` is present.
 - **Error handling**: Use `fastify.to(promise)` for `[err, result]` tuples where
-  available.
+  available. Use `createError()` for structured HTTP errors.
+- **Data loading**: Use `routeLoader$()` for server-side data in route
+  components. Never fetch data client-side when SSR can provide it.
+- **Form handling**: Use `routeAction$()` with `zod$()` validation for form
+  submissions. Use the `<Form>` component for progressive enhancement.
+- **Middleware**: Export `onRequest`, `onGet`, `onPost` from route files for
+  per-route middleware. Use Fastify plugins for global middleware.
+- **Sessions**: Use `createCookie()` for signed cookies, Redis-backed session
+  storage in production. Regenerate session IDs on auth state changes.
+- **Error pages**: Add `error.tsx` in route directories for error boundaries.
+  Use `notFound()` to trigger not-found pages.
 
 ## Instruction Files
 
@@ -219,15 +232,23 @@ file paths or technology areas:
 
 Comprehensive guides are maintained in the `/docs` directory:
 
-| Document                  | Content                                        |
-| ------------------------- | ---------------------------------------------- |
-| `architecture.md`         | Framework architecture and design decisions    |
-| `getting-started.md`      | Setup guide and prerequisites                  |
-| `project-structure.md`    | Directory layout and code organization         |
-| `api-design.md`           | tRPC and RESTful API patterns                  |
-| `rendering.md`            | SSR, SSG, and Worker Thread rendering pipeline |
-| `data-layer.md`           | Drizzle ORM, database patterns, and data flow  |
-| `cli.md`                  | CLI scaffolding commands                       |
-| `worker-communication.md` | SharedArrayBuffer, Atomics, and Redis patterns |
-| `references.md`           | Links to all external documentation            |
-| `nitro-inspiration.md`    | Nitro v3 concepts adapted for Scratchy         |
+| Document                  | Content                                           |
+| ------------------------- | ------------------------------------------------- |
+| `architecture.md`         | Framework architecture and design decisions       |
+| `getting-started.md`      | Setup guide and prerequisites                     |
+| `project-structure.md`    | Directory layout and code organization            |
+| `api-design.md`           | tRPC and RESTful API patterns                     |
+| `data-loading.md`         | routeLoader$, server functions, caching           |
+| `forms-and-actions.md`    | routeAction$, Form component, file uploads        |
+| `middleware.md`           | Request middleware, onRequest, lifecycle hooks    |
+| `error-handling.md`       | Error boundaries, error pages, structured errors  |
+| `sessions.md`             | Cookie/session management, flash messages         |
+| `security.md`             | CSRF, CSP, auth, rate limiting, input validation  |
+| `rendering.md`            | SSR, SSG, and Worker Thread rendering pipeline    |
+| `streaming.md`            | Streaming SSR, progressive rendering, defer/Await |
+| `testing.md`              | Testing strategy, Vitest, Cypress, test utilities |
+| `data-layer.md`           | Drizzle ORM, database patterns, and data flow     |
+| `cli.md`                  | CLI scaffolding commands                          |
+| `worker-communication.md` | SharedArrayBuffer, Atomics, and Redis patterns    |
+| `references.md`           | Links to all external documentation               |
+| `nitro-inspiration.md`    | Nitro v3 concepts adapted for Scratchy            |

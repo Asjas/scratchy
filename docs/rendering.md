@@ -269,6 +269,40 @@ const userData = await redis.get(`user:${userId}`);
 
 ## Performance Considerations
 
+### Streaming SSR
+
+Scratchy supports streaming HTML responses for faster Time to First Byte (TTFB).
+Instead of waiting for the entire page to render, the server sends HTML chunks
+as they become available. See [streaming.md](streaming.md) for detailed
+patterns.
+
+Key streaming features:
+
+- **Progressive rendering**: Shell → content → interactive (defer + Await)
+- **loading.tsx**: Route-level loading skeletons shown while data loads
+- **Out-of-order streaming**: Placeholder slots filled as data resolves
+- **Early flush**: Send `<head>` and shell immediately
+
+```typescript
+// Route handler with streaming
+fastify.get("/dashboard", async (request, reply) => {
+  const result = await fastify.runTask({
+    type: "stream-ssr",
+    route: "/dashboard",
+    props: { userId: request.user.id },
+  });
+
+  reply
+    .header("content-type", "text/html; charset=utf-8")
+    .header("transfer-encoding", "chunked");
+
+  for await (const chunk of result.stream) {
+    reply.raw.write(chunk);
+  }
+  reply.raw.end();
+});
+```
+
 ### Worker Pool Sizing
 
 ```
@@ -303,3 +337,13 @@ Track these metrics for the rendering pipeline:
    leaks)
 6. **Monitor heap usage** — use `resourceLimits.maxOldGenerationSizeMb` to
    constrain worker memory
+
+## Related Documentation
+
+- [streaming.md](streaming.md) — Streaming SSR, progressive rendering,
+  defer/Await
+- [data-loading.md](data-loading.md) — routeLoader$, caching, revalidation
+- [error-handling.md](error-handling.md) — Error handling in workers and
+  rendering
+- [worker-communication.md](worker-communication.md) — SharedArrayBuffer and
+  Redis patterns

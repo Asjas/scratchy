@@ -180,15 +180,82 @@ controllers.
 | **Cache**          | Response caching, request deduplication                  | Redis/DragonflyDB, async-cache-dedupe |
 | **CLI**            | Project scaffolding, code generation                     | Custom CLI tool                       |
 
+## Request Lifecycle
+
+Every incoming request passes through a layered pipeline inspired by Qwik City's
+`onRequest` and Remix's composable middleware:
+
+```
+Request → Fastify Hooks → Global Middleware → Route Middleware → Handler → Response
+```
+
+| Stage                | Runs                                        | Docs              |
+| -------------------- | ------------------------------------------- | ----------------- |
+| **onRequest**        | Auth, rate limiting, early rejection        | middleware.md     |
+| **preValidation**    | CSRF token verification                     | security.md       |
+| **preHandler**       | Authorization, session loading              | sessions.md       |
+| **handler**          | routeLoader$ / routeAction$ / route handler | data-loading.md   |
+| **preSerialization** | Response transformation                     | streaming.md      |
+| **onSend**           | Security headers, compression               | security.md       |
+| **onResponse**       | Logging, metrics                            | middleware.md     |
+| **onError**          | Error handler, error pages                  | error-handling.md |
+
+Route-level middleware uses Qwik City's `onRequest`, `onGet`, `onPost` exports:
+
+```typescript
+// src/client/routes/admin/layout.tsx
+export const onRequest: RequestHandler = async (event) => {
+  if (!event.sharedMap.get("user")) {
+    throw event.redirect(302, "/login");
+  }
+  await event.next();
+};
+```
+
+See [middleware.md](middleware.md) for the full middleware architecture.
+
+## Error Handling Architecture
+
+Scratchy provides layered error handling inspired by Next.js error boundaries,
+Remix ErrorBoundary exports, and Nuxt's `createError()`:
+
+| Layer               | Pattern                               | Docs              |
+| ------------------- | ------------------------------------- | ----------------- |
+| **Route errors**    | `error.tsx` per route segment         | error-handling.md |
+| **Not found**       | `not-found.tsx` + `notFound()` helper | error-handling.md |
+| **Global errors**   | `global-error.tsx` root error page    | error-handling.md |
+| **API errors**      | TRPCError codes + JSON envelope       | api-design.md     |
+| **Worker errors**   | Piscina error propagation + fallback  | error-handling.md |
+| **Database errors** | PostgreSQL error code mapping         | error-handling.md |
+
+See [error-handling.md](error-handling.md) for full patterns.
+
+## Session and Cookie Management
+
+Session handling uses patterns from Remix's cookie/session packages:
+
+- **Signed cookies** with HMAC-SHA256 and secret rotation
+- **Multiple storage backends**: Redis (production), PostgreSQL (audit), Cookie
+  (small data)
+- **Flash messages** for one-time notifications
+- **Session regeneration** on authentication state changes
+
+See [sessions.md](sessions.md) for full patterns.
+
 ## Security Layers
 
-1. **CORS** — Enabled only on `/external/api` routes
-2. **Helmet** — Security headers on all responses
-3. **Rate Limiting** — Per-route and global rate limits
-4. **Authentication** — Session-based via Better Auth (or equivalent)
-5. **Authorization** — tRPC middleware (isAuthenticated, isOwner, isAdmin)
-6. **Input Validation** — Zod schemas on all inputs (tRPC and REST)
-7. **SQL Injection Prevention** — Drizzle ORM parameterized queries
+1. **Helmet** — Security headers (CSP, HSTS, X-Frame-Options) on all responses
+2. **CORS** — Enabled only on `/external/api` routes
+3. **Rate Limiting** — Per-route and global rate limits with Redis backend
+4. **CSRF Protection** — Double-submit cookie pattern on state-changing requests
+5. **Authentication** — Session-based via Better Auth (or equivalent)
+6. **Authorization** — tRPC middleware (isAuthenticated, isOwner, isAdmin)
+7. **Input Validation** — Zod schemas on all inputs (tRPC and REST)
+8. **SQL Injection Prevention** — Drizzle ORM parameterized queries
+9. **CSP with Nonces** — Content Security Policy compatible with Qwik
+   resumability
+
+See [security.md](security.md) for full security patterns.
 
 ## Scalability Model
 

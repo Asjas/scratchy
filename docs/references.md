@@ -20,19 +20,26 @@
 - [Fastify TypeScript](https://fastify.dev/docs/latest/Reference/TypeScript/)
 - [Fastify Ecosystem](https://fastify.dev/ecosystem/)
 
-#### Fastify Plugins
+##### Fastify Plugins
 
 - [@fastify/autoload](https://github.com/fastify/fastify-autoload) — Automatic
   plugin loading
+- [@fastify/cookie](https://github.com/fastify/fastify-cookie) — Cookie parsing
+  and serialization
 - [@fastify/cors](https://github.com/fastify/fastify-cors) — CORS support
+- [@fastify/csrf-protection](https://github.com/fastify/csrf-protection) — CSRF
+  token validation
 - [@fastify/helmet](https://github.com/fastify/fastify-helmet) — Security
   headers
+- [@fastify/multipart](https://github.com/fastify/fastify-multipart) — File
+  uploads
 - [@fastify/rate-limit](https://github.com/fastify/fastify-rate-limit) — Rate
   limiting
 - [@fastify/sensible](https://github.com/fastify/fastify-sensible) — Error
   helpers and utilities
-- [@fastify/multipart](https://github.com/fastify/fastify-multipart) — File
-  uploads
+- [@fastify/session](https://github.com/fastify/session) — Session management
+- [@fastify/secure-session](https://github.com/fastify/fastify-secure-session) —
+  Encrypted sessions
 - [fastify-plugin](https://github.com/fastify/fastify-plugin) — Plugin wrapper
 - [fastify-print-routes](https://github.com/ShogunPanda/fastify-print-routes) —
   Route table logging
@@ -171,6 +178,85 @@
 
 ## Framework Inspiration
 
+### Qwik City
+
+Scratchy's client-side APIs are heavily inspired by Qwik City patterns:
+
+- [Qwik City Documentation](https://qwik.dev/docs/qwikcity/)
+- [Qwik City GitHub](https://github.com/QwikDev/qwik/tree/main/packages/qwik-city)
+- [routeLoader$](https://qwik.dev/docs/route-loader/) — Server-side data loading
+- [routeAction$](https://qwik.dev/docs/action/) — Server-side form actions
+- [server$](https://qwik.dev/docs/server$/) — Server functions callable from
+  client
+- [Middleware (onRequest)](https://qwik.dev/docs/middleware/) — Route middleware
+- [validator$](https://qwik.dev/docs/action/#validation) — Input validation
+- [Form Component](https://qwik.dev/docs/action/#using-actions-with-form) —
+  Progressive enhancement
+
+### Remix
+
+Scratchy's middleware, session, and form patterns draw from Remix:
+
+- [Remix Documentation](https://remix.run/docs)
+- [Remix GitHub](https://github.com/remix-run/remix)
+- [Remix Cookie API](https://remix.run/docs/utils/cookies) — Signed cookies with
+  rotation
+- [Remix Sessions](https://remix.run/docs/utils/sessions) — Session storage
+  strategies
+- [Remix Form](https://remix.run/docs/components/form) — Progressive enhancement
+  forms
+- [Remix Error Handling](https://remix.run/docs/guides/errors) — Error
+  boundaries
+- [Remix Middleware](https://remix.run/docs/route/middleware) — Composable
+  middleware
+
+### Next.js
+
+Scratchy's file conventions and streaming patterns reference Next.js:
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Next.js GitHub](https://github.com/vercel/next.js)
+- [App Router](https://nextjs.org/docs/app) — File-based routing conventions
+- [Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware)
+  — Request middleware
+- [Error Handling](https://nextjs.org/docs/app/building-your-application/routing/error-handling)
+  — Error boundaries per segment
+- [Loading UI](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming)
+  — Streaming and Suspense
+- [Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)
+  — Server mutations
+
+### SolidStart
+
+- [SolidStart Documentation](https://start.solidjs.com/)
+- [SolidStart GitHub](https://github.com/solidjs/solid-start)
+- [Server Functions](https://start.solidjs.com/core-concepts/server-functions) —
+  "use server" pattern
+- [Error Boundaries](https://docs.solidjs.com/reference/components/error-boundary)
+  — Component error handling
+
+### Nuxt
+
+- [Nuxt Documentation](https://nuxt.com/docs)
+- [Nuxt GitHub](https://github.com/nuxt/nuxt)
+- [Data Fetching](https://nuxt.com/docs/getting-started/data-fetching) —
+  useFetch/useAsyncData
+- [Middleware](https://nuxt.com/docs/guide/directory-structure/middleware) —
+  Route and server middleware
+- [Error Handling](https://nuxt.com/docs/getting-started/error-handling) —
+  createError, error.vue
+- [State Management](https://nuxt.com/docs/getting-started/state-management) —
+  useState composable
+- [Server Routes](https://nuxt.com/docs/guide/directory-structure/server) —
+  Server API routes
+
+### RedwoodJS SDK
+
+- [RedwoodJS SDK GitHub](https://github.com/redwoodjs/sdk)
+- [RedwoodJS Documentation](https://docs.redwoodjs.com/docs/introduction/)
+- [RedwoodJS CLI](https://docs.redwoodjs.com/docs/cli-commands)
+- [RedwoodJS Architecture](https://docs.redwoodjs.com/docs/how-redwood-works)
+
 ### Nitro
 
 - [Nitro Documentation](https://nitro.build/)
@@ -184,11 +270,18 @@
 - [Laravel Artisan CLI](https://laravel.com/docs/13.x/artisan)
 - [Laravel Architecture](https://laravel.com/docs/13.x/structure)
 
-### RedwoodJS
+## Security
 
-- [RedwoodJS Documentation](https://docs.redwoodjs.com/docs/introduction/)
-- [RedwoodJS CLI](https://docs.redwoodjs.com/docs/cli-commands)
-- [RedwoodJS Architecture](https://docs.redwoodjs.com/docs/how-redwood-works)
+- [OWASP Top Ten](https://owasp.org/www-project-top-ten/) — Web application
+  security risks
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — Security
+  best practices
+- [helmet.js](https://helmetjs.github.io/) — Security headers documentation
+- [Argon2](https://github.com/ranisalt/node-argon2) — Password hashing
+- [Web Crypto API (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
+  — Cryptographic operations
+- [CSP (MDN)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) — Content
+  Security Policy
 
 ## AI Development Resources
 
