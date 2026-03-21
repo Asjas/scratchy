@@ -7,11 +7,11 @@ const routes: FastifyPluginAsync = async function (fastify) {
     credentials: true,
   });
 
-  fastify.get("/{{routePath}}", async (_request, _reply) => {
+  fastify.get("/{{routePath}}", (_request, _reply) => {
     return { data: [] };
   });
 
-  fastify.post("/{{routePath}}", async (request, _reply) => {
+  fastify.post("/{{routePath}}", (request, _reply) => {
     return { data: request.body };
   });
 };
