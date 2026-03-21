@@ -7,9 +7,9 @@ export type PromiseHash = Record<string, Promise<unknown>>;
  * Given an object where each value is a Promise, infer the resolved type for
  * each key.
  */
-export type AwaitedPromiseHash<Hash> = Hash extends PromiseHash
-  ? { [Key in keyof Hash]: Awaited<Hash[Key]> }
-  : never;
+export type AwaitedPromiseHash<Hash extends PromiseHash> = {
+  [Key in keyof Hash]: Awaited<Hash[Key]>;
+};
 
 /**
  * An object version of `Promise.all`. Pass an object whose values are
@@ -22,7 +22,7 @@ export type AwaitedPromiseHash<Hash> = Hash extends PromiseHash
  *   posts: getPosts(id),
  * });
  */
-export async function promiseHash<Hash extends object>(
+export async function promiseHash<Hash extends PromiseHash>(
   hash: Hash,
 ): Promise<AwaitedPromiseHash<Hash>> {
   return Object.fromEntries(

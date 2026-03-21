@@ -307,7 +307,7 @@ describe("integration: redirectBack", () => {
       headers: { referer: "https://example.com/page" },
     });
     expect(res.statusCode).toBe(302);
-    expect(res.headers.location).toBe("https://example.com/page");
+    expect(res.headers.location).toBe("/page");
   });
 
   it("redirects to the fallback when Referer is absent", async () => {

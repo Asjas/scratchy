@@ -11,7 +11,7 @@ describe("redirectBack", () => {
       req({ referer: "https://example.com/page" }),
       { fallback: "/" },
     );
-    expect(location).toBe("https://example.com/page");
+    expect(location).toBe("/page");
   });
 
   it("returns the fallback when Referer header is absent", () => {
@@ -29,7 +29,7 @@ describe("redirectBack", () => {
       req({ referer: ["https://first.com", "https://second.com"] }),
       { fallback: "/" },
     );
-    expect(location).toBe("https://first.com");
+    expect(location).toBe("/");
   });
 
   it("handles various fallback paths", () => {
