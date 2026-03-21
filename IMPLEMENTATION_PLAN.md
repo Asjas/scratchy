@@ -458,7 +458,7 @@ code with Qwik, React interop, and Tailwind CSS.
 
 ### Tasks
 
-- [ ] Create Vite config factory (`src/index.ts`)
+- [x] Create Vite config factory (`src/index.ts`)
   - Export `scratchyVite(options)` plugin that composes:
     - `qwikVite()` from `@builder.io/qwik/optimizer`
     - `qwikCity()` from `@builder.io/qwik-city/vite`
@@ -467,16 +467,16 @@ code with Qwik, React interop, and Tailwind CSS.
   - Configure `server.proxy` to forward `/trpc` and `/external/api` to the
     Fastify backend
   - Set `build.target` to `es2022`
-  - Enable source maps in development
-- [ ] Support optional React interop
+  - Enable source maps for builds
+- [x] Support optional React interop
   - If the user opts in, include `qwikReact()` from
     `@builder.io/qwik-react/vite`
-- [ ] Support manual chunk splitting
+- [x] Support manual chunk splitting
   - Separate `vendor-qwik`, `vendor-react` (if applicable), and `vendor` chunks
-- [ ] Create default Tailwind CSS configuration helper
+- [x] Create default Tailwind CSS configuration helper
   - Export a function that generates a `tailwind.config.ts` with sensible
     defaults (content paths, dark mode, font families)
-- [ ] Write unit tests
+- [x] Write unit tests
   - Plugin composition returns a valid Vite config
   - Proxy rules are correctly configured
   - React plugin is conditionally included
