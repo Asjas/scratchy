@@ -117,8 +117,8 @@ export function readFromBuffer(
   const decoder = new TextDecoder();
   const data = JSON.parse(decoder.decode(shared.data.slice(0, length)));
 
-  // Signal consumed
-  Atomics.store(shared.status, 0, BufferStatus.CONSUMED);
+  // Signal consumed and reset to IDLE for next cycle
+  Atomics.store(shared.status, 0, BufferStatus.IDLE);
   Atomics.notify(shared.status, 0);
 
   return data;
