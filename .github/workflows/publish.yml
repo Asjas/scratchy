@@ -133,6 +133,12 @@ jobs:
         # npm exchanges the GitHub OIDC token for a short-lived publish token
         # automatically when --provenance is set and the package is configured as a
         # trusted publisher on npmjs.com.
+        # Clear NODE_AUTH_TOKEN so npm uses the OIDC exchange instead of a stored
+        # (potentially invalid) token. setup-node writes an .npmrc that references
+        # ${NODE_AUTH_TOKEN}; setting it to empty here lets npm fall through to the
+        # OIDC trusted-publisher flow triggered by --provenance.
+        env:
+          NODE_AUTH_TOKEN: ""
         run: |
           for pkg_dir in packages/*/; do
             pkg_json="${pkg_dir}package.json"
