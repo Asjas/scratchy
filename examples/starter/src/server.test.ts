@@ -1,5 +1,6 @@
 import { createServer, loadConfig } from "@scratchyjs/core";
 import { createSSRHandler } from "@scratchyjs/renderer";
+import type {} from "@scratchyjs/renderer/plugin";
 import { publicProcedure, router } from "@scratchyjs/trpc";
 import type { FastifyInstance } from "fastify";
 import { resolve } from "node:path";

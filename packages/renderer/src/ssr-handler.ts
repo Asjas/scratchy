@@ -1,3 +1,4 @@
+import type {} from "./types/fastify.js";
 import type { RenderResult, RenderTask } from "./worker.js";
 import type { FastifyReply, FastifyRequest } from "fastify";
 

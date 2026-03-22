@@ -1,3 +1,4 @@
+import type {} from "@fastify/rate-limit";
 import type {
   FastifyError,
   FastifyInstance,
