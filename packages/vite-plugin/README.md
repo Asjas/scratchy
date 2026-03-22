@@ -19,7 +19,7 @@ pnpm add -D @scratchyjs/vite-plugin
 import { createScratchyConfig } from "@scratchyjs/vite-plugin";
 import { defineConfig } from "vite";
 
-export default defineConfig(await createScratchyConfig());
+export default defineConfig(async () => createScratchyConfig());
 ```
 
 ### With options
@@ -28,8 +28,8 @@ export default defineConfig(await createScratchyConfig());
 import { createScratchyConfig } from "@scratchyjs/vite-plugin";
 import { defineConfig } from "vite";
 
-export default defineConfig(
-  await createScratchyConfig({
+export default defineConfig(async () =>
+  createScratchyConfig({
     // Rendering
     react: true, // enable @builder.io/qwik-react
     tailwind: true, // enable @tailwindcss/vite (default: true)
