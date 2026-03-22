@@ -302,6 +302,7 @@ named Worker for that PR. Cloudflare exposes it on a `workers.dev` subdomain der
 from the Worker name and account (for example, `https://<worker-name>.<account>.workers.dev`).
 The exact preview URL is shown in the GitHub Actions "Deploy docs preview" job summary
 and in the Cloudflare Workers dashboard for the corresponding Worker.
+
 ### Required GitHub Secrets
 
 | Secret                  | Description                                                                 |

@@ -108,6 +108,7 @@ jobs:
           path: docs/.vitepress/dist
 
       - name: Deploy PR preview to Cloudflare Workers
+        id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -120,7 +121,7 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const previewUrl = `https://preview-${prNumber}.scratchyjs.com`;
+            const previewUrl = '${{ steps.deploy.outputs.deployment-url }}';
             const body = `📚 **Docs preview deployed**\n\n${previewUrl}\n\n_Updates automatically on every push to this PR._`;
 
             const { data: comments } = await github.rest.issues.listComments({
