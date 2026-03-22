@@ -17,6 +17,10 @@ on:
       - "wrangler.toml"
       - "pnpm-lock.yaml"
       - "package.json"
+  workflow_run:
+    workflows: ["Publish @scratchyjs/* packages"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
@@ -25,12 +29,18 @@ permissions:
 jobs:
   # ── Build (shared) ──────────────────────────────────────────────────────────
   build:
-    if: github.event.action != 'closed'
+    if: >
+      (github.event_name != 'pull_request' || github.event.action != 'closed') &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          # Publish pushes the release commit near the end of the job, so use
+          # the latest main branch state when this workflow is triggered from
+          # the publish workflow completion event.
+          ref: ${{ github.event_name == 'workflow_run' && 'refs/heads/main' || github.ref }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -58,13 +68,17 @@ jobs:
 
   # ── Deploy to production (push to main) ────────────────────────────────────
   deploy-production:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     needs: build
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'refs/heads/main' || github.ref }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
