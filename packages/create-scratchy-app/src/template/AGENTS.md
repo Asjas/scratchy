@@ -11,7 +11,7 @@ servers (not serverless), powered by:
 
 | Layer         | Technology                                             |
 | ------------- | ------------------------------------------------------ |
-| Runtime       | Node.js (>=22) with Worker Threads                     |
+| Runtime       | Node.js (>=24) with Worker Threads                     |
 | API Framework | Fastify 5                                              |
 | RPC Layer     | tRPC 11 (internal APIs) + RESTful endpoints (external) |
 | Rendering     | Qwik (primary) with React support via `qwik-react`     |
