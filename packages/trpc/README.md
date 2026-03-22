@@ -109,7 +109,7 @@ transformer.
 
 ### `trpcPlugin` (Fastify plugin)
 
-Registers the tRPC Fastify adapter and sets `cache-control: no-store` response
+Registers the tRPC Fastify adapter and sets `cache-control: no-store, no-cache, must-revalidate, private` response
 headers.
 
 **Options** (`TrpcPluginOptions`)
