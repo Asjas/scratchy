@@ -110,7 +110,7 @@ jobs:
         env:
           CALVER_VERSION: ${{ steps.calver.outputs.version }}
         run: |
-          git cliff \
+          git-cliff \
             --config cliff.toml \
             --unreleased \
             --tag "v${CALVER_VERSION}" \
