@@ -1,4 +1,5 @@
 import type { CommandMeta } from "citty";
+import { consola } from "consola";
 import { rm } from "node:fs/promises";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -43,6 +44,9 @@ describe("cacheClearCommand", () => {
 
   it("should handle errors gracefully and continue", async () => {
     vi.mocked(rm).mockRejectedValueOnce(new Error("ENOENT"));
+    const warnSpy = vi
+      .spyOn(consola, "warn")
+      .mockImplementation(() => undefined);
 
     const { cacheClearCommand } = await import("./cache-clear.js");
     const run = cacheClearCommand.run;
@@ -57,10 +61,15 @@ describe("cacheClearCommand", () => {
 
     // Should have tried all 4 directories despite the first failing
     expect(rm).toHaveBeenCalledTimes(4);
+    expect(warnSpy).toHaveBeenCalledWith("Skipped dist: ENOENT");
+    warnSpy.mockRestore();
   });
 
   it("should handle non-Error exceptions gracefully", async () => {
     vi.mocked(rm).mockRejectedValueOnce("string error");
+    const warnSpy = vi
+      .spyOn(consola, "warn")
+      .mockImplementation(() => undefined);
 
     const { cacheClearCommand } = await import("./cache-clear.js");
     const run = cacheClearCommand.run;
@@ -74,6 +83,8 @@ describe("cacheClearCommand", () => {
     });
 
     expect(rm).toHaveBeenCalledTimes(4);
+    expect(warnSpy).toHaveBeenCalledWith("Skipped dist: string error");
+    warnSpy.mockRestore();
   });
 
   it("should use process.cwd() when cwd is empty", async () => {
