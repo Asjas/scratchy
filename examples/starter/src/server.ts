@@ -17,12 +17,15 @@ export interface ServerOpts {
   router?: AnyRouter;
   /** When `true`, the Drizzle database plugin is not registered. */
   skipDb?: boolean;
+  /** When `true`, the auth plugin is not registered even if `BETTER_AUTH_SECRET` is set. */
+  skipAuth?: boolean;
 }
 
 /**
  * Creates and configures the Fastify server with all framework packages wired up:
  * - `@scratchy/core` — base server (CORS, helmet, rate-limit, health route)
  * - `@scratchy/drizzle` — Drizzle ORM database plugin (when `DATABASE_URL` is set)
+ * - `@scratchy/auth` — Better Auth plugin (when `BETTER_AUTH_SECRET` is set)
  * - `@scratchy/trpc` — tRPC router at `/trpc`
  * - `@scratchy/renderer` — Piscina SSR worker pool
  */
@@ -38,6 +41,17 @@ export async function buildServer(opts: ServerOpts = {}) {
       connectionString: config.DATABASE_URL,
       schemas: dbSchemas,
     });
+  }
+
+  // ── Auth ─────────────────────────────────────────────────────────────────
+  // Must be registered after the database plugin so `server.db` is available.
+  const shouldRegisterAuth =
+    !opts.skipAuth && Boolean(config.BETTER_AUTH_SECRET);
+  if (shouldRegisterAuth && shouldRegisterDb) {
+    const { createAppAuth } = await import("./auth.js");
+    const { default: authPlugin } = await import("@scratchy/auth/plugin");
+    const auth = createAppAuth(config, server.db);
+    await server.register(authPlugin, { auth });
   }
 
   // ── tRPC API ─────────────────────────────────────────────────────────────

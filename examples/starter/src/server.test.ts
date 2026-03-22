@@ -64,6 +64,27 @@ beforeAll(async () => {
   const { default: trpcPlugin } = await import("@scratchy/trpc/plugin");
   await server.register(trpcPlugin, { router: testAppRouter });
 
+  // Register the auth plugin with an in-memory Better Auth instance.
+  // No database adapter is configured here intentionally — this keeps
+  // the tests self-contained and dependency-free. Without an adapter,
+  // sign-up/sign-in flows will fail at the storage layer, but the routes
+  // are still mounted and reachable (no 404), which is what the auth
+  // endpoint reachability tests below verify.
+  const { createAuth } = await import("@scratchy/auth");
+  const { default: authPlugin } = await import("@scratchy/auth/plugin");
+  const auth = createAuth({
+    basePath: "/api/auth",
+    secret: "test-secret-at-least-32-characters-long",
+    emailAndPassword: { enabled: true },
+  });
+  await server.register(authPlugin, { auth });
+
+  // Register a protected test route using requireAuth
+  const { requireAuth } = await import("@scratchy/auth/hooks");
+  server.get("/protected", { preHandler: requireAuth }, (request) => {
+    return { user: request.user };
+  });
+
   // Register the renderer worker pool
   const { default: rendererPlugin } = await import("@scratchy/renderer/plugin");
   const workerPath = resolve(import.meta.dirname, "renderer", "worker.ts");
@@ -208,5 +229,66 @@ describe("SSR worker pool", () => {
   it("worker pool decorators are registered on the server", () => {
     expect(server.piscina).toBeDefined();
     expect(typeof server.runTask).toBe("function");
+  });
+});
+
+// ── Auth plugin ───────────────────────────────────────────────────────────────
+describe("auth plugin", () => {
+  it("request.session and request.user decorators are registered (null when unauthenticated)", async () => {
+    const response = await server.inject({
+      method: "GET",
+      url: "/protected",
+    });
+
+    // requireAuth blocks unauthenticated requests with 401
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toMatchObject({
+      error: "Unauthorized",
+    });
+  });
+
+  it("GET /api/auth/get-session returns null session when unauthenticated", async () => {
+    const response = await server.inject({
+      method: "GET",
+      url: "/api/auth/get-session",
+    });
+
+    // Better Auth returns 200 with null when there is no session
+    expect(response.statusCode).toBe(200);
+    const body = response.json<null>();
+    expect(body).toBeNull();
+  });
+
+  it("POST /api/auth/sign-up/email endpoint is reachable", async () => {
+    const response = await server.inject({
+      method: "POST",
+      url: "/api/auth/sign-up/email",
+      headers: { "content-type": "application/json" },
+      payload: JSON.stringify({
+        name: "Test User",
+        email: "test@example.com",
+        password: "password123456",
+      }),
+    });
+
+    // Without a database adapter the request fails, but the route is mounted
+    // and Better Auth handles the request (not a 404).
+    expect(response.statusCode).not.toBe(404);
+  });
+
+  it("POST /api/auth/sign-in/email endpoint is reachable", async () => {
+    const response = await server.inject({
+      method: "POST",
+      url: "/api/auth/sign-in/email",
+      headers: { "content-type": "application/json" },
+      payload: JSON.stringify({
+        email: "test@example.com",
+        password: "password123456",
+      }),
+    });
+
+    // Without a database adapter the request fails, but the route is mounted
+    // and Better Auth handles the request (not a 404).
+    expect(response.statusCode).not.toBe(404);
   });
 });

@@ -12,6 +12,17 @@ export const appConfigSchema = configSchema.extend({
   REDIS_URL: z.string().min(1).optional(),
   /** Drizzle schema namespace. Defaults to "app". */
   DATABASE_SCHEMA: z.string().default("app"),
+  /**
+   * Secret key used by Better Auth to sign session tokens and cookies.
+   * Must be at least 32 characters. Generate with:
+   *   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   */
+  BETTER_AUTH_SECRET: z.string().min(32).optional(),
+  /**
+   * Application origin URL used by Better Auth for trusted-origin validation.
+   * Example: "http://localhost:3000" or "https://my-app.example.com".
+   */
+  ORIGIN: z.string().url().optional(),
 });
 
 export type AppConfig = z.infer<typeof appConfigSchema>;

@@ -609,6 +609,7 @@ package, and write integration and E2E tests to verify the entire stack.
   │   ├── index.ts              # Entry point
   │   ├── server.ts             # Server setup using @scratchy/core
   │   ├── config.ts             # App config
+  │   ├── auth.ts               # Better Auth instance using @scratchy/auth
   │   ├── router.ts             # tRPC init using @scratchy/trpc
   │   ├── context.ts            # tRPC context
   │   ├── db/
@@ -616,7 +617,8 @@ package, and write integration and E2E tests to verify the entire stack.
   │   │   ├── my-schema.ts      # App schema namespace
   │   │   └── schema/
   │   │       ├── columns.helpers.ts
-  │   │       ├── user.ts
+  │   │       ├── user.ts        # Users table (Better Auth compatible)
+  │   │       ├── auth-tables.ts # Better Auth tables (session, account, verification)
   │   │       └── post.ts
   │   ├── routers/
   │   │   ├── index.ts
@@ -640,6 +642,7 @@ package, and write integration and E2E tests to verify the entire stack.
 
 - [x] Wire up all framework packages together
   - `@scratchy/core` for server
+  - `@scratchy/auth` for authentication
   - `@scratchy/drizzle` for database
   - `@scratchy/trpc` for API
   - `@scratchy/renderer` for SSR
@@ -648,12 +651,39 @@ package, and write integration and E2E tests to verify the entire stack.
   - PostgreSQL 16
   - DragonflyDB (Redis-compatible)
 - [x] Create `.env.example` with all required environment variables
+- [x] Integrate `@scratchy/auth` into the example application
+  - Add `src/auth.ts` — configures Better Auth instance with `createAuth()`
+
+    ```
+    examples/starter/
+    └── src/
+        ├── auth.ts               # Better Auth instance (emailAndPassword + drizzle adapter)
+        └── db/
+            └── schema/
+                ├── user.ts       # Updated: adds emailVerified + image fields
+                └── auth-tables.ts# Better Auth tables: session, account, verification
+    ```
+
+  - Update `src/db/schema/user.ts` — add `emailVerified` and `image` fields
+    required by Better Auth
+  - Create `src/db/schema/auth-tables.ts` — session, account, and verification
+    tables needed by the Better Auth drizzle adapter
+  - Register `authPlugin` in `src/server.ts` when `BETTER_AUTH_SECRET` is set
+  - Add `BETTER_AUTH_SECRET` to `src/config.ts` and `.env.example`
+  - Use `requireAuth` preHandler hook on routes that need authentication
+  - Extend `src/types/fastify.d.ts` to include auth type augmentation
+  - See `.github/instructions/auth.instructions.md` for the full coding
+    reference for `@scratchy/auth`
+
 - [x] Write integration tests
   - Server starts and health check works
   - tRPC queries and mutations succeed
   - REST external routes respond with CORS headers
   - Database CRUD operations via tRPC
   - Worker pool renders SSR HTML
+  - Auth plugin decorators (`request.session`, `request.user`) are registered
+  - Auth routes are mounted at `/api/auth`
+  - `requireAuth` returns 401 for unauthenticated requests
 - [ ] Write E2E tests (optional, Playwright or Cypress)
   - Navigate to home page, verify SSR HTML
   - Interact with client-side component, verify Qwik resumability
@@ -677,6 +707,9 @@ docker-compose (infrastructure)
 - SSR renders a Qwik page via worker thread
 - Integration tests pass in CI
 - Docker Compose spins up Postgres and Redis
+- Auth plugin registers and mounts Better Auth handler at `/api/auth`
+- `request.user` is `null` for unauthenticated requests and typed as `AuthUser`
+- `requireAuth` preHandler blocks unauthenticated requests with HTTP 401
 
 ---
 

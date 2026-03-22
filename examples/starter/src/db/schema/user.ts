@@ -13,6 +13,8 @@ export const userRole = appSchema.enum("user_role", ["member", "admin"]);
 
 /**
  * Users table. Stores authentication identity and profile information.
+ * Fields `emailVerified` and `image` are required by the Better Auth
+ * drizzle adapter.
  */
 export const user = appSchema.table(
   "user",
@@ -20,6 +22,10 @@ export const user = appSchema.table(
     id: text().primaryKey(),
     name: text().notNull(),
     email: text().notNull().unique(),
+    /** Set to `true` after the user confirms their email address. Required by Better Auth. */
+    emailVerified: boolean().default(false).notNull(),
+    /** Optional profile picture URL. Required by Better Auth. */
+    image: text(),
     role: userRole().default("member").notNull(),
     banned: boolean().default(false),
     ...timestamps,
