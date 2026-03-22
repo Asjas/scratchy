@@ -10,7 +10,7 @@ import type {
  *
  * @example
  * ```ts
- * import { requireAuth } from "@scratchy/auth/hooks";
+ * import { requireAuth } from "@scratchyjs/auth/hooks";
  *
  * fastify.get("/profile", { preHandler: requireAuth }, async (request) => {
  *   return { user: request.session!.user };
@@ -41,7 +41,7 @@ export function requireAuth(
  *
  * @example
  * ```ts
- * import { requireAdmin } from "@scratchy/auth/hooks";
+ * import { requireAdmin } from "@scratchyjs/auth/hooks";
  *
  * fastify.delete("/users/:id", { preHandler: requireAdmin }, async (request) => {
  *   // Only admin users reach this handler

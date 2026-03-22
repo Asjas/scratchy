@@ -113,7 +113,7 @@ function routeToFilePath(route: string): string {
  *
  * @example
  * ```ts
- * import { runSsgPipeline } from "@scratchy/renderer";
+ * import { runSsgPipeline } from "@scratchyjs/renderer";
  * import { resolve } from "node:path";
  *
  * const result = await runSsgPipeline({

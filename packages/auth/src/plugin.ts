@@ -49,7 +49,7 @@ export interface AuthPluginOptions {
  *
  * @example
  * ```ts
- * import authPlugin from "@scratchy/auth/plugin";
+ * import authPlugin from "@scratchyjs/auth/plugin";
  * import { auth } from "./auth.js";
  *
  * await server.register(authPlugin, { auth });
@@ -86,5 +86,5 @@ export default fp(
 
     fastify.log.info("auth plugin registered");
   },
-  { name: "@scratchy/auth" },
+  { name: "@scratchyjs/auth" },
 );

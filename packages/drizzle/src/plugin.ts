@@ -54,5 +54,5 @@ export default fp(
 
     fastify.log.info("drizzle plugin registered");
   },
-  { name: "@scratchy/drizzle" },
+  { name: "@scratchyjs/drizzle" },
 );

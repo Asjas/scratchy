@@ -75,7 +75,7 @@ describe("swagger plugin", () => {
       paths: Record<string, unknown>;
     }>();
     expect(spec.openapi).toBe("3.0.3");
-    expect(spec.info.title).toBe("Scratchy API");
+    expect(spec.info.title).toBe("Scratchyjs API");
     expect(spec.info.version).toBe("0.0.1");
   });
 

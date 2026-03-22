@@ -11,8 +11,8 @@
  * This file is intentionally free of local `.ts` imports. Piscina
  * loads it directly with Node.js type stripping, which does not
  * resolve `.js` extensions to `.ts` files for local modules.
- * Package imports (e.g. `@scratchy/renderer/worker`) are fine because
+ * Package imports (e.g. `@scratchyjs/renderer/worker`) are fine because
  * Node.js resolves them through `node_modules` independently of the
  * file extension.
  */
-export { default } from "@scratchy/renderer/worker";
+export { default } from "@scratchyjs/renderer/worker";

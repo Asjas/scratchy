@@ -1,7 +1,7 @@
-import { timestamps } from "@scratchy/drizzle";
+import { timestamps } from "@scratchyjs/drizzle";
 
 /**
- * Re-exports the shared `timestamps` spread object from `@scratchy/drizzle`
+ * Re-exports the shared `timestamps` spread object from `@scratchyjs/drizzle`
  * so local schema files can import from a single in-project location.
  *
  * @example

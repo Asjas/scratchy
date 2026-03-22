@@ -1,6 +1,6 @@
 import { loadAppConfig } from "./config.js";
 import { buildServer } from "./server.js";
-import { setupShutdown } from "@scratchy/core";
+import { setupShutdown } from "@scratchyjs/core";
 
 const config = loadAppConfig();
 const server = await buildServer({ config });

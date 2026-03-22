@@ -30,13 +30,13 @@ export interface SwaggerPluginOptions extends FastifyPluginOptions {
  * Register this plugin before the routes you want included in the generated
  * OpenAPI spec so that their schemas are captured. Routes that are registered
  * earlier (for example, the health route created internally by
- * `@scratchy/core`'s `createServer()`) will continue to work normally; they
+ * `@scratchyjs/core`'s `createServer()`) will continue to work normally; they
  * just won't appear in the Swagger documentation. The Swagger UI is served at
  * the path configured by `routePrefix` (default: `/documentation`).
  *
  * @example
  * ```ts
- * import swaggerPlugin from "@scratchy/core/plugins/swagger";
+ * import swaggerPlugin from "@scratchyjs/core/plugins/swagger";
  *
  * await server.register(swaggerPlugin, {
  *   routePrefix: "/docs",
@@ -52,7 +52,7 @@ export default fp<SwaggerPluginOptions>(
     const {
       routePrefix = "/documentation",
       info: {
-        title = "Scratchy API",
+        title = "Scratchyjs API",
         description = "REST API documentation",
         version = "0.0.1",
       } = {},
@@ -86,5 +86,5 @@ export default fp<SwaggerPluginOptions>(
 
     fastify.log.info({ routePrefix }, "swagger documentation available");
   },
-  { name: "@scratchy/swagger" },
+  { name: "@scratchyjs/swagger" },
 );

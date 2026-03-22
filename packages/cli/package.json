@@ -1,7 +1,6 @@
 {
-  "name": "@scratchy/cli",
+  "name": "@scratchyjs/cli",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "bin": {
     "scratchy": "./src/index.ts"

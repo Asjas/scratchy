@@ -1,5 +1,5 @@
 /**
- * Integration tests for @scratchy/utils.
+ * Integration tests for @scratchyjs/utils.
  *
  * Each test creates a real Fastify server, exercises a utility inside a route
  * handler, and verifies the behaviour via server.inject().

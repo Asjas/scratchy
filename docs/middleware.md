@@ -176,7 +176,7 @@ controlling the request:
 
 ```typescript
 // routes/dashboard/index.ts
-import type { RequestEvent } from "scratchy/server";
+import type { RequestEvent } from "scratchyjs/server";
 
 // Runs before the handler for ANY HTTP method
 export async function onRequest(event: RequestEvent) {
@@ -203,7 +203,7 @@ export default component$(() => {
 
 ```typescript
 // routes/api/posts/index.ts
-import type { RequestEvent } from "scratchy/server";
+import type { RequestEvent } from "scratchyjs/server";
 import { z } from "zod";
 
 // Only runs on GET requests
@@ -250,7 +250,7 @@ src/routes/
 
 ```typescript
 // routes/admin/layout.ts
-import type { RequestEvent } from "scratchy/server";
+import type { RequestEvent } from "scratchyjs/server";
 
 export async function onRequest(event: RequestEvent) {
   const user = event.sharedMap.get("user");
@@ -319,7 +319,7 @@ function in the array runs sequentially and can short-circuit the chain.
 
 ```typescript
 // middleware/require-auth.ts
-import type { MiddlewareFn } from "scratchy/server";
+import type { MiddlewareFn } from "scratchyjs/server";
 
 export const requireAuth: MiddlewareFn = async (event) => {
   const user = event.sharedMap.get("user");
@@ -333,7 +333,7 @@ export const requireAuth: MiddlewareFn = async (event) => {
 
 ```typescript
 // middleware/require-role.ts
-import type { MiddlewareFn } from "scratchy/server";
+import type { MiddlewareFn } from "scratchyjs/server";
 
 export function requireRole(role: string): MiddlewareFn {
   return async (event) => {
@@ -349,7 +349,7 @@ export function requireRole(role: string): MiddlewareFn {
 
 ```typescript
 // middleware/validate-body.ts
-import type { MiddlewareFn } from "scratchy/server";
+import type { MiddlewareFn } from "scratchyjs/server";
 import type { ZodSchema } from "zod";
 
 export function validateBody(schema: ZodSchema): MiddlewareFn {
@@ -370,7 +370,7 @@ export function validateBody(schema: ZodSchema): MiddlewareFn {
 
 ```typescript
 // routes/api/admin/users/index.ts
-import type { RouteConfig } from "scratchy/server";
+import type { RouteConfig } from "scratchyjs/server";
 import { createUserSchema } from "~/lib/schemas/user.js";
 import { requireAuth } from "~/middleware/require-auth.js";
 import { requireRole } from "~/middleware/require-role.js";
@@ -436,7 +436,7 @@ package is a factory function that returns a configured middleware.
 ```typescript
 // plugins/app/auth.ts
 import fp from "fastify-plugin";
-import { createAuthMiddleware } from "scratchy/middleware/auth-middleware";
+import { createAuthMiddleware } from "scratchyjs/middleware/auth-middleware";
 
 export default fp(async function auth(fastify) {
   const authMiddleware = createAuthMiddleware({
@@ -454,7 +454,7 @@ export default fp(async function auth(fastify) {
 ```typescript
 // plugins/external/cors.ts
 import fp from "fastify-plugin";
-import { createCorsMiddleware } from "scratchy/middleware/cors-middleware";
+import { createCorsMiddleware } from "scratchyjs/middleware/cors-middleware";
 
 export default fp(async function cors(fastify) {
   const corsMiddleware = createCorsMiddleware({
@@ -476,7 +476,7 @@ export default fp(async function cors(fastify) {
 
 ```typescript
 // middleware/require-auth.ts
-import type { MiddlewareFn } from "scratchy/server";
+import type { MiddlewareFn } from "scratchyjs/server";
 import { verifySessionToken } from "~/services/auth.js";
 
 export const requireAuth: MiddlewareFn = async (event) => {
@@ -562,7 +562,7 @@ Per-route rate limiting:
 
 ```typescript
 // middleware/strict-rate-limit.ts
-import type { MiddlewareFn } from "scratchy/server";
+import type { MiddlewareFn } from "scratchyjs/server";
 
 export function strictRateLimit(max: number, windowMs: number): MiddlewareFn {
   const hits = new Map<string, { count: number; resetAt: number }>();
@@ -624,7 +624,7 @@ export default fp(async function logger(fastify) {
 ```typescript
 // middleware/csrf-protection.ts
 import { timingSafeEqual } from "node:crypto";
-import type { MiddlewareFn } from "scratchy/server";
+import type { MiddlewareFn } from "scratchyjs/server";
 
 export const csrfProtection: MiddlewareFn = async (event) => {
   if (["GET", "HEAD", "OPTIONS"].includes(event.method)) {
@@ -652,7 +652,7 @@ export const csrfProtection: MiddlewareFn = async (event) => {
 
 ```typescript
 // middleware/cache-response.ts
-import type { MiddlewareFn } from "scratchy/server";
+import type { MiddlewareFn } from "scratchyjs/server";
 
 export function cacheResponse(maxAge: number): MiddlewareFn {
   return async (event) => {
@@ -742,7 +742,7 @@ or the route handler:
 
 ```typescript
 // middleware/error-boundary.ts
-import type { MiddlewareFn } from "scratchy/server";
+import type { MiddlewareFn } from "scratchyjs/server";
 
 export const errorBoundary: MiddlewareFn = async (event) => {
   try {

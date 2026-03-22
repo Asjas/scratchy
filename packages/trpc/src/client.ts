@@ -15,7 +15,7 @@ export interface ClientOptions {
  * superjson transformer, and POST method override for E2E testing compatibility.
  *
  * The router **must** be initialized with `superjson` as its transformer
- * (which `@scratchy/trpc` does by default).
+ * (which `@scratchyjs/trpc` does by default).
  */
 export function createClient<TRouter extends AnyRouter>(opts: ClientOptions) {
   // tRPC's `httpBatchStreamLink` expects the transformer option to match the
@@ -23,7 +23,7 @@ export function createClient<TRouter extends AnyRouter>(opts: ClientOptions) {
   // Because `TRouter` is generic, TypeScript cannot verify at compile time that
   // `superjson` satisfies the constraint. The cast through `unknown` is necessary
   // to bridge this gap. It is safe because all Scratchy routers are initialised
-  // with `superjson` in `@scratchy/trpc`'s `trpc.ts`.
+  // with `superjson` in `@scratchyjs/trpc`'s `trpc.ts`.
   type LinkOptions = Parameters<typeof httpBatchStreamLink<TRouter>>[0];
 
   return createTRPCClient<TRouter>({

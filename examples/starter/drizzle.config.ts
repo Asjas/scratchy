@@ -1,4 +1,4 @@
-import { createDrizzleConfig } from "@scratchy/drizzle";
+import { createDrizzleConfig } from "@scratchyjs/drizzle";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 

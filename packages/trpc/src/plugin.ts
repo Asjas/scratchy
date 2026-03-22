@@ -64,5 +64,5 @@ export default fp<TrpcPluginOptions<AnyRouter>>(
 
     fastify.log.info({ prefix }, "tRPC plugin registered");
   },
-  { name: "@scratchy/trpc" },
+  { name: "@scratchyjs/trpc" },
 );

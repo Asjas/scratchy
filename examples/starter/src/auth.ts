@@ -1,6 +1,6 @@
 import type { AppConfig } from "./config.js";
 import { account, session, user, verification } from "./db/schema/index.js";
-import { createAuth } from "@scratchy/auth";
+import { createAuth } from "@scratchyjs/auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { ulid } from "ulid";
@@ -13,17 +13,17 @@ import { ulid } from "ulid";
  * - Drizzle ORM adapter for persistent session/user storage
  * - ULID IDs to stay consistent with the rest of the Scratchy data layer
  *
- * Register the returned instance with `authPlugin` from `@scratchy/auth/plugin`:
+ * Register the returned instance with `authPlugin` from `@scratchyjs/auth/plugin`:
  *
  * ```ts
- * import authPlugin from "@scratchy/auth/plugin";
+ * import authPlugin from "@scratchyjs/auth/plugin";
  *
  * const auth = createAppAuth(config, server.db);
  * await server.register(authPlugin, { auth });
  * ```
  *
  * @param config - Application config. Must include a valid `BETTER_AUTH_SECRET`.
- * @param db     - Drizzle database instance (registered by `@scratchy/drizzle`).
+ * @param db     - Drizzle database instance (registered by `@scratchyjs/drizzle`).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createAppAuth(config: AppConfig, db: NodePgDatabase<any>) {

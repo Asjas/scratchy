@@ -1,4 +1,4 @@
-# @scratchy/drizzle
+# @scratchyjs/drizzle
 
 Database layer for the Scratchy framework — Drizzle ORM helpers, connection
 pooling, schema namespace helpers, column helpers, and a Fastify plugin.
@@ -6,7 +6,7 @@ pooling, schema namespace helpers, column helpers, and a Fastify plugin.
 ## Installation
 
 ```bash
-pnpm add @scratchy/drizzle
+pnpm add @scratchyjs/drizzle
 ```
 
 ## Usage
@@ -14,7 +14,7 @@ pnpm add @scratchy/drizzle
 ### Connection Pool
 
 ```typescript
-import { createPool } from "@scratchy/drizzle";
+import { createPool } from "@scratchyjs/drizzle";
 
 const pool = await createPool("postgresql://localhost:5432/mydb", {
   max: 50,
@@ -39,7 +39,7 @@ still handled so they don't crash the process.
 Always use a custom PostgreSQL schema instead of the default `public` schema:
 
 ```typescript
-import { createSchema } from "@scratchy/drizzle";
+import { createSchema } from "@scratchyjs/drizzle";
 
 // Reads DATABASE_SCHEMA env var, or defaults to "app"
 const mySchema = createSchema();
@@ -54,7 +54,7 @@ Spread the `timestamps` helper into every table to get consistent
 `created_at`/`updated_at` columns:
 
 ```typescript
-import { timestamps } from "@scratchy/drizzle/helpers";
+import { timestamps } from "@scratchyjs/drizzle/helpers";
 import { text } from "drizzle-orm/pg-core";
 
 const user = mySchema.table("user", {
@@ -73,7 +73,7 @@ automatically updates via `$onUpdateFn(() => new Date())`.
 Register the plugin to make `fastify.db` and `fastify.pool` available:
 
 ```typescript
-import drizzlePlugin from "@scratchy/drizzle/plugin";
+import drizzlePlugin from "@scratchyjs/drizzle/plugin";
 
 await server.register(drizzlePlugin, {
   connectionString: process.env.DATABASE_URL,
@@ -93,7 +93,7 @@ Generate a Drizzle Kit config with Scratchy defaults:
 
 ```typescript
 // drizzle.config.ts
-import { createDrizzleConfig } from "@scratchy/drizzle";
+import { createDrizzleConfig } from "@scratchyjs/drizzle";
 
 export default createDrizzleConfig({
   schema: ["./src/db/my-schema.ts", "./src/db/schema"],

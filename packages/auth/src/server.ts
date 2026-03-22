@@ -20,7 +20,7 @@ export type CreateAuthOptions = BetterAuthOptions;
  *
  * @example
  * ```ts
- * import { createAuth } from "@scratchy/auth";
+ * import { createAuth } from "@scratchyjs/auth";
  *
  * export const auth = createAuth({
  *   database: drizzleAdapter(db, { provider: "pg" }),

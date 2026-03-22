@@ -1,4 +1,4 @@
-import { configSchema } from "@scratchy/core";
+import { configSchema } from "@scratchyjs/core";
 import { z } from "zod";
 
 /**

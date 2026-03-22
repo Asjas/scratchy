@@ -1,6 +1,6 @@
-import { createServer, loadConfig } from "@scratchy/core";
-import { createSSRHandler } from "@scratchy/renderer";
-import { publicProcedure, router } from "@scratchy/trpc";
+import { createServer, loadConfig } from "@scratchyjs/core";
+import { createSSRHandler } from "@scratchyjs/renderer";
+import { publicProcedure, router } from "@scratchyjs/trpc";
 import type { FastifyInstance } from "fastify";
 import { resolve } from "node:path";
 import superjson from "superjson";
@@ -61,7 +61,7 @@ beforeAll(async () => {
   server = await createServer(config);
 
   // Register tRPC with the in-memory test router
-  const { default: trpcPlugin } = await import("@scratchy/trpc/plugin");
+  const { default: trpcPlugin } = await import("@scratchyjs/trpc/plugin");
   await server.register(trpcPlugin, { router: testAppRouter });
 
   // Register the auth plugin with an in-memory Better Auth instance.
@@ -70,8 +70,8 @@ beforeAll(async () => {
   // sign-up/sign-in flows will fail at the storage layer, but the routes
   // are still mounted and reachable (no 404), which is what the auth
   // endpoint reachability tests below verify.
-  const { createAuth } = await import("@scratchy/auth");
-  const { default: authPlugin } = await import("@scratchy/auth/plugin");
+  const { createAuth } = await import("@scratchyjs/auth");
+  const { default: authPlugin } = await import("@scratchyjs/auth/plugin");
   const auth = createAuth({
     basePath: "/api/auth",
     secret: "test-secret-at-least-32-characters-long",
@@ -80,13 +80,14 @@ beforeAll(async () => {
   await server.register(authPlugin, { auth });
 
   // Register a protected test route using requireAuth
-  const { requireAuth } = await import("@scratchy/auth/hooks");
+  const { requireAuth } = await import("@scratchyjs/auth/hooks");
   server.get("/protected", { preHandler: requireAuth }, (request) => {
     return { user: request.user };
   });
 
   // Register the renderer worker pool
-  const { default: rendererPlugin } = await import("@scratchy/renderer/plugin");
+  const { default: rendererPlugin } =
+    await import("@scratchyjs/renderer/plugin");
   const workerPath = resolve(import.meta.dirname, "renderer", "worker.ts");
   await server.register(rendererPlugin, {
     worker: workerPath,

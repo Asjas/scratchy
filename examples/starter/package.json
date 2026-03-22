@@ -1,20 +1,19 @@
 {
-  "name": "@scratchy/example",
+  "name": "@scratchyjs/example",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "scripts": {
     "dev": "node --env-file=.env src/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@scratchy/auth": "workspace:*",
-    "@scratchy/core": "workspace:*",
-    "@scratchy/drizzle": "workspace:*",
-    "@scratchy/renderer": "workspace:*",
-    "@scratchy/trpc": "workspace:*",
-    "@scratchy/utils": "workspace:*",
-    "@scratchy/vite-plugin": "workspace:*",
+    "@scratchyjs/auth": "workspace:*",
+    "@scratchyjs/core": "workspace:*",
+    "@scratchyjs/drizzle": "workspace:*",
+    "@scratchyjs/renderer": "workspace:*",
+    "@scratchyjs/trpc": "workspace:*",
+    "@scratchyjs/utils": "workspace:*",
+    "@scratchyjs/vite-plugin": "workspace:*",
     "better-auth": "1.5.5",
     "drizzle-orm": "0.45.1",
     "ulid": "3.0.2"

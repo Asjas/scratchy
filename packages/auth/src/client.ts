@@ -13,7 +13,7 @@ import { createAuthClient as baseCreateAuthClient } from "better-auth/client";
  *
  * @example
  * ```ts
- * import { createAuthClient } from "@scratchy/auth/client";
+ * import { createAuthClient } from "@scratchyjs/auth/client";
  *
  * export const authClient = createAuthClient({
  *   baseURL: "http://localhost:3000",

@@ -1,4 +1,4 @@
-import { createSchema } from "@scratchy/drizzle";
+import { createSchema } from "@scratchyjs/drizzle";
 
 /**
  * PostgreSQL schema namespace for the starter example.

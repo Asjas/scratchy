@@ -46,7 +46,7 @@ have a consistent development environment.
 
   ```jsonc
   {
-    "name": "scratchy",
+    "name": "scratchyjs",
     "private": true,
     "type": "module",
     "engines": { "node": ">=22" },
@@ -143,7 +143,7 @@ package registers into.
 
 ```jsonc
 {
-  "name": "@scratchy/core",
+  "name": "@scratchyjs/core",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -229,7 +229,7 @@ helpers, and patterns for prepared statements and migrations.
 
 ```jsonc
 {
-  "name": "@scratchy/drizzle",
+  "name": "@scratchyjs/drizzle",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -300,7 +300,7 @@ authorization middleware, and Fastify adapter registration.
 
 ```jsonc
 {
-  "name": "@scratchy/trpc",
+  "name": "@scratchyjs/trpc",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -373,7 +373,7 @@ utilities.
 
 ```jsonc
 {
-  "name": "@scratchy/renderer",
+  "name": "@scratchyjs/renderer",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -448,7 +448,7 @@ code with Qwik, React interop, and Tailwind CSS.
 
 ```jsonc
 {
-  "name": "@scratchy/vite-plugin",
+  "name": "@scratchyjs/vite-plugin",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -504,14 +504,14 @@ vite-tsconfig-paths
 
 ## Phase 6 — CLI Package (`packages/cli`)
 
-**Goal:** Build the `scratchy` CLI with scaffolding commands for models,
+**Goal:** Build the `scratchyjs` CLI with scaffolding commands for models,
 routers, routes, components, pages, plugins, and full feature scaffolds.
 
 ### Package Identity
 
 ```jsonc
 {
-  "name": "@scratchy/cli",
+  "name": "@scratchyjs/cli",
   "type": "module",
   "bin": {
     "scratchy": "./src/index.ts",
@@ -593,7 +593,7 @@ package, and write integration and E2E tests to verify the entire stack.
 
 ```jsonc
 {
-  "name": "@scratchy/example",
+  "name": "@scratchyjs/example",
   "private": true,
   "type": "module",
 }
@@ -607,13 +607,13 @@ package, and write integration and E2E tests to verify the entire stack.
   examples/starter/
   ├── src/
   │   ├── index.ts              # Entry point
-  │   ├── server.ts             # Server setup using @scratchy/core
+  │   ├── server.ts             # Server setup using @scratchyjs/core
   │   ├── config.ts             # App config
-  │   ├── auth.ts               # Better Auth instance using @scratchy/auth
-  │   ├── router.ts             # tRPC init using @scratchy/trpc
+  │   ├── auth.ts               # Better Auth instance using @scratchyjs/auth
+  │   ├── router.ts             # tRPC init using @scratchyjs/trpc
   │   ├── context.ts            # tRPC context
   │   ├── db/
-  │   │   ├── index.ts          # Drizzle instance using @scratchy/drizzle
+  │   │   ├── index.ts          # Drizzle instance using @scratchyjs/drizzle
   │   │   ├── my-schema.ts      # App schema namespace
   │   │   └── schema/
   │   │       ├── columns.helpers.ts
@@ -641,17 +641,17 @@ package, and write integration and E2E tests to verify the entire stack.
   ```
 
 - [x] Wire up all framework packages together
-  - `@scratchy/core` for server
-  - `@scratchy/auth` for authentication
-  - `@scratchy/drizzle` for database
-  - `@scratchy/trpc` for API
-  - `@scratchy/renderer` for SSR
-  - `@scratchy/vite-plugin` for client bundling
+  - `@scratchyjs/core` for server
+  - `@scratchyjs/auth` for authentication
+  - `@scratchyjs/drizzle` for database
+  - `@scratchyjs/trpc` for API
+  - `@scratchyjs/renderer` for SSR
+  - `@scratchyjs/vite-plugin` for client bundling
 - [x] Create Docker Compose file for local infrastructure
   - PostgreSQL 16
   - DragonflyDB (Redis-compatible)
 - [x] Create `.env.example` with all required environment variables
-- [x] Integrate `@scratchy/auth` into the example application
+- [x] Integrate `@scratchyjs/auth` into the example application
   - Add `src/auth.ts` — configures Better Auth instance with `createAuth()`
 
     ```
@@ -673,7 +673,7 @@ package, and write integration and E2E tests to verify the entire stack.
   - Use `requireAuth` preHandler hook on routes that need authentication
   - Extend `src/types/fastify.d.ts` to include auth type augmentation
   - See `.github/instructions/auth.instructions.md` for the full coding
-    reference for `@scratchy/auth`
+    reference for `@scratchyjs/auth`
 
 - [x] Write integration tests
   - Server starts and health check works
@@ -691,7 +691,7 @@ package, and write integration and E2E tests to verify the entire stack.
 
 ### Key Dependencies
 
-All `@scratchy/*` packages plus:
+All `@scratchyjs/*` packages plus:
 
 ```
 vitest (devDependency)
@@ -797,6 +797,6 @@ be planned for:
 - [ ] Lock-free ring buffer for high-throughput SharedArrayBuffer communication
 - [ ] Multi-server cache invalidation via Redis Pub/Sub
 - [ ] Turborepo or Nx for optimized monorepo task execution
-- [ ] `create-scratchy-app` initializer package
+- [ ] `create-scratchyjs-app` initializer package
 - [ ] Plugin marketplace / community plugin conventions
 - [ ] Performance benchmarking suite

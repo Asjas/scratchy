@@ -65,25 +65,25 @@ importers:
 
   examples/starter:
     dependencies:
-      '@scratchy/auth':
+      '@scratchyjs/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@scratchy/core':
+      '@scratchyjs/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@scratchy/drizzle':
+      '@scratchyjs/drizzle':
         specifier: workspace:*
         version: link:../../packages/drizzle
-      '@scratchy/renderer':
+      '@scratchyjs/renderer':
         specifier: workspace:*
         version: link:../../packages/renderer
-      '@scratchy/trpc':
+      '@scratchyjs/trpc':
         specifier: workspace:*
         version: link:../../packages/trpc
-      '@scratchy/utils':
+      '@scratchyjs/utils':
         specifier: workspace:*
         version: link:../../packages/utils
-      '@scratchy/vite-plugin':
+      '@scratchyjs/vite-plugin':
         specifier: workspace:*
         version: link:../../packages/vite-plugin
       better-auth:

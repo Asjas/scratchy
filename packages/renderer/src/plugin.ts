@@ -93,5 +93,5 @@ export default fp(
       "renderer worker pool initialized",
     );
   },
-  { name: "@scratchy/renderer" },
+  { name: "@scratchyjs/renderer" },
 );

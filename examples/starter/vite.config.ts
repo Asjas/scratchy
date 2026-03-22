@@ -1,4 +1,4 @@
-import { createScratchyConfig } from "@scratchy/vite-plugin";
+import { createScratchyConfig } from "@scratchyjs/vite-plugin";
 import { defineConfig } from "vite";
 
 export default defineConfig(async () => {

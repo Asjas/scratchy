@@ -1,19 +1,19 @@
-# @scratchy/example — Starter Application
+# @scratchyjs/example — Starter Application
 
 A minimal but complete example application demonstrating how to wire up all
 Scratchy framework packages together.
 
 ## What It Shows
 
-| Layer           | Package                 | Role                                      |
-| --------------- | ----------------------- | ----------------------------------------- |
-| HTTP server     | `@scratchy/core`        | Fastify with CORS, helmet, rate-limiting  |
-| Authentication  | `@scratchy/auth`        | Better Auth with email/password           |
-| Database        | `@scratchy/drizzle`     | Drizzle ORM with PostgreSQL               |
-| API             | `@scratchy/trpc`        | Type-safe tRPC router for `posts`         |
-| Rendering       | `@scratchy/renderer`    | Piscina SSR worker pool                   |
-| Client bundling | `@scratchy/vite-plugin` | Vite + Qwik + Tailwind CSS                |
-| Utilities       | `@scratchy/utils`       | Request helpers (IP, locale, prefetch, …) |
+| Layer           | Package                   | Role                                      |
+| --------------- | ------------------------- | ----------------------------------------- |
+| HTTP server     | `@scratchyjs/core`        | Fastify with CORS, helmet, rate-limiting  |
+| Authentication  | `@scratchyjs/auth`        | Better Auth with email/password           |
+| Database        | `@scratchyjs/drizzle`     | Drizzle ORM with PostgreSQL               |
+| API             | `@scratchyjs/trpc`        | Type-safe tRPC router for `posts`         |
+| Rendering       | `@scratchyjs/renderer`    | Piscina SSR worker pool                   |
+| Client bundling | `@scratchyjs/vite-plugin` | Vite + Qwik + Tailwind CSS                |
+| Utilities       | `@scratchyjs/utils`       | Request helpers (IP, locale, prefetch, …) |
 
 ## Getting Started
 
@@ -93,14 +93,14 @@ The server starts on `http://localhost:3000`.
 ## Authentication
 
 Authentication is handled by [Better Auth](https://www.better-auth.com/) via
-`@scratchy/auth`. The auth instance is created in `src/auth.ts` and registered
+`@scratchyjs/auth`. The auth instance is created in `src/auth.ts` and registered
 as a Fastify plugin in `src/server.ts`.
 
 ### How it works
 
 1. **`src/auth.ts`** — creates the Better Auth instance with email/password
    support and a Drizzle ORM adapter for persistent session storage.
-2. **`src/server.ts`** — registers `authPlugin` from `@scratchy/auth/plugin`
+2. **`src/server.ts`** — registers `authPlugin` from `@scratchyjs/auth/plugin`
    after the database plugin (so `server.db` is available).
 3. Every request gets `request.session` and `request.user` decorators set by the
    auth plugin's `onRequest` hook (both `null` when unauthenticated).
@@ -108,7 +108,7 @@ as a Fastify plugin in `src/server.ts`.
 ### Protecting routes
 
 ```typescript
-import { requireAdmin, requireAuth } from "@scratchy/auth/hooks";
+import { requireAdmin, requireAuth } from "@scratchyjs/auth/hooks";
 
 // Authenticated users only
 fastify.get("/profile", { preHandler: requireAuth }, (request) => {
@@ -143,7 +143,7 @@ Better Auth requires four tables managed in `src/db/schema/`:
 src/
 ├── index.ts              # Server entry point
 ├── server.ts             # Server factory (wires all packages)
-├── config.ts             # App config (extends @scratchy/core)
+├── config.ts             # App config (extends @scratchyjs/core)
 ├── auth.ts               # Better Auth instance (createAppAuth)
 ├── router.ts             # tRPC re-exports
 ├── context.ts            # tRPC context re-export
@@ -161,7 +161,7 @@ src/
 │       ├── queries.ts    # posts.list, posts.getById
 │       └── mutations.ts  # posts.create, posts.update, posts.delete
 ├── renderer/
-│   └── worker.ts         # Piscina SSR worker (delegates to @scratchy/renderer)
+│   └── worker.ts         # Piscina SSR worker (delegates to @scratchyjs/renderer)
 ├── client/
 │   ├── routes/
 │   │   ├── layout.tsx    # Qwik root layout

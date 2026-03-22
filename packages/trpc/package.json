@@ -1,7 +1,6 @@
 {
-  "name": "@scratchy/trpc",
+  "name": "@scratchyjs/trpc",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
