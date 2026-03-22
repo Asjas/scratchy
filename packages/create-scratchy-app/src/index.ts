@@ -4,6 +4,7 @@ import {
   copyTemplate,
   defaultProjectName,
   detectPackageManager,
+  getInstallCommand,
   getRunCommand,
   initGit,
   installDeps,
@@ -27,14 +28,18 @@ import { existsSync } from "node:fs";
 // ─── Optional feature strip helpers ──────────────────────────────────────────
 
 import { readFile, rm, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 import pc from "picocolors";
 
 /** Absolute path to the bundled template directory. */
 const TEMPLATE_DIR = join(import.meta.dirname, "template");
 
-/** CLI version sourced from package.json at runtime. */
-const VERSION = "0.1.0";
+/** CLI version read from package.json at runtime. */
+const require = createRequire(import.meta.url);
+const { version: VERSION } = require("../package.json") as {
+  version: string;
+};
 
 // ─── Parse argv ──────────────────────────────────────────────────────────────
 
@@ -246,6 +251,9 @@ async function main(): Promise<void> {
     await stripRendererFiles(projectDir);
   }
 
+  // Clean up any remaining sentinel comments from generated files.
+  await cleanSentinelComments(projectDir);
+
   s.stop("Project scaffolded.");
 
   // ── Git ─────────────────────────────────────────────────────────────────
@@ -270,7 +278,7 @@ async function main(): Promise<void> {
     } else {
       ins.stop(
         pc.yellow(
-          `Could not install dependencies. Run ${pc.cyan(getRunCommand(packageManager, "install"))} manually.`,
+          `Could not install dependencies. Run ${pc.cyan(getInstallCommand(packageManager))} manually.`,
         ),
       );
     }
@@ -288,14 +296,29 @@ async function main(): Promise<void> {
   }
 
   if (!installDepsChoice) {
-    nextSteps.push(getRunCommand(packageManager, "install"));
+    nextSteps.push(getInstallCommand(packageManager));
   }
 
   nextSteps.push("cp .env.example .env   # configure environment variables");
-  nextSteps.push("docker compose up -d   # start PostgreSQL + DragonflyDB");
+
+  if (includeDb) {
+    nextSteps.push("docker compose up -d   # start PostgreSQL + DragonflyDB");
+  }
+
   nextSteps.push(
     getRunCommand(packageManager, "dev") + "         # start the dev server",
   );
+
+  if (includeDb) {
+    nextSteps.push(
+      getRunCommand(packageManager, "drizzle-kit generate") +
+        "  # generate initial migration",
+    );
+    nextSteps.push(
+      getRunCommand(packageManager, "drizzle-kit migrate") +
+        "   # apply migrations",
+    );
+  }
 
   outro(
     [
@@ -331,8 +354,10 @@ async function stripDatabaseFiles(dir: string): Promise<void> {
     "REDIS_URL",
   ]);
 
-  // Remove db-related imports from server.ts
-  await removeServerDbBlock(join(dir, "src", "server.ts"));
+  // Remove db-related blocks from server.ts using sentinel comments
+  await removeFeatureBlock(join(dir, "src", "server.ts"), "db");
+  // Auth blocks also depend on db, strip them too
+  await removeFeatureBlock(join(dir, "src", "server.ts"), "auth");
 }
 
 async function stripAuthFiles(dir: string): Promise<void> {
@@ -363,6 +388,9 @@ async function stripAuthFiles(dir: string): Promise<void> {
       .join("\n");
     await writeFile(schemaIndex, updated, "utf8");
   }
+
+  // Remove auth blocks from server.ts using sentinel comments
+  await removeFeatureBlock(join(dir, "src", "server.ts"), "auth");
 }
 
 async function stripRendererFiles(dir: string): Promise<void> {
@@ -374,8 +402,8 @@ async function stripRendererFiles(dir: string): Promise<void> {
     }
   }
 
-  // Remove renderer import from server.ts
-  await removeServerRendererBlock(join(dir, "src", "server.ts"));
+  // Remove renderer blocks from server.ts using sentinel comments
+  await removeFeatureBlock(join(dir, "src", "server.ts"), "renderer");
 }
 
 async function stripEnvSection(envFile: string, keys: string[]): Promise<void> {
@@ -391,35 +419,56 @@ async function stripEnvSection(envFile: string, keys: string[]): Promise<void> {
   await writeFile(envFile, filtered.join("\n"), "utf8");
 }
 
-async function removeServerDbBlock(serverFile: string): Promise<void> {
-  if (!existsSync(serverFile)) return;
+/**
+ * Removes lines between `// @scratchy-feature <name>-start` and
+ * `// @scratchy-feature <name>-end` sentinel comments (inclusive).
+ * This approach removes well-delimited blocks instead of fragile
+ * line-by-line substring matching, keeping the generated TypeScript valid.
+ */
+async function removeFeatureBlock(
+  filePath: string,
+  feature: string,
+): Promise<void> {
+  if (!existsSync(filePath)) return;
 
-  const content = await readFile(serverFile, "utf8");
-  // Remove lines that reference @scratchyjs/drizzle or db operations
+  const content = await readFile(filePath, "utf8");
+  const startTag = `// @scratchy-feature ${feature}-start`;
+  const endTag = `// @scratchy-feature ${feature}-end`;
   const lines = content.split("\n");
-  const filtered = lines.filter(
-    (line) =>
-      !line.includes("@scratchyjs/drizzle") &&
-      !line.includes("drizzlePlugin") &&
-      !line.includes("skipDb") &&
-      !line.includes("DATABASE_URL") &&
-      !line.includes("dbSchemas"),
-  );
-  await writeFile(serverFile, filtered.join("\n"), "utf8");
+  const result: string[] = [];
+  let skipping = false;
+
+  for (const line of lines) {
+    if (line.trim() === startTag) {
+      skipping = true;
+      continue;
+    }
+    if (line.trim() === endTag) {
+      skipping = false;
+      continue;
+    }
+    if (!skipping) {
+      result.push(line);
+    }
+  }
+
+  await writeFile(filePath, result.join("\n"), "utf8");
 }
 
-async function removeServerRendererBlock(serverFile: string): Promise<void> {
+/**
+ * After all feature stripping is complete, remove any remaining sentinel
+ * comments from generated files so they don't appear in user projects.
+ */
+async function cleanSentinelComments(dir: string): Promise<void> {
+  const serverFile = join(dir, "src", "server.ts");
   if (!existsSync(serverFile)) return;
 
   const content = await readFile(serverFile, "utf8");
-  const lines = content.split("\n");
-  const filtered = lines.filter(
-    (line) =>
-      !line.includes("@scratchyjs/renderer") &&
-      !line.includes("createSSRHandler") &&
-      !line.includes("renderer"),
-  );
-  await writeFile(serverFile, filtered.join("\n"), "utf8");
+  const cleaned = content
+    .split("\n")
+    .filter((line) => !line.trim().startsWith("// @scratchy-feature "))
+    .join("\n");
+  await writeFile(serverFile, cleaned, "utf8");
 }
 
 // ─── Run ──────────────────────────────────────────────────────────────────────

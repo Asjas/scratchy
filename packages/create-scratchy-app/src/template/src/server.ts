@@ -1,11 +1,18 @@
 import { createServer } from "@scratchyjs/core";
+// @scratchy-feature renderer-start
 import { createSSRHandler } from "@scratchyjs/renderer";
+// @scratchy-feature renderer-end
 import type { AnyRouter } from "@trpc/server";
+// @scratchy-feature renderer-start
 import { resolve } from "node:path";
 import type { AppConfig } from "~/config.js";
 import { loadAppConfig } from "~/config.js";
+// @scratchy-feature db-start
 import * as dbSchemas from "~/db/schema/index.js";
+// @scratchy-feature db-end
 import { appRouter } from "~/routers/index.js";
+
+// @scratchy-feature renderer-end
 
 export interface ServerOpts {
   /** Pre-loaded application config. Falls back to `loadAppConfig()` if omitted. */
@@ -15,10 +22,14 @@ export interface ServerOpts {
    * without a real database connection.
    */
   router?: AnyRouter;
+  // @scratchy-feature db-start
   /** When `true`, the Drizzle database plugin is not registered. */
   skipDb?: boolean;
+  // @scratchy-feature db-end
+  // @scratchy-feature auth-start
   /** When `true`, the auth plugin is not registered even if `BETTER_AUTH_SECRET` is set. */
   skipAuth?: boolean;
+  // @scratchy-feature auth-end
 }
 
 /**
@@ -33,7 +44,8 @@ export async function buildServer(opts: ServerOpts = {}) {
   const config = opts.config ?? loadAppConfig();
   const server = await createServer(config);
 
-  // ── Database ─────────────────────────────────────────────────────────────
+  // @scratchy-feature db-start
+  // ── Database ────────────────────────────────────────────────────────────────
   const shouldRegisterDb = !opts.skipDb && Boolean(config.DATABASE_URL);
   if (shouldRegisterDb && config.DATABASE_URL) {
     const { default: drizzlePlugin } =
@@ -43,7 +55,9 @@ export async function buildServer(opts: ServerOpts = {}) {
       schemas: dbSchemas,
     });
   }
+  // @scratchy-feature db-end
 
+  // @scratchy-feature auth-start
   // ── Auth ─────────────────────────────────────────────────────────────────
   // Must be registered after the database plugin so `server.db` is available.
   const shouldRegisterAuth =
@@ -54,31 +68,38 @@ export async function buildServer(opts: ServerOpts = {}) {
     const auth = createAppAuth(config, server.db);
     await server.register(authPlugin, { auth });
   }
+  // @scratchy-feature auth-end
 
-  // ── tRPC API ──────────────────────────────────────────────────────────────
+  // ── tRPC API ─────────────────────────────────────────────────────────────
+  // @scratchy-feature db-start
   const effectiveRouter = opts.router ?? appRouter;
   if (!shouldRegisterDb && effectiveRouter === appRouter) {
-    // Use a bare router when no database is available to avoid import errors
-    // from routers that reference `ctx.request.server.db`.
-    const { createContext } = await import("~/context.js");
-    const { default: trpcPlugin } = await import("@scratchyjs/trpc/plugin");
-    await server.register(trpcPlugin, {
-      router: effectiveRouter,
-      createContext,
-    });
-  } else {
-    const { createContext } = await import("~/context.js");
-    const { default: trpcPlugin } = await import("@scratchyjs/trpc/plugin");
-    await server.register(trpcPlugin, {
-      router: effectiveRouter,
-      createContext,
-    });
+    throw new Error(
+      "Default appRouter requires a database, but DATABASE_URL is unset or skipDb is true. " +
+        "Either configure DATABASE_URL / disable skipDb, or pass a custom router via ServerOpts.router.",
+    );
   }
+  // @scratchy-feature db-end
+  const { default: trpcPlugin } = await import("@scratchyjs/trpc/plugin");
+  await server.register(trpcPlugin, {
+    router: opts.router ?? appRouter,
+  });
 
-  // ── SSR Renderer ──────────────────────────────────────────────────────────
+  // @scratchy-feature renderer-start
+  // ── Renderer worker pool ─────────────────────────────────────────────────
+  const { default: rendererPlugin } =
+    await import("@scratchyjs/renderer/plugin");
   const workerPath = resolve(import.meta.dirname, "renderer", "worker.ts");
-  const ssrHandler = await createSSRHandler({ workerPath });
-  await server.register(ssrHandler);
+  await server.register(rendererPlugin, {
+    worker: workerPath,
+    minThreads: 1,
+    maxThreads: 2,
+    taskTimeout: 10_000,
+  });
+
+  // ── SSR catch-all ────────────────────────────────────────────────────────
+  server.get("/*", createSSRHandler());
+  // @scratchy-feature renderer-end
 
   return server;
 }

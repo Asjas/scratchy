@@ -89,11 +89,10 @@ Always ask clarifying questions about the user's context, audience, and goals
 
 **Example intro for Scratchy:**
 
-> \*"In this tutorial, you will build a simple API with Scratchy using Fastify
-> and tRPC. By the end, you will have a running server that responds to
-> type-safe queries. No prior Scratchy experience is needed — only Node.js
->
-> > = 22 and pnpm >= 10."\*
+> "In this tutorial, you will build a simple API with Scratchy using Fastify and
+> tRPC. By the end, you will have a running server that responds to type-safe
+> queries. No prior Scratchy experience is needed — only Node.js >= 24 and
+> pnpm >= 10."
 
 **Scratchy tutorial patterns:**
 
