@@ -48,7 +48,8 @@ function collectFiles(dir: string): string[] {
  */
 function fileToRoutePath(routesDir: string, filePath: string): string {
   const rel = relative(routesDir, filePath);
-  const parts = rel.replace(/\.ts$/, "").split("/");
+  const normalizedRel = rel.replace(/\\/g, "/");
+  const parts = normalizedRel.replace(/\.ts$/, "").split("/");
   const cleaned = parts.filter((p) => p !== "index");
   return "/" + (cleaned.length > 0 ? cleaned.join("/") : "");
 }
