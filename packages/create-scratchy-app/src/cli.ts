@@ -41,6 +41,7 @@ export interface NextStepsConfig {
   includeDb: boolean;
   installDepsChoice: boolean;
   packageManager: PackageManager;
+  cwd: string;
 }
 
 /**
@@ -54,13 +55,13 @@ export function buildNextSteps(config: NextStepsConfig): string[] {
     includeDb,
     installDepsChoice,
     packageManager,
+    cwd,
   } = config;
 
-  const relativeDir =
-    projectDir === process.cwd() ? "." : `./${rawProjectName}`;
+  const relativeDir = projectDir === cwd ? "." : `./${rawProjectName}`;
   const steps: string[] = [];
 
-  if (projectDir !== process.cwd()) {
+  if (projectDir !== cwd) {
     steps.push(`cd ${relativeDir}`);
   }
 

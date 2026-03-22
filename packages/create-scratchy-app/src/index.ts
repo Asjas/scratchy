@@ -267,6 +267,7 @@ async function main(): Promise<void> {
     includeDb,
     installDepsChoice,
     packageManager,
+    cwd: process.cwd(),
   });
 
   outro(

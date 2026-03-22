@@ -93,6 +93,7 @@ describe("buildNextSteps", () => {
     includeDb: true,
     installDepsChoice: true,
     packageManager: "pnpm",
+    cwd: "/home/user/projects",
   };
 
   it("includes cd step when projectDir differs from cwd", () => {
@@ -103,7 +104,8 @@ describe("buildNextSteps", () => {
   it("omits cd step when projectDir equals cwd", () => {
     const steps = buildNextSteps({
       ...baseConfig,
-      projectDir: process.cwd(),
+      projectDir: "/home/user/projects",
+      cwd: "/home/user/projects",
     });
     expect(steps.every((s) => !s.startsWith("cd "))).toBe(true);
   });
@@ -200,7 +202,8 @@ describe("buildNextSteps", () => {
   it("returns minimal steps when projectDir is cwd, deps installed, no db", () => {
     const steps = buildNextSteps({
       ...baseConfig,
-      projectDir: process.cwd(),
+      projectDir: "/home/user/projects",
+      cwd: "/home/user/projects",
       installDepsChoice: true,
       includeDb: false,
     });
@@ -275,15 +278,15 @@ describe("validateProjectName", () => {
     expect(result).toContain("must start with a letter or digit");
   });
 
-  it("returns error for names with special characters", () => {
+  it("returns error for names with invalid characters", () => {
     expect(validateProjectName("my app")).toContain(
-      "must start with a letter or digit",
+      "contain only letters, digits, hyphens, dots, or underscores",
     );
     expect(validateProjectName("my@app")).toContain(
-      "must start with a letter or digit",
+      "contain only letters, digits, hyphens, dots, or underscores",
     );
     expect(validateProjectName("my/app")).toContain(
-      "must start with a letter or digit",
+      "contain only letters, digits, hyphens, dots, or underscores",
     );
   });
 
