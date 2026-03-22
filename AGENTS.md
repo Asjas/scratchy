@@ -288,14 +288,20 @@ docs/
 
 ### Deployment
 
-| Event                                                 | Target                 | URL                                 |
-| ----------------------------------------------------- | ---------------------- | ----------------------------------- |
-| Push to `main` (docs/\*\* or CHANGELOG.md changed)    | Production Worker      | https://scratchyjs.com              |
-| PR opened/updated (docs/\*\* or CHANGELOG.md changed) | Preview Worker         | https://preview-{pr}.scratchyjs.com |
-| PR closed                                             | Preview Worker deleted | —                                   |
+| Event                                                 | Target                 | URL / How to Access                                  |
+| ----------------------------------------------------- | ---------------------- | ---------------------------------------------------- |
+| Push to `main` (docs/\*\* or CHANGELOG.md changed)    | Production Worker      | https://scratchyjs.com                               |
+| PR opened/updated (docs/\*\* or CHANGELOG.md changed) | Preview Worker         | Cloudflare `workers.dev` preview URL (see PR checks) |
+| PR closed                                             | Preview Worker deleted | —                                                    |
 
 Deployment uses Cloudflare Workers Static Assets (`wrangler.toml` at repo root).
 
+**Preview URL discovery:** This repository does not configure `preview-{pr}.scratchyjs.com`
+routes or DNS records. When a PR touches `docs/**` or `CHANGELOG.md`, CI deploys a
+named Worker for that PR. Cloudflare exposes it on a `workers.dev` subdomain derived
+from the Worker name and account (for example, `https://<worker-name>.<account>.workers.dev`).
+The exact preview URL is shown in the GitHub Actions "Deploy docs preview" job summary
+and in the Cloudflare Workers dashboard for the corresponding Worker.
 ### Required GitHub Secrets
 
 | Secret                  | Description                                                                 |
