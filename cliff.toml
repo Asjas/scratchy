@@ -71,7 +71,7 @@ commit_parsers = [
 ]
 
 # Prevent breaking changes from being skipped by later parsers.
-protect_breaking_commits = false
+protect_breaking_commits = true
 
 # Include all commits that match at least one parser (filter_commits = true
 # would exclude commits that don't match any parser).
