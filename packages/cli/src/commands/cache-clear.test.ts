@@ -1,3 +1,4 @@
+import type { CommandMeta } from "citty";
 import { rm } from "node:fs/promises";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -16,7 +17,7 @@ describe("cacheClearCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { cwd: "/tmp/test-project" },
+      args: { _: [], cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: cacheClearCommand,
     });
@@ -49,7 +50,7 @@ describe("cacheClearCommand", () => {
 
     // Should not throw
     await run({
-      args: { cwd: "/tmp/test-project" },
+      args: { _: [], cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: cacheClearCommand,
     });
@@ -67,7 +68,7 @@ describe("cacheClearCommand", () => {
 
     // Should not throw
     await run({
-      args: { cwd: "/tmp/test-project" },
+      args: { _: [], cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: cacheClearCommand,
     });
@@ -81,7 +82,7 @@ describe("cacheClearCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { cwd: "" },
+      args: { _: [], cwd: "" },
       rawArgs: [],
       cmd: cacheClearCommand,
     });
@@ -92,8 +93,9 @@ describe("cacheClearCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { cacheClearCommand } = await import("./cache-clear.js");
-    expect(cacheClearCommand.meta?.name).toBe("cache:clear");
-    expect(cacheClearCommand.meta?.description).toBe(
+    const meta = cacheClearCommand.meta as CommandMeta;
+    expect(meta.name).toBe("cache:clear");
+    expect(meta.description).toBe(
       "Remove build output and local cache directories",
     );
   });

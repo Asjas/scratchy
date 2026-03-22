@@ -1,5 +1,6 @@
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
+import type { CommandMeta } from "citty";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../utils/render.js", () => ({
@@ -20,7 +21,7 @@ describe("makeMigrationCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "add_role_to_users", cwd: "/tmp/test-project" },
+      args: { _: [], name: "add_role_to_users", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makeMigrationCommand,
     });
@@ -44,7 +45,7 @@ describe("makeMigrationCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "addRoleToUsers", cwd: "/tmp/test-project" },
+      args: { _: [], name: "addRoleToUsers", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makeMigrationCommand,
     });
@@ -59,6 +60,7 @@ describe("makeMigrationCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { makeMigrationCommand } = await import("./make-migration.js");
-    expect(makeMigrationCommand.meta?.name).toBe("make:migration");
+    const meta = makeMigrationCommand.meta as CommandMeta;
+    expect(meta.name).toBe("make:migration");
   });
 });

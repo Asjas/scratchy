@@ -88,7 +88,13 @@ Use **pnpm** as the package manager (recommended; never npm or yarn in CI).
 pnpm dev                              # Start the dev server (via tsx)
 pnpm build                            # Build all packages
 
-# Validation (run before every commit)
+# Validation (run ALL four steps before every commit — CI will reject failures)
+pnpm format                        # Prettier — fix code formatting
+pnpm lint                          # ESLint — catch lint errors
+pnpm typecheck                     # tsc --noEmit — catch type errors
+pnpm build                         # Build all packages
+
+# Or as a single command chain:
 pnpm format && pnpm lint && pnpm typecheck && pnpm build
 
 # Testing
@@ -215,6 +221,10 @@ npx create-scratchy-app --help        # Show help
 17. **Prepared statements** must be module-scoped (top-level), never inside
     functions.
 18. **Graceful shutdown** — use `close-with-grace` for SIGTERM/SIGINT handling.
+19. **Always run the full validation chain before committing** —
+    `pnpm format && pnpm lint && pnpm typecheck && pnpm build`. All four steps
+    are mandatory; CI rejects on any failure. `pnpm typecheck` runs
+    `tsc --noEmit` and catches type errors that tests and linting miss.
 
 ## Coding Conventions
 

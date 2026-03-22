@@ -1,5 +1,6 @@
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
+import type { CommandMeta } from "citty";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../utils/render.js", () => ({
@@ -21,6 +22,7 @@ describe("makeModelCommand", () => {
 
     await run({
       args: {
+        "_": [],
         "name": "Post",
         "columns": "title:text,published:boolean",
         "with-router": false,
@@ -69,6 +71,7 @@ describe("makeModelCommand", () => {
 
     await run({
       args: {
+        "_": [],
         "name": "User",
         "columns": "",
         "with-router": true,
@@ -97,6 +100,7 @@ describe("makeModelCommand", () => {
 
     await run({
       args: {
+        "_": [],
         "name": "Comment",
         "columns": "",
         "with-router": false,
@@ -117,6 +121,7 @@ describe("makeModelCommand", () => {
 
     await run({
       args: {
+        "_": [],
         "name": "Product",
         "columns": "name:text,price:integer",
         "with-router": false,
@@ -139,8 +144,9 @@ describe("makeModelCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { makeModelCommand } = await import("./make-model.js");
-    expect(makeModelCommand.meta?.name).toBe("make:model");
-    expect(makeModelCommand.meta?.description).toBe(
+    const meta = makeModelCommand.meta as CommandMeta;
+    expect(meta.name).toBe("make:model");
+    expect(meta.description).toBe(
       "Generate a Drizzle model (schema, queries, mutations)",
     );
   });

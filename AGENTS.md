@@ -72,11 +72,17 @@ pnpm install --frozen-lockfile
 pnpm dev                           # Run the development server
 pnpm build                         # Build all packages
 
-# Validation (run before every commit)
+# Validation (run ALL four steps before every commit — CI will reject failures)
+pnpm format                        # Prettier — fix code formatting
+pnpm lint                          # ESLint — catch lint errors
+pnpm typecheck                     # tsc --noEmit — catch type errors across all packages
+pnpm build                         # Build all packages
+
+# Or as a single command chain:
 pnpm format && pnpm lint && pnpm typecheck && pnpm build
 
 # Testing
-pnpm test                          # Run all tests
+pnpm test                          # Run all tests (Vitest)
 
 # Documentation site (VitePress)
 pnpm docs:dev                      # Start the VitePress dev server (http://localhost:5173)
@@ -124,6 +130,11 @@ pnpm cy:open                       # Open the Cypress interactive test runner
     functions.
 17. **Graceful shutdown** — use `close-with-grace` for SIGTERM/SIGINT handling.
     Never re-call `closeWithGrace` inside `process.on('uncaughtException')`.
+18. **Always run the full validation chain before committing** —
+    `pnpm format && pnpm lint && pnpm typecheck && pnpm build`. All four steps
+    are mandatory; CI rejects on any failure. `pnpm typecheck` runs
+    `tsc --noEmit` across all packages via Turbo and catches type errors that
+    tests and linting miss.
 
 ## Architecture
 

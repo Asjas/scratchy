@@ -1,5 +1,6 @@
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
+import type { CommandMeta } from "citty";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../utils/render.js", () => ({
@@ -20,7 +21,11 @@ describe("makeRouteCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "external/api/v1/products", cwd: "/tmp/test-project" },
+      args: {
+        _: [],
+        path: "external/api/v1/products",
+        cwd: "/tmp/test-project",
+      },
       rawArgs: [],
       cmd: makeRouteCommand,
     });
@@ -40,7 +45,7 @@ describe("makeRouteCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "/users", cwd: "/tmp/test-project" },
+      args: { _: [], path: "/users", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makeRouteCommand,
     });
@@ -56,7 +61,7 @@ describe("makeRouteCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "health", cwd: "" },
+      args: { _: [], path: "health", cwd: "" },
       rawArgs: [],
       cmd: makeRouteCommand,
     });
@@ -69,9 +74,8 @@ describe("makeRouteCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { makeRouteCommand } = await import("./make-route.js");
-    expect(makeRouteCommand.meta?.name).toBe("make:route");
-    expect(makeRouteCommand.meta?.description).toBe(
-      "Generate a Fastify REST route",
-    );
+    const meta = makeRouteCommand.meta as CommandMeta;
+    expect(meta.name).toBe("make:route");
+    expect(meta.description).toBe("Generate a Fastify REST route");
   });
 });

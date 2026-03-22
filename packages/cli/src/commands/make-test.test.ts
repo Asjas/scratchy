@@ -1,5 +1,6 @@
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
+import type { CommandMeta } from "citty";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../utils/render.js", () => ({
@@ -20,7 +21,11 @@ describe("makeTestCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "routers/posts/queries", cwd: "/tmp/test-project" },
+      args: {
+        _: [],
+        path: "routers/posts/queries",
+        cwd: "/tmp/test-project",
+      },
       rawArgs: [],
       cmd: makeTestCommand,
     });
@@ -40,7 +45,7 @@ describe("makeTestCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "/utils/helpers", cwd: "/tmp/test-project" },
+      args: { _: [], path: "/utils/helpers", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makeTestCommand,
     });
@@ -65,7 +70,7 @@ describe("makeTestCommand", () => {
 
     await expect(
       run({
-        args: { path: "../../etc/passwd", cwd: "/tmp/test-project" },
+        args: { _: [], path: "../../etc/passwd", cwd: "/tmp/test-project" },
         rawArgs: [],
         cmd: makeTestCommand,
       }),
@@ -81,7 +86,7 @@ describe("makeTestCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "lib/utils", cwd: "" },
+      args: { _: [], path: "lib/utils", cwd: "" },
       rawArgs: [],
       cmd: makeTestCommand,
     });
@@ -94,9 +99,8 @@ describe("makeTestCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { makeTestCommand } = await import("./make-test.js");
-    expect(makeTestCommand.meta?.name).toBe("make:test");
-    expect(makeTestCommand.meta?.description).toBe(
-      "Generate a Vitest test file",
-    );
+    const meta = makeTestCommand.meta as CommandMeta;
+    expect(meta.name).toBe("make:test");
+    expect(meta.description).toBe("Generate a Vitest test file");
   });
 });

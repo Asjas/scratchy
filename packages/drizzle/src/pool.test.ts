@@ -107,8 +107,7 @@ describe("createPool", () => {
 
     // Extract the connect handler
     const connectCall = mockPoolInstance.on.mock.calls.find(
-      (call: [string, (...args: unknown[]) => unknown]) =>
-        call[0] === "connect",
+      (call: unknown[]) => call[0] === "connect",
     );
     const connectHandler = connectCall?.[1] as (client: unknown) => void;
 
@@ -128,8 +127,7 @@ describe("createPool", () => {
     await createPool("postgresql://localhost:5432/testdb");
 
     const connectCall = mockPoolInstance.on.mock.calls.find(
-      (call: [string, (...args: unknown[]) => unknown]) =>
-        call[0] === "connect",
+      (call: unknown[]) => call[0] === "connect",
     );
     const connectHandler = connectCall?.[1] as (client: unknown) => void;
 
@@ -149,8 +147,7 @@ describe("createPool", () => {
 
     // Extract the connect handler
     const connectCall = mockPoolInstance.on.mock.calls.find(
-      (call: [string, (...args: unknown[]) => unknown]) =>
-        call[0] === "connect",
+      (call: unknown[]) => call[0] === "connect",
     );
     const connectHandler = connectCall?.[1] as (client: unknown) => void;
 
@@ -161,7 +158,7 @@ describe("createPool", () => {
 
     // Extract the client error handler
     const clientErrorHandler = mockClient.on.mock.calls.find(
-      (call: [string, (...args: unknown[]) => unknown]) => call[0] === "error",
+      (call: unknown[]) => call[0] === "error",
     )?.[1] as (err: Error) => void;
 
     const testError = new Error("connection lost");
@@ -178,7 +175,7 @@ describe("createPool", () => {
 
     // Extract the pool error handler
     const errorCall = mockPoolInstance.on.mock.calls.find(
-      (call: [string, (...args: unknown[]) => unknown]) => call[0] === "error",
+      (call: unknown[]) => call[0] === "error",
     );
     const errorHandler = errorCall?.[1] as (err: Error) => void;
 
@@ -195,7 +192,7 @@ describe("createPool", () => {
 
     // Extract the pool error handler
     const errorCall = mockPoolInstance.on.mock.calls.find(
-      (call: [string, (...args: unknown[]) => unknown]) => call[0] === "error",
+      (call: unknown[]) => call[0] === "error",
     );
     const errorHandler = errorCall?.[1] as (err: Error) => void;
 

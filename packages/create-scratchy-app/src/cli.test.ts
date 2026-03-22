@@ -142,21 +142,22 @@ describe("buildNextSteps", () => {
     expect(steps.every((s) => !s.includes("docker compose"))).toBe(true);
   });
 
-  it("includes drizzle-kit steps when db is included", () => {
+  it("includes db:generate and db:migrate steps when db is included", () => {
     const steps = buildNextSteps({
       ...baseConfig,
       includeDb: true,
     });
-    expect(steps.some((s) => s.includes("drizzle-kit generate"))).toBe(true);
-    expect(steps.some((s) => s.includes("drizzle-kit migrate"))).toBe(true);
+    expect(steps.some((s) => s.includes("db:generate"))).toBe(true);
+    expect(steps.some((s) => s.includes("db:migrate"))).toBe(true);
   });
 
-  it("omits drizzle-kit steps when db is not included", () => {
+  it("omits db steps when db is not included", () => {
     const steps = buildNextSteps({
       ...baseConfig,
       includeDb: false,
     });
-    expect(steps.every((s) => !s.includes("drizzle-kit"))).toBe(true);
+    expect(steps.every((s) => !s.includes("db:generate"))).toBe(true);
+    expect(steps.every((s) => !s.includes("db:migrate"))).toBe(true);
   });
 
   it("always includes env copy step", () => {
@@ -197,6 +198,18 @@ describe("buildNextSteps", () => {
     });
     expect(steps.some((s) => s === "bun install")).toBe(true);
     expect(steps.some((s) => s.includes("bun run dev"))).toBe(true);
+  });
+
+  it("places migration steps before dev server when db is included", () => {
+    const steps = buildNextSteps({
+      ...baseConfig,
+      includeDb: true,
+    });
+    const migrateIdx = steps.findIndex((s) => s.includes("db:migrate"));
+    const devIdx = steps.findIndex((s) => s.includes("pnpm dev"));
+    expect(migrateIdx).toBeGreaterThan(-1);
+    expect(devIdx).toBeGreaterThan(-1);
+    expect(migrateIdx).toBeLessThan(devIdx);
   });
 
   it("returns minimal steps when projectDir is cwd, deps installed, no db", () => {

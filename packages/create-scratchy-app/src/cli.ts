@@ -73,22 +73,18 @@ export function buildNextSteps(config: NextStepsConfig): string[] {
 
   if (includeDb) {
     steps.push("docker compose up -d   # start PostgreSQL + DragonflyDB");
+    steps.push(
+      getRunCommand(packageManager, "db:generate") +
+        "  # generate initial migration",
+    );
+    steps.push(
+      getRunCommand(packageManager, "db:migrate") + "   # apply migrations",
+    );
   }
 
   steps.push(
     getRunCommand(packageManager, "dev") + "         # start the dev server",
   );
-
-  if (includeDb) {
-    steps.push(
-      getRunCommand(packageManager, "drizzle-kit generate") +
-        "  # generate initial migration",
-    );
-    steps.push(
-      getRunCommand(packageManager, "drizzle-kit migrate") +
-        "   # apply migrations",
-    );
-  }
 
   return steps;
 }

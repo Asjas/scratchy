@@ -1,5 +1,6 @@
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
+import type { CommandMeta } from "citty";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../utils/render.js", () => ({
@@ -20,7 +21,7 @@ describe("makeRouterCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "post", cwd: "/tmp/test-project" },
+      args: { _: [], name: "post", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makeRouterCommand,
     });
@@ -57,7 +58,7 @@ describe("makeRouterCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "blogPost", cwd: "/tmp/test-project" },
+      args: { _: [], name: "blogPost", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makeRouterCommand,
     });
@@ -79,7 +80,7 @@ describe("makeRouterCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "user", cwd: "" },
+      args: { _: [], name: "user", cwd: "" },
       rawArgs: [],
       cmd: makeRouterCommand,
     });
@@ -92,9 +93,8 @@ describe("makeRouterCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { makeRouterCommand } = await import("./make-router.js");
-    expect(makeRouterCommand.meta?.name).toBe("make:router");
-    expect(makeRouterCommand.meta?.description).toBe(
-      "Generate tRPC router queries and mutations",
-    );
+    const meta = makeRouterCommand.meta as CommandMeta;
+    expect(meta.name).toBe("make:router");
+    expect(meta.description).toBe("Generate tRPC router queries and mutations");
   });
 });

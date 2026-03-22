@@ -1,5 +1,6 @@
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
+import type { CommandMeta } from "citty";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../utils/render.js", () => ({
@@ -20,7 +21,7 @@ describe("makePluginCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "myService", cwd: "/tmp/test-project" },
+      args: { _: [], name: "myService", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makePluginCommand,
     });
@@ -42,7 +43,7 @@ describe("makePluginCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "cache", cwd: "" },
+      args: { _: [], name: "cache", cwd: "" },
       rawArgs: [],
       cmd: makePluginCommand,
     });
@@ -55,9 +56,8 @@ describe("makePluginCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { makePluginCommand } = await import("./make-plugin.js");
-    expect(makePluginCommand.meta?.name).toBe("make:plugin");
-    expect(makePluginCommand.meta?.description).toBe(
-      "Generate a Fastify plugin",
-    );
+    const meta = makePluginCommand.meta as CommandMeta;
+    expect(meta.name).toBe("make:plugin");
+    expect(meta.description).toBe("Generate a Fastify plugin");
   });
 });

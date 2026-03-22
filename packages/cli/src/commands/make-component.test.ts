@@ -1,5 +1,6 @@
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
+import type { CommandMeta } from "citty";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../utils/render.js", () => ({
@@ -20,7 +21,12 @@ describe("makeComponentCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "UserCard", react: false, cwd: "/tmp/test-project" },
+      args: {
+        _: [],
+        name: "UserCard",
+        react: false,
+        cwd: "/tmp/test-project",
+      },
       rawArgs: [],
       cmd: makeComponentCommand,
     });
@@ -42,7 +48,12 @@ describe("makeComponentCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "DataChart", react: true, cwd: "/tmp/test-project" },
+      args: {
+        _: [],
+        name: "DataChart",
+        react: true,
+        cwd: "/tmp/test-project",
+      },
       rawArgs: [],
       cmd: makeComponentCommand,
     });
@@ -64,7 +75,7 @@ describe("makeComponentCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "Button", react: false, cwd: "" },
+      args: { _: [], name: "Button", react: false, cwd: "" },
       rawArgs: [],
       cmd: makeComponentCommand,
     });
@@ -77,9 +88,8 @@ describe("makeComponentCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { makeComponentCommand } = await import("./make-component.js");
-    expect(makeComponentCommand.meta?.name).toBe("make:component");
-    expect(makeComponentCommand.meta?.description).toBe(
-      "Generate a Qwik or React component",
-    );
+    const meta = makeComponentCommand.meta as CommandMeta;
+    expect(meta.name).toBe("make:component");
+    expect(meta.description).toBe("Generate a Qwik or React component");
   });
 });

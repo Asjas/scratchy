@@ -1,5 +1,6 @@
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
+import type { CommandMeta } from "citty";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../utils/render.js", () => ({
@@ -20,7 +21,7 @@ describe("makeSeedCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "Users", model: "", cwd: "/tmp/test-project" },
+      args: { _: [], name: "Users", model: "", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makeSeedCommand,
     });
@@ -47,7 +48,12 @@ describe("makeSeedCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { name: "InitialData", model: "User", cwd: "/tmp/test-project" },
+      args: {
+        _: [],
+        name: "InitialData",
+        model: "User",
+        cwd: "/tmp/test-project",
+      },
       rawArgs: [],
       cmd: makeSeedCommand,
     });
@@ -66,9 +72,8 @@ describe("makeSeedCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { makeSeedCommand } = await import("./make-seed.js");
-    expect(makeSeedCommand.meta?.name).toBe("make:seed");
-    expect(makeSeedCommand.meta?.description).toBe(
-      "Generate a database seed file",
-    );
+    const meta = makeSeedCommand.meta as CommandMeta;
+    expect(meta.name).toBe("make:seed");
+    expect(meta.description).toBe("Generate a database seed file");
   });
 });

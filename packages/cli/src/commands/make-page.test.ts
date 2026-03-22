@@ -1,5 +1,6 @@
 import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
+import type { CommandMeta } from "citty";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../utils/render.js", () => ({
@@ -20,7 +21,7 @@ describe("makePageCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "blog", cwd: "/tmp/test-project" },
+      args: { _: [], path: "blog", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makePageCommand,
     });
@@ -43,7 +44,7 @@ describe("makePageCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "blog/[slug]", cwd: "/tmp/test-project" },
+      args: { _: [], path: "blog/[slug]", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makePageCommand,
     });
@@ -62,7 +63,7 @@ describe("makePageCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "/about", cwd: "/tmp/test-project" },
+      args: { _: [], path: "/about", cwd: "/tmp/test-project" },
       rawArgs: [],
       cmd: makePageCommand,
     });
@@ -79,7 +80,7 @@ describe("makePageCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { path: "settings", cwd: "" },
+      args: { _: [], path: "settings", cwd: "" },
       rawArgs: [],
       cmd: makePageCommand,
     });
@@ -92,9 +93,8 @@ describe("makePageCommand", () => {
 
   it("should have correct command metadata", async () => {
     const { makePageCommand } = await import("./make-page.js");
-    expect(makePageCommand.meta?.name).toBe("make:page");
-    expect(makePageCommand.meta?.description).toBe(
-      "Generate a Qwik page with routeLoader$",
-    );
+    const meta = makePageCommand.meta as CommandMeta;
+    expect(meta.name).toBe("make:page");
+    expect(meta.description).toBe("Generate a Qwik page with routeLoader$");
   });
 });
