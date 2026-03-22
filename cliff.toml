@@ -18,6 +18,7 @@ body = """
 {% else %}\
     ## [unreleased]
 {% endif %}\
+{% if commits | length > 0 %}
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim | upper_first }}
     {% for commit in commits %}
@@ -27,6 +28,9 @@ body = """
           ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/Asjas/scratchyjs/commit/{{ commit.id }}))\
     {% endfor %}
 {% endfor %}\n
+{% else %}
+  - No changelog entries in this release.
+{% endif %}
 """
 
 # Template for the changelog footer.
