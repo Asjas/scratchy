@@ -1,11 +1,14 @@
 name: Publish @scratchyjs/* packages
 
-# Manual release workflow only.
+# Triggered manually via the GitHub Actions UI.
+# Use workflow_dispatch to cut a release at the right moment rather than
+# publishing on every merge to main.
 on:
   workflow_dispatch:
 
 permissions:
-  # Push the CalVer version-bump commit and annotated git tag back to main.
+  # Push the CalVer version-bump commit, updated CHANGELOG.md, and annotated
+  # git tag back to main; also required to create GitHub Releases.
   contents: write
   # Required for both npm OIDC trusted publishing and SLSA provenance attestation.
   # No NPM_TOKEN secret is needed — npm exchanges this OIDC token for a short-lived
@@ -13,7 +16,7 @@ permissions:
   # on npmjs.com (https://docs.npmjs.com/trusted-publishers).
   id-token: write
 
-# Only allow one publish run at a time. A second push while a run is in
+# Only allow one publish run at a time. A second dispatch while a run is in
 # progress will wait (not cancel) so no release is silently dropped.
 concurrency:
   group: publish
@@ -27,7 +30,7 @@ jobs:
       - name: ⬇️ Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0 # full history so the tag push doesn't fail
+          fetch-depth: 0 # full history needed by git-cliff and for tag pushes
 
       - name: 📦 Set up pnpm
         uses: pnpm/action-setup@v4
@@ -46,8 +49,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🔍 Test
-        run: |
-          pnpm test
+        run: pnpm test
+
       - name: 🔖 Generate CalVer version (YY.MM.DD-millis)
         id: calver
         run: |
@@ -69,15 +72,43 @@ jobs:
             echo "  ${name} → ${CALVER_VERSION}"
           done
 
-      - name: 🏷️ Commit version bump & push to main
+      # Generate release notes (header stripped — used as the GitHub Release body)
+      # and update CHANGELOG.md (full format with header — committed to the repo).
+      # orhun/git-cliff-action installs git-cliff and makes it available in PATH
+      # for the subsequent step that prepends to CHANGELOG.md.
+      - name: 📋 Generate release notes
+        id: git-cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: >-
+            --unreleased
+            --tag v${{ steps.calver.outputs.version }}
+            --strip all
+        env:
+          # The action writes the generated content to this file.
+          OUTPUT: RELEASE_NOTES.md
+          GITHUB_REPO: ${{ github.repository }}
+
+      - name: 📝 Update CHANGELOG.md
+        env:
+          CALVER_VERSION: ${{ steps.calver.outputs.version }}
+        run: |
+          git cliff \
+            --config cliff.toml \
+            --unreleased \
+            --tag "v${CALVER_VERSION}" \
+            --prepend CHANGELOG.md
+
+      - name: 🏷️ Commit version bump, CHANGELOG.md & push to main
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add packages/*/package.json
+          git add packages/*/package.json CHANGELOG.md
           git commit -m "chore: release v${{ steps.calver.outputs.version }} [skip ci]"
-          # Pull --rebase first so that a concurrent workflow run on the same push
-          # doesn't cause a non-fast-forward rejection. The tag is created after the
-          # rebase so it points to the correct (post-rebase) commit.
+          # Pull --rebase first so that a concurrent dispatch while a run is in
+          # progress doesn't cause a non-fast-forward rejection. The tag is
+          # created after the rebase so it points to the correct commit.
           git pull --rebase origin main
           git tag "v${{ steps.calver.outputs.version }}" \
             -m "Release v${{ steps.calver.outputs.version }} (CalVer)"
@@ -102,3 +133,13 @@ jobs:
             echo "→ Publishing ${name}..."
             (cd "${pkg_dir}" && npm publish --provenance --tag latest)
           done
+
+      - name: 🎉 Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CALVER_VERSION: ${{ steps.calver.outputs.version }}
+        run: |
+          gh release create "v${CALVER_VERSION}" \
+            --title "Release v${CALVER_VERSION}" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag
