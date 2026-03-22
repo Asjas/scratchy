@@ -291,8 +291,6 @@ export default fastifyRateLimit;
 
 ```typescript
 // Apply a tighter limit to login routes
-import { requireRateLimit } from "@scratchyjs/core";
-
 fastify.post("/api/auth/sign-in/email", {
   config: { rateLimit: { max: 10, timeWindow: "15 minutes" } },
 }, handler);
