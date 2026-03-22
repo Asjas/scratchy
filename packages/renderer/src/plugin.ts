@@ -1,3 +1,4 @@
+import type {} from "./types/fastify.js";
 import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 import { availableParallelism } from "node:os";

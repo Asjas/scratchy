@@ -139,6 +139,8 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Vite logs files
+# Turbo
+.turbo
+
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
