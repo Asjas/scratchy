@@ -161,8 +161,7 @@ describe("createPool", () => {
 
     // Extract the client error handler
     const clientErrorHandler = mockClient.on.mock.calls.find(
-      (call: [string, (...args: unknown[]) => unknown]) =>
-        call[0] === "error",
+      (call: [string, (...args: unknown[]) => unknown]) => call[0] === "error",
     )?.[1] as (err: Error) => void;
 
     const testError = new Error("connection lost");
@@ -179,8 +178,7 @@ describe("createPool", () => {
 
     // Extract the pool error handler
     const errorCall = mockPoolInstance.on.mock.calls.find(
-      (call: [string, (...args: unknown[]) => unknown]) =>
-        call[0] === "error",
+      (call: [string, (...args: unknown[]) => unknown]) => call[0] === "error",
     );
     const errorHandler = errorCall?.[1] as (err: Error) => void;
 
@@ -197,8 +195,7 @@ describe("createPool", () => {
 
     // Extract the pool error handler
     const errorCall = mockPoolInstance.on.mock.calls.find(
-      (call: [string, (...args: unknown[]) => unknown]) =>
-        call[0] === "error",
+      (call: [string, (...args: unknown[]) => unknown]) => call[0] === "error",
     );
     const errorHandler = errorCall?.[1] as (err: Error) => void;
 

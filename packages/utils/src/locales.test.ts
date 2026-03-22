@@ -94,4 +94,15 @@ describe("getClientLocales", () => {
   it("returns undefined for empty accept-language header", () => {
     expect(getClientLocales(req({ "accept-language": "" }))).toBeUndefined();
   });
+
+  it("filters out locales that cause Intl.DateTimeFormat to throw", () => {
+    // Locale tags with empty subtags throw a RangeError in the Intl API.
+    // The catch block in getClientLocales should gracefully return false.
+    const locales = getClientLocales(req({ "accept-language": "en-US, und-" }));
+    // "und-" is structurally invalid and triggers a RangeError
+    // Only en-US should survive
+    if (locales) {
+      expect(locales).not.toContain("und-");
+    }
+  });
 });

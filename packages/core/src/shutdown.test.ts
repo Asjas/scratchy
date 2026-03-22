@@ -123,4 +123,48 @@ describe("setupShutdown", () => {
 
     expect(logInfo).toHaveBeenCalledWith("SIGTERM received, server closing");
   });
+
+  it("logs uncaught exceptions via the process handler", async () => {
+    const server = Fastify({ logger: false });
+    await server.ready();
+
+    const logError = vi.spyOn(server.log, "error");
+
+    setupShutdown(server);
+
+    // Extract and invoke the uncaughtException handler
+    const listeners = process.listeners("uncaughtException");
+    const ourListener = listeners[listeners.length - 1] as (err: Error) => void;
+    const testError = new Error("test uncaught");
+    ourListener(testError);
+
+    expect(logError).toHaveBeenCalledWith(
+      { err: testError },
+      "Uncaught Exception occurred",
+    );
+  });
+
+  it("logs unhandled rejections via the process handler", async () => {
+    const server = Fastify({ logger: false });
+    await server.ready();
+
+    const logError = vi.spyOn(server.log, "error");
+
+    setupShutdown(server);
+
+    // Extract and invoke the unhandledRejection handler
+    const listeners = process.listeners("unhandledRejection");
+    const ourListener = listeners[listeners.length - 1] as (
+      reason: unknown,
+      promise: Promise<unknown>,
+    ) => void;
+    const testReason = "test rejection reason";
+    const testPromise = Promise.resolve();
+    ourListener(testReason, testPromise);
+
+    expect(logError).toHaveBeenCalledWith(
+      { reason: testReason, promise: testPromise },
+      "Unhandled Rejection occurred",
+    );
+  });
 });
