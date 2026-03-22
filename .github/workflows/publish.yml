@@ -10,8 +10,9 @@ permissions:
   # Push the CalVer version-bump commit, updated CHANGELOG.md, and annotated
   # git tag back to main; also required to create GitHub Releases.
   contents: write
-  # Keep id-token permission available so we can switch back to trusted publishing
-  # after package-level OIDC setup is complete on npmjs.com.
+  # Required for both npm OIDC trusted publishing and SLSA provenance attestation.
+  # npm exchanges this GitHub OIDC token for a short-lived publish token when
+  # each package is configured as a trusted publisher on npmjs.com.
   id-token: write
 
 # Only allow one publish run at a time. A second dispatch while a run is in
@@ -129,29 +130,10 @@ jobs:
           git push origin HEAD:main --follow-tags
 
       - name: 🚀 Publish all packages to npm
-        # TEMPORARY: use an automation token until each package has npm trusted
-        # publisher configuration. Set repository/environment secret NPM_TOKEN
-        # to an npm Automation token with publish rights for @scratchyjs.
-        # If this secret is a classic/granular token tied to 2FA writes,
-        # npm will fail with EOTP during publish.
-        # After OIDC is configured for all packages, remove NODE_AUTH_TOKEN and
-        # switch npm publish back to --provenance.
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # npm exchanges the GitHub OIDC token for a short-lived publish token
+        # automatically when --provenance is set and the package is configured as a
+        # trusted publisher on npmjs.com.
         run: |
-          if [ -z "${NODE_AUTH_TOKEN}" ]; then
-            echo "NPM_TOKEN is not configured. Add it as a secret before publishing." >&2
-            exit 1
-          fi
-
-          if ! npm whoami >/dev/null 2>&1; then
-            echo "NPM_TOKEN is invalid or lacks npm auth scope (npm whoami failed)." >&2
-            exit 1
-          fi
-
-          echo "npm auth OK (npm whoami succeeded)."
-          echo "If publish fails with EOTP, replace NPM_TOKEN with an npm Automation token."
-
           for pkg_dir in packages/*/; do
             pkg_json="${pkg_dir}package.json"
             [ -f "${pkg_json}" ] || continue
@@ -159,7 +141,7 @@ jobs:
             [ "${is_private}" = "true" ] && continue
             name=$(node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('${pkg_json}','utf8')).name)")
             echo "→ Publishing ${name}..."
-            (cd "${pkg_dir}" && npm publish --access public --tag latest)
+            (cd "${pkg_dir}" && npm publish --provenance --access public --tag latest)
           done
 
       - name: 🎉 Create GitHub Release
