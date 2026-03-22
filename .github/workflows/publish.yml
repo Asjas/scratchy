@@ -22,6 +22,8 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment:
+      name: release
 
     steps:
       - name: ⬇️ Checkout repository
