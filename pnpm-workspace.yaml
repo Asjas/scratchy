@@ -3,5 +3,6 @@ packages:
   - examples/*
 
 onlyBuiltDependencies:
+  - cypress
   - esbuild
   - sharp

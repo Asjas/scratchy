@@ -8,8 +8,6 @@ export default defineConfig({
 
   appearance: true,
 
-  ignoreDeadLinks: true,
-
   head: [["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }]],
 
   themeConfig: {
