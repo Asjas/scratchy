@@ -791,8 +791,8 @@ be planned for:
 - [x] Authentication plugin (Better Auth integration)
 - [x] `make:migration`, `make:seed`, `make:test` CLI commands
 - [x] `db:seed`, `db:fresh`, `routes:list`, `cache:clear` CLI commands
-- [ ] OpenAPI/Swagger documentation generation for REST endpoints
-- [ ] SSG build-time pre-rendering pipeline
+- [x] OpenAPI/Swagger documentation generation for REST endpoints
+- [x] SSG build-time pre-rendering pipeline
 - [ ] Streaming SSR (send HTML chunks as they render)
 - [ ] Lock-free ring buffer for high-throughput SharedArrayBuffer communication
 - [ ] Multi-server cache invalidation via Redis Pub/Sub
