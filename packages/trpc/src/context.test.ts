@@ -147,7 +147,6 @@ describe("createContext — error recovery (CVE-2025-43855 pattern)", () => {
       "user",
       {
         get() {
-          // eslint-disable-next-line @typescript-eslint/only-throw-error
           throw "unexpected string thrown";
         },
       },
