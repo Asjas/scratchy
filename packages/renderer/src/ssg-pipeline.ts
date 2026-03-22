@@ -9,10 +9,10 @@ import { Piscina } from "piscina";
  */
 export interface SsgPipelineOptions {
   /**
-   * Absolute path to the Piscina worker entry-point file.
-   * Should point to the compiled worker that exports a default `handler`
-   * function (e.g. `@scratchy/renderer/worker`).
-   */
+   * Absolute filesystem path to the Piscina worker entry-point file.
+   * This value is passed directly to Piscina's {@link Piscina} `filename`
+   * option, so it must be a file path or file URL, not a package import
+   * specifier (e.g. `/absolute/path/to/renderer/worker.cjs`).
   worker: string;
   /**
    * List of routes to pre-render (e.g. `["/", "/about", "/blog/hello"]`).
