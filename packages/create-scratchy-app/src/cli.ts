@@ -1,5 +1,6 @@
 import type { PackageManager } from "./utils.js";
 import { getInstallCommand, getRunCommand } from "./utils.js";
+import { relative } from "node:path";
 
 /** Parsed CLI arguments (pure, no side effects). */
 export interface ParsedArgs {
@@ -49,16 +50,10 @@ export interface NextStepsConfig {
  * Pure function — no I/O, no side effects.
  */
 export function buildNextSteps(config: NextStepsConfig): string[] {
-  const {
-    projectDir,
-    rawProjectName,
-    includeDb,
-    installDepsChoice,
-    packageManager,
-    cwd,
-  } = config;
+  const { projectDir, includeDb, installDepsChoice, packageManager, cwd } =
+    config;
 
-  const relativeDir = projectDir === cwd ? "." : `./${rawProjectName}`;
+  const relativeDir = projectDir === cwd ? "." : relative(cwd, projectDir);
   const steps: string[] = [];
 
   if (projectDir !== cwd) {

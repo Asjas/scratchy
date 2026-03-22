@@ -71,9 +71,13 @@ export async function isEmptyDir(dir: string): Promise<boolean> {
       (f) => f !== ".git" && f !== ".DS_Store" && f !== "Thumbs.db",
     );
     return meaningful.length === 0;
-  } catch {
-    // Dir does not exist — treat as empty.
-    return true;
+  } catch (err) {
+    // Only treat ENOENT (directory does not exist) as empty.
+    // Rethrow other errors (e.g., permission denied) so they're not silently ignored.
+    if ((err as { code?: string }).code === "ENOENT") {
+      return true;
+    }
+    throw err;
   }
 }
 
@@ -131,7 +135,8 @@ export async function replaceInFile(
 
 /**
  * Initialises a git repository in `dir`.
- * Returns `true` on success, `false` if git is not installed.
+ * Returns `true` on success, `false` if git is not installed or git
+ * configuration is incomplete (e.g., missing user.name/user.email).
  */
 export function initGit(dir: string): boolean {
   try {
@@ -143,6 +148,7 @@ export function initGit(dir: string): boolean {
     });
     return true;
   } catch {
+    // Return false for any git error: missing executable, config issues, etc.
     return false;
   }
 }

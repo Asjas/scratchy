@@ -1,5 +1,10 @@
 #!/usr/bin/env tsx
-import { buildNextSteps, helpText, parseArgs } from "./cli.js";
+import {
+  buildNextSteps,
+  helpText,
+  parseArgs,
+  validateProjectName,
+} from "./cli.js";
 import {
   cleanSentinelComments,
   stripAuthFiles,
@@ -86,12 +91,7 @@ async function main(): Promise<void> {
       message: "Project name:",
       placeholder: "my-scratchy-app",
       defaultValue: "my-scratchy-app",
-      validate(value) {
-        if (!value.trim()) return "Project name cannot be empty.";
-        if (!/^[a-z0-9][-a-z0-9._]*$/i.test(value.trim())) {
-          return "Project name must start with a letter or digit and contain only letters, digits, hyphens, dots, or underscores.";
-        }
-      },
+      validate: validateProjectName,
     });
 
     if (isCancel(answer)) {

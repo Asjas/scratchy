@@ -5,11 +5,14 @@ import { join } from "node:path";
 /**
  * Removes feature-specific files from the scaffolded project when the user
  * opts out of the database feature.
+ * Also removes DB-dependent routers and authentication files since they
+ * depend on the database layer.
  */
 export async function stripDatabaseFiles(dir: string): Promise<void> {
   const toRemove = [
     join(dir, "src", "db"),
     join(dir, "src", "auth.ts"),
+    join(dir, "src", "routers", "posts"),
     join(dir, "src", "db", "schema", "auth-tables.ts"),
     join(dir, "drizzle.config.ts"),
     join(dir, "docker-compose.yml"),
@@ -31,6 +34,8 @@ export async function stripDatabaseFiles(dir: string): Promise<void> {
   // Remove db-related blocks from server.ts using sentinel comments
   // Also strip auth blocks since auth depends on db
   await removeFeatureBlocks(join(dir, "src", "server.ts"), ["db", "auth"]);
+  // Remove posts router from routers/index.ts
+  await removeFeatureBlocks(join(dir, "src", "routers", "index.ts"), ["posts"]);
 }
 
 /**
@@ -145,6 +150,9 @@ export async function removeFeatureBlocks(
       importPatterns.push("~/auth.js");
     } else if (feature === "renderer") {
       importPatterns.push("@scratchyjs/renderer");
+    } else if (feature === "posts") {
+      importPatterns.push("~/routers/posts/queries.js");
+      importPatterns.push("~/routers/posts/mutations.js");
     }
   }
 

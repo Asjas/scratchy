@@ -98,7 +98,7 @@ describe("buildNextSteps", () => {
 
   it("includes cd step when projectDir differs from cwd", () => {
     const steps = buildNextSteps(baseConfig);
-    expect(steps[0]).toBe("cd ./my-app");
+    expect(steps[0]).toBe("cd my-app");
   });
 
   it("omits cd step when projectDir equals cwd", () => {
