@@ -38,7 +38,9 @@ describe("Docs site layout elements", () => {
   });
 
   it("shows a table of contents on the right for long pages", () => {
-    // The aside TOC appears on pages with headings
-    cy.get("#VPContent").should("exist");
+    // The aside TOC appears on pages with headings; verify the right-side outline exists
+    cy.get(".VPDocAside").within(() => {
+      cy.get(".VPLocalNavOutline").should("exist");
+    });
   });
 });
