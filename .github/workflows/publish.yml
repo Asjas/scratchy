@@ -74,10 +74,24 @@ jobs:
             echo "  ${name} → ${CALVER_VERSION}"
           done
 
-      # Generate release notes (header stripped — used as the GitHub Release body)
-      # and update CHANGELOG.md (full format with header — committed to the repo).
-      # orhun/git-cliff-action installs git-cliff and makes it available in PATH
-      # for the subsequent step that prepends to CHANGELOG.md.
+      - name: 🏷️ Commit version bump & sync with main
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/*/package.json
+          git commit -m "chore: release v${{ steps.calver.outputs.version }} [skip ci]"
+          # Rebase onto main so the final tagged commit includes any concurrent
+          # merges. Use -X theirs so that if an earlier publish run already landed
+          # a version bump on main, conflicts in package.json are resolved by
+          # keeping *our* CalVer version (in git-rebase semantics "theirs" = the
+          # commit being replayed, i.e. our version-bump commit).
+          git pull --rebase -X theirs origin main
+
+      # git-cliff runs AFTER the rebase so the generated release notes and
+      # CHANGELOG.md entry cover exactly the commits that will be tagged —
+      # including any that landed on main during this workflow run.
+      # orhun/git-cliff-action also installs git-cliff into PATH, which is used
+      # by the CHANGELOG update step below.
       - name: 📋 Generate release notes
         id: git-cliff
         uses: orhun/git-cliff-action@v4
@@ -102,16 +116,13 @@ jobs:
             --tag "v${CALVER_VERSION}" \
             --prepend CHANGELOG.md
 
-      - name: 🏷️ Commit version bump, CHANGELOG.md & push to main
+      - name: 🏷️ Fold CHANGELOG.md into release commit, tag & push
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add packages/*/package.json CHANGELOG.md
-          git commit -m "chore: release v${{ steps.calver.outputs.version }} [skip ci]"
-          # Pull --rebase first so that a concurrent dispatch while a run is in
-          # progress doesn't cause a non-fast-forward rejection. The tag is
-          # created after the rebase so it points to the correct commit.
-          git pull --rebase origin main
+          # Amend the release commit to include CHANGELOG.md so the tag
+          # points to a single atomic commit containing both the version
+          # bump and the updated changelog.
+          git add CHANGELOG.md
+          git commit --amend --no-edit
           git tag "v${{ steps.calver.outputs.version }}" \
             -m "Release v${{ steps.calver.outputs.version }} (CalVer)"
           git push origin HEAD:main --follow-tags
