@@ -234,13 +234,13 @@ describe("SSR worker pool", () => {
 
 // ── Auth plugin ───────────────────────────────────────────────────────────────
 describe("auth plugin", () => {
-  it("request.session and request.user decorators are registered (null when unauthenticated)", async () => {
+  it("blocks unauthenticated requests to /protected with 401", async () => {
     const response = await server.inject({
       method: "GET",
       url: "/protected",
     });
 
-    // requireAuth blocks unauthenticated requests with 401
+    // Verify that unauthenticated access to /protected is rejected with 401
     expect(response.statusCode).toBe(401);
     expect(response.json()).toMatchObject({
       error: "Unauthorized",
