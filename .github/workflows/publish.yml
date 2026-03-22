@@ -78,7 +78,11 @@ jobs:
           # Pull --rebase first so that a concurrent workflow run on the same push
           # doesn't cause a non-fast-forward rejection. The tag is created after the
           # rebase so it points to the correct (post-rebase) commit.
-          git pull --rebase origin main
+          # Use -X theirs so that if an earlier publish run already landed a version
+          # bump on main, conflicts in package.json are resolved by keeping *our*
+          # CalVer version (in git-rebase semantics "theirs" = the commit being
+          # replayed, i.e. our version-bump commit).
+          git pull --rebase -X theirs origin main
           git tag "v${{ steps.calver.outputs.version }}" \
             -m "Release v${{ steps.calver.outputs.version }} (CalVer)"
           git push origin HEAD:main --follow-tags
