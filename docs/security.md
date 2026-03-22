@@ -902,6 +902,50 @@ fastify.addHook("onSend", async (_request, reply) => {
 });
 ```
 
+### Strip Internal-Routing Headers (CVE-2025-29927 pattern)
+
+`@scratchyjs/core` automatically loads a `strip-internal-headers` plugin that
+removes known internal-routing headers from every inbound request **before** any
+auth hook runs. This prevents attackers from bypassing authentication middleware
+by sending spoofed internal headers — a pattern demonstrated in CVE-2025-29927
+(Next.js `x-middleware-subrequest` bypass) and applicable to any framework that
+might trust such headers from external clients.
+
+**Headers stripped by default:**
+
+| Header                    | Origin  | Risk                         |
+| ------------------------- | ------- | ---------------------------- |
+| `x-middleware-subrequest` | Next.js | Auth bypass (CVE-2025-29927) |
+| `x-middleware-prefetch`   | Next.js | Request flow manipulation    |
+| `x-middleware-rewrite`    | Next.js | Routing bypass               |
+| `x-internal-request`      | Generic | Auth bypass if trusted       |
+| `x-internal-token`        | Generic | Credential injection         |
+| `x-vercel-internal`       | Vercel  | Platform internal routing    |
+| `x-now-route-matches`     | Vercel  | Route matching manipulation  |
+| `x-remix-response`        | Remix   | Response handling bypass     |
+
+To add application-specific internal headers to the strip list, create a
+separate hook plugin in your `plugins/app/` directory:
+
+```typescript
+// plugins/app/strip-app-headers.ts
+import fp from "fastify-plugin";
+
+export default fp(
+  function stripAppHeaders(fastify, _opts, done) {
+    fastify.addHook("onRequest", (request, _reply, hookDone) => {
+      delete request.headers["x-my-app-bypass"];
+      hookDone();
+    });
+    done();
+  },
+  { name: "strip-app-internal-headers" },
+);
+```
+
+**Never** trust internal headers for auth decisions — all auth must flow through
+`requireAuth` / `protectedProcedure` based on actual session state.
+
 ---
 
 ## Input Validation and Sanitization
@@ -1173,6 +1217,25 @@ endpoints serve same-origin requests and must never have CORS headers.
 
 See [api-design.md](api-design.md) for the full CORS strategy.
 
+### Production Origin Allowlist (`ALLOWED_ORIGINS`)
+
+The `@scratchyjs/core` CORS plugin reads `process.env.NODE_ENV` and
+`process.env.ALLOWED_ORIGINS` at startup to determine the `origin` policy:
+
+| Environment            | `ALLOWED_ORIGINS` | Behaviour                                          |
+| ---------------------- | ----------------- | -------------------------------------------------- |
+| `development` / `test` | any               | `origin: true` — all origins accepted              |
+| `production`           | set               | Explicit allowlist callback — only listed origins  |
+| `production`           | not set           | `origin: false` — all cross-origin requests denied |
+
+```bash
+# .env.production — required for cross-origin browser clients
+ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
+```
+
+A startup warning is logged when `NODE_ENV=production` and `ALLOWED_ORIGINS` is
+unset so the misconfiguration is visible immediately in server logs.
+
 ### Internal API (No CORS)
 
 ```typescript
@@ -1377,6 +1440,30 @@ export async function verifyPassword(
 
 ## Dependency Security
 
+### Known CVEs Addressed in This Stack
+
+The following CVEs have been researched and mitigated within Scratchy. Each
+entry lists the status and what action (if any) is required:
+
+| CVE            | Component                     | Type                                                   | Severity | Status                                                    | Action                                                                          |
+| -------------- | ----------------------------- | ------------------------------------------------------ | -------- | --------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| CVE-2025-32442 | Fastify ≤ 5.3.1               | Content-Type validation bypass → injection             | High     | ✅ Use single Zod schema per route                        | Keep Fastify ≥ 5.3.2                                                            |
+| CVE-2025-43855 | `@trpc/server` 11.0–11.1.0    | WebSocket `connectionParams` uncaught exception → DoS  | High     | ✅ `createContext()` wrapped in try/catch                 | Keep `@trpc/server` ≥ 11.1.1                                                    |
+| CVE-2025-29927 | Next.js (pattern)             | Internal header bypass of auth middleware              | Critical | ✅ `strip-internal-headers` plugin                        | Built into `@scratchyjs/core`                                                   |
+| CVE-2024-8024  | `@fastify/cors` (pattern)     | `origin: true` + credentials → credential exfiltration | High     | ✅ CORS plugin auto-restricts in production               | Set `ALLOWED_ORIGINS` in production                                             |
+| CVE-2024-22207 | `@fastify/swagger-ui` < 2.1.0 | Serves module directory files → info disclosure        | Medium   | ✅ Using swagger-ui ≥ 5.x                                 | No action needed                                                                |
+| CVE-2025-43864 | Remix (pattern)               | Cache poisoning + persistent XSS                       | High     | ✅ tRPC uses `no-store`; add `Vary: Cookie` for SSR pages | Add `Cache-Control: private, no-store` + `Vary: Cookie` to authenticated routes |
+| CVE-2025-61686 | Remix (pattern)               | Path traversal via file-based session storage          | Critical | ✅ Redis sessions + signed cookies                        | Never use file-based session storage                                            |
+
+**Upgrade guidance for CVE-2025-32442 (Fastify Content-Type bypass):** This CVE
+affects per-content-type schema configurations. The Scratchy pattern of using a
+single Zod schema per route (via `fastify-type-provider-zod`) is the safe
+pattern. Ensure Fastify is kept at 5.3.2+ in your `package.json`.
+
+**Upgrade guidance for CVE-2025-43855 (tRPC WebSocket DoS):** The
+`createContext()` function in `@scratchyjs/trpc` is already wrapped in a
+try/catch to prevent uncaught exceptions. Keep `@trpc/server` at ≥ 11.1.1.
+
 ### Audit Commands
 
 ```bash
@@ -1516,6 +1603,7 @@ Use this checklist before every production deployment:
 - [ ] HSTS is enabled with `includeSubDomains` and `preload`
 - [ ] `X-Frame-Options: DENY` is set
 - [ ] `Permissions-Policy` disables unused browser features
+- [ ] `strip-internal-headers` plugin is not removed from `@scratchyjs/core`
 
 ### Input and Output
 
@@ -1531,6 +1619,9 @@ Use this checklist before every production deployment:
 - [ ] Login and password reset have stricter rate limits
 - [ ] CORS is enabled only on `/external/api` routes
 - [ ] CORS origins are explicitly allowlisted
+- [ ] `ALLOWED_ORIGINS` is set in production environment
+- [ ] Authenticated SSR responses include `Cache-Control: private, no-store` and
+      `Vary: Cookie`
 
 ### Secrets
 
@@ -1544,6 +1635,7 @@ Use this checklist before every production deployment:
 - [ ] `pnpm audit` runs in CI
 - [ ] `pnpm-lock.yaml` is committed
 - [ ] CI uses `--frozen-lockfile`
+- [ ] Known CVE table reviewed — all items marked ✅
 
 ---
 

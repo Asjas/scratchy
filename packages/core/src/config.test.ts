@@ -42,4 +42,44 @@ describe("configSchema", () => {
   it("should reject invalid LOG_LEVEL", () => {
     expect(() => configSchema.parse({ LOG_LEVEL: "verbose" })).toThrow();
   });
+
+  it("should default ALLOWED_ORIGINS to an empty array", () => {
+    const config = loadConfig({});
+    expect(config.ALLOWED_ORIGINS).toEqual([]);
+  });
+
+  it("should parse a single ALLOWED_ORIGINS value", () => {
+    const config = loadConfig({
+      ALLOWED_ORIGINS: "https://app.example.com",
+    });
+    expect(config.ALLOWED_ORIGINS).toEqual(["https://app.example.com"]);
+  });
+
+  it("should parse comma-separated ALLOWED_ORIGINS", () => {
+    const config = loadConfig({
+      ALLOWED_ORIGINS: "https://app.example.com,https://admin.example.com",
+    });
+    expect(config.ALLOWED_ORIGINS).toEqual([
+      "https://app.example.com",
+      "https://admin.example.com",
+    ]);
+  });
+
+  it("should trim whitespace from ALLOWED_ORIGINS entries", () => {
+    const config = loadConfig({
+      ALLOWED_ORIGINS:
+        "  https://app.example.com , https://admin.example.com  ",
+    });
+    expect(config.ALLOWED_ORIGINS).toEqual([
+      "https://app.example.com",
+      "https://admin.example.com",
+    ]);
+  });
+
+  it("should ignore empty entries in ALLOWED_ORIGINS", () => {
+    const config = loadConfig({
+      ALLOWED_ORIGINS: "https://app.example.com,,",
+    });
+    expect(config.ALLOWED_ORIGINS).toEqual(["https://app.example.com"]);
+  });
 });

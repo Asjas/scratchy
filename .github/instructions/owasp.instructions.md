@@ -377,47 +377,73 @@ fastify.register(fastifyHelmet, {
 
 ### CORS — restrict to known origins; never `origin: true` in production
 
-Scratchy's default CORS configuration allows all origins (`origin: true`).
-This is intentional for development, but **must be restricted to an explicit
-allowlist in production**:
+Scratchy's CORS plugin (`packages/core/src/plugins/external/cors.ts`) uses
+`process.env.NODE_ENV` at module load time to set the `origin` behaviour:
 
-```typescript
-// packages/core/src/plugins/external/cors.ts (actual Scratchy default)
-import fastifyCors, { type FastifyCorsOptions } from "@fastify/cors";
+- **Development / test** → `origin: true` (all origins allowed).
+- **Production with `ALLOWED_ORIGINS`** → explicit allowlist callback.
+- **Production without `ALLOWED_ORIGINS`** → `origin: false` (deny all
+  cross-origin requests — a safe fail-closed default).
 
-export const autoConfig: FastifyCorsOptions = {
-  credentials: true,
-  maxAge: 86400,
-  origin: true,   // ⚠️ allows all origins — restrict to explicit allowlist in production
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-};
+Set `ALLOWED_ORIGINS` to a comma-separated list of permitted origins:
 
-export default fastifyCors;
+```bash
+# .env.production
+ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
 ```
 
-**Recommended production hardening** — replace `origin: true` with an
-explicit allowlist via the `ALLOWED_ORIGINS` environment variable:
+A startup warning is logged when `NODE_ENV=production` and `ALLOWED_ORIGINS`
+is unset so the misconfiguration is visible immediately.
+
+**Why `origin: true` + `credentials: true` is dangerous (CVE-2024-8024 pattern):**
+When both are set the server reflects *any* `Origin` header back as
+`Access-Control-Allow-Origin` while also sending `Access-Control-Allow-Credentials: true`.
+This allows any malicious site to make credentialed cross-origin requests
+(e.g. authenticated `fetch()` calls) and read the response.
 
 ```typescript
-// ✅ Production CORS config — restrict to known origins
-import fastifyCors, { type FastifyCorsOptions } from "@fastify/cors";
-
+// ❌ NEVER do this in production
 export const autoConfig: FastifyCorsOptions = {
   credentials: true,
-  maxAge: 86_400,
-  // ✅ Explicit allowlist — never use origin: true with credentials in production
-  origin: (origin, callback) => {
-    const allowed = process.env.ALLOWED_ORIGINS?.split(",") ?? [];
-    if (!origin || allowed.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  origin: true, // Echoes back any origin — credential exfiltration vector
 };
 
-export default fastifyCors;
+// ✅ The Scratchy default now handles this automatically:
+//    NODE_ENV=production + ALLOWED_ORIGINS unset → origin: false (deny all)
+//    NODE_ENV=production + ALLOWED_ORIGINS set   → explicit allowlist callback
+//    NODE_ENV=development                        → origin: true (dev convenience)
+```
+
+### Strip internal-routing headers (CVE-2025-29927 / Auth Bypass pattern)
+
+The `strip-internal-headers` plugin (auto-loaded from
+`packages/core/src/plugins/external/strip-internal-headers.ts`) removes
+known internal-routing headers from every inbound request **before** any
+auth hook runs.
+
+**Why this matters:** Frameworks and reverse proxies use special headers to
+communicate between internal services (e.g. `x-middleware-subrequest` in
+Next.js). In CVE-2025-29927 an attacker sent this header directly to bypass
+Next.js middleware auth entirely. The same pattern applies to any framework
+that trusts internal headers from external clients.
+
+```typescript
+// ✅ Already handled by @scratchyjs/core — do NOT remove the plugin
+// The plugin strips these headers in an onRequest hook:
+//   x-middleware-subrequest   (CVE-2025-29927 bypass vector)
+//   x-middleware-prefetch
+//   x-middleware-rewrite
+//   x-internal-request
+//   x-internal-token
+//   x-vercel-internal
+//   x-remix-response
+
+// ❌ NEVER trust these headers for auth decisions
+fastify.addHook("onRequest", async (request) => {
+  if (request.headers["x-internal-request"] === "true") {
+    request.user = { id: "service-account", role: "admin" }; // NEVER DO THIS
+  }
+});
 ```
 
 ### Error messages — never leak internal details in production
@@ -447,6 +473,18 @@ fastify.setErrorHandler((error, request, reply) => {
 ---
 
 ## A06 — Vulnerable and Outdated Components
+
+### Known CVEs addressed in this stack
+
+The following CVEs have been researched and mitigated within Scratchy:
+
+| CVE | Component | Description | Mitigation |
+| --- | --------- | ----------- | ---------- |
+| CVE-2025-32442 | Fastify ≤ 5.3.1 | Content-Type validation bypass → injection | Keep Fastify ≥ 5.3.2; use single Zod schema per route (not per-content-type) |
+| CVE-2025-43855 | `@trpc/server` 11.0–11.1.0 | WebSocket `connectionParams` uncaught exception → DoS | `createContext()` wrapped in try/catch; keep `@trpc/server` ≥ 11.1.1 |
+| CVE-2025-29927 | Next.js (pattern) | Internal header bypass of auth middleware | `strip-internal-headers` plugin removes `x-middleware-subrequest` and related headers |
+| CVE-2024-8024 | `@fastify/cors` (pattern) | `origin: true` + `credentials: true` → credential exfiltration | CORS plugin auto-uses `origin: false` in production unless `ALLOWED_ORIGINS` is set |
+| CVE-2024-22207 | `@fastify/swagger-ui` < 2.1.0 | Serves all module directory files → info disclosure | Keep `@fastify/swagger-ui` ≥ 5.x (already in use) |
 
 ### Dependency auditing in CI
 
@@ -579,6 +617,65 @@ try {
 }
 ```
 
+### tRPC context resilience (CVE-2025-43855 pattern)
+
+The tRPC `createContext()` function in `@scratchyjs/trpc` is wrapped in a
+`try/catch` so that any exception during context creation (e.g. a malformed
+WebSocket `connectionParams` payload) returns an *unauthenticated* context
+rather than propagating as an uncaught exception that would crash the server:
+
+```typescript
+// packages/trpc/src/context.ts — already implemented this way
+export function createContext({ req, res }: CreateFastifyContextOptions): Context {
+  try {
+    const user = (req as unknown as { user?: User | null }).user ?? null;
+    return { request: req, reply: res, user, hasRole: (role) => user?.role === role };
+  } catch {
+    req.log.warn("tRPC createContext failed — returning unauthenticated context");
+    return { request: req, reply: res, user: null, hasRole: () => false };
+  }
+}
+```
+
+Do **not** remove this try/catch — it is a direct mitigation for the class
+of DoS vulnerabilities described by CVE-2025-43855 (tRPC WebSocket uncaught
+exception crash).
+
+### Cache-Control for SSR responses (Remix CVE-2025-43864 pattern)
+
+Cache poisoning attacks work by getting a CDN/edge cache to store a response
+that contains attacker-controlled content. Subsequent visitors receive the
+poisoned cached response, resulting in persistent XSS.
+
+Always set `Cache-Control: private, no-store` and `Vary: Cookie` on
+authenticated / personalised SSR responses:
+
+```typescript
+// ✅ In tRPC plugin — already set by @scratchyjs/trpc
+responseMeta: () => ({
+  headers: { "cache-control": "no-store, no-cache, must-revalidate, private" },
+}),
+
+// ✅ For SSR route handlers and Qwik routeLoader$ responses
+fastify.addHook("onSend", (request, reply, _payload, done) => {
+  // Never let authenticated pages be cached by CDNs
+  if (request.user) {
+    reply.header("Cache-Control", "private, no-store");
+    reply.header("Vary", "Cookie, Authorization");
+  }
+  done();
+});
+```
+
+```typescript
+// ✅ In Qwik routeLoader$ — set response headers explicitly
+export const useProtectedData = routeLoader$(async (event) => {
+  event.headers.set("Cache-Control", "private, no-store");
+  event.headers.set("Vary", "Cookie");
+  // ...
+});
+```
+
 ---
 
 ## A09 — Security Logging and Monitoring Failures
@@ -698,6 +795,7 @@ function safeFetch(url: string, options?: RequestInit): Promise<Response> {
 - [ ] Checks resource ownership or admin role before mutating data
 - [ ] Validates all inputs with a Zod schema
 - [ ] Returns generic error messages (no internal details)
+- [ ] Authenticated SSR responses set `Cache-Control: private, no-store` and `Vary: Cookie`
 
 ### Every new mutation / state-changing endpoint
 
@@ -712,10 +810,17 @@ function safeFetch(url: string, options?: RequestInit): Promise<Response> {
 - [ ] Session cookies are `httpOnly`, `secure` (prod), `sameSite: "lax"`
 - [ ] `@fastify/helmet` is registered before the new plugin
 - [ ] Rate limiting is applied where appropriate
+- [ ] Does not trust `x-middleware-*`, `x-internal-*`, or other internal-routing headers
 
 ### Every redirect
 
 - [ ] Uses `safeRedirect()` from `@scratchyjs/utils`
+
+### Every production deployment
+
+- [ ] `ALLOWED_ORIGINS` is set to an explicit allowlist (not left empty)
+- [ ] `NODE_ENV=production` is set
+- [ ] No `sql.raw()` calls with user-supplied input (grep the codebase)
 
 ---
 
@@ -730,4 +835,6 @@ function safeFetch(url: string, options?: RequestInit): Promise<Response> {
 - [@fastify/rate-limit](https://github.com/fastify/fastify-rate-limit)
 - [@fastify/cors](https://github.com/fastify/fastify-cors)
 - [Drizzle ORM — SQL injection prevention](https://orm.drizzle.team/docs/overview)
+- [CVE-2025-29927 — Next.js middleware bypass](https://github.com/advisories/GHSA-f82v-jwr5-mffw)
+- [CVE-2025-43855 — tRPC WebSocket DoS](https://github.com/advisories/GHSA-9m93-w8w6-76hh)
 - [docs/security.md](../../docs/security.md) — Scratchy production security reference

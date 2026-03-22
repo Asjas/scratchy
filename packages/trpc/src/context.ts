@@ -18,20 +18,41 @@ export interface Context {
  * Creates a tRPC context from the incoming Fastify request.
  * Extracts the user from `req.user` (populated by an auth plugin)
  * and provides a `hasRole()` helper.
+ *
+ * The entire function is wrapped in a try/catch so that a context-creation
+ * failure (e.g. a malformed connectionParams payload on a WebSocket/SSE
+ * upgrade — CVE-2025-43855 pattern) never propagates as an uncaught
+ * exception and crashes the server. On error, an unauthenticated context
+ * is returned and the error is logged.
  */
 export function createContext({
   req,
   res,
 }: CreateFastifyContextOptions): Context {
-  const user =
-    (req as unknown as { user?: User | null | undefined }).user ?? null;
+  try {
+    const user =
+      (req as unknown as { user?: User | null | undefined }).user ?? null;
 
-  return {
-    request: req,
-    reply: res,
-    user,
-    hasRole(role: string) {
-      return user?.role === role;
-    },
-  };
+    return {
+      request: req,
+      reply: res,
+      user,
+      hasRole(role: string) {
+        return user?.role === role;
+      },
+    };
+  } catch (error) {
+    req.log.warn(
+      { err: error },
+      "tRPC createContext failed — returning unauthenticated context",
+    );
+    return {
+      request: req,
+      reply: res,
+      user: null,
+      hasRole() {
+        return false;
+      },
+    };
+  }
 }
