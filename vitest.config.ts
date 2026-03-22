@@ -8,7 +8,11 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["packages/*/src/**/*.ts"],
-      exclude: ["**/*.test.ts", "**/*.d.ts"],
+      exclude: [
+        "**/*.test.ts",
+        "**/*.d.ts",
+        "**/create-scratchy-app/src/template/**",
+      ],
       reporter: ["text", "json", "json-summary"],
     },
   },

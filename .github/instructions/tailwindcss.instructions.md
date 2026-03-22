@@ -1,6 +1,11 @@
 ---
 name: tailwindcss-styling
-description: "Guides TailwindCSS styling patterns and configuration within the Scratchy framework. Use when styling Qwik or React components, configuring Tailwind, creating reusable style patterns, or implementing responsive and dark mode designs. Trigger terms: Tailwind, CSS, styling, utility classes, responsive, dark mode, theme, design system."
+description:
+  "Guides TailwindCSS styling patterns and configuration within the Scratchy
+  framework. Use when styling Qwik or React components, configuring Tailwind,
+  creating reusable style patterns, or implementing responsive and dark mode
+  designs. Trigger terms: Tailwind, CSS, styling, utility classes, responsive,
+  dark mode, theme, design system."
 metadata:
   tags: tailwindcss, css, styling, design, responsive, dark-mode
 applyTo: "**/*.css,**/*.tsx"
@@ -82,35 +87,41 @@ export default {
 ```tsx
 import { component$ } from "@builder.io/qwik";
 
-export const Button = component$(({
-  variant = "primary",
-  size = "md",
-  children,
-}: {
-  variant?: "primary" | "secondary" | "ghost";
-  size?: "sm" | "md" | "lg";
-  children?: unknown;
-}) => {
-  const baseStyles = "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
+export const Button = component$(
+  ({
+    variant = "primary",
+    size = "md",
+    children,
+  }: {
+    variant?: "primary" | "secondary" | "ghost";
+    size?: "sm" | "md" | "lg";
+    children?: unknown;
+  }) => {
+    const baseStyles =
+      "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
 
-  const variants = {
-    primary: "bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500",
-    secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500",
-    ghost: "text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:ring-gray-500",
-  };
+    const variants = {
+      primary:
+        "bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500",
+      secondary:
+        "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500",
+      ghost:
+        "text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:ring-gray-500",
+    };
 
-  const sizes = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
-  };
+    const sizes = {
+      sm: "px-3 py-1.5 text-sm",
+      md: "px-4 py-2 text-sm",
+      lg: "px-6 py-3 text-base",
+    };
 
-  return (
-    <button class={`${baseStyles} ${variants[variant]} ${sizes[size]}`}>
-      {children}
-    </button>
-  );
-});
+    return (
+      <button class={`${baseStyles} ${variants[variant]} ${sizes[size]}`}>
+        {children}
+      </button>
+    );
+  },
+);
 ```
 
 ### Responsive Design
@@ -118,7 +129,10 @@ export const Button = component$(({
 ```tsx
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
   {items.map((item) => (
-    <div key={item.id} class="rounded-lg border border-gray-200 p-4">
+    <div
+      key={item.id}
+      class="rounded-lg border border-gray-200 p-4"
+    >
       <h3 class="text-lg font-semibold sm:text-xl">{item.title}</h3>
       <p class="mt-2 text-sm text-gray-600 lg:text-base">{item.description}</p>
     </div>
@@ -132,7 +146,7 @@ export const Button = component$(({
 <div class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
   <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Title</h1>
   <p class="text-gray-600 dark:text-gray-400">Description</p>
-  <button class="bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400">
+  <button class="bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400 text-white">
     Action
   </button>
 </div>
@@ -143,9 +157,7 @@ export const Button = component$(({
 #### Page Container
 
 ```tsx
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-  {/* Content */}
-</div>
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{/* Content */}</div>
 ```
 
 #### Card
@@ -153,8 +165,12 @@ export const Button = component$(({
 ```tsx
 <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
   <div class="px-6 py-4">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Card Title</h3>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Card description</p>
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+      Card Title
+    </h3>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      Card description
+    </p>
   </div>
 </div>
 ```
@@ -162,17 +178,21 @@ export const Button = component$(({
 #### Stack Layout
 
 ```tsx
-{/* Vertical stack with gap */}
+{
+  /* Vertical stack with gap */
+}
 <div class="flex flex-col gap-4">
   <div>Item 1</div>
   <div>Item 2</div>
-</div>
+</div>;
 
-{/* Horizontal stack with gap */}
+{
+  /* Horizontal stack with gap */
+}
 <div class="flex items-center gap-3">
   <span>Label</span>
   <span>Value</span>
-</div>
+</div>;
 ```
 
 ### Form Styling
@@ -185,15 +205,12 @@ export const Button = component$(({
     </label>
     <input
       type="email"
-      class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm
-             focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500
-             dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      class="focus:border-primary-500 focus:ring-primary-500 mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:ring-1 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
     />
   </div>
   <button
     type="submit"
-    class="w-full rounded-lg bg-primary-600 px-4 py-2 text-white hover:bg-primary-700
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+    class="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 w-full rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-offset-2 focus:outline-none"
   >
     Submit
   </button>
@@ -203,14 +220,20 @@ export const Button = component$(({
 ## Animation Patterns
 
 ```tsx
-{/* Fade in */}
-<div class="animate-in fade-in duration-300">Content</div>
+{
+  /* Fade in */
+}
+<div class="animate-in fade-in duration-300">Content</div>;
 
-{/* Hover scale */}
-<div class="transition-transform hover:scale-105">Hover me</div>
+{
+  /* Hover scale */
+}
+<div class="transition-transform hover:scale-105">Hover me</div>;
 
-{/* Skeleton loading */}
-<div class="animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700 h-4 w-3/4" />
+{
+  /* Skeleton loading */
+}
+<div class="h-4 w-3/4 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />;
 ```
 
 ## Best Practices
@@ -220,8 +243,8 @@ export const Button = component$(({
    custom CSS classes
 3. **Use semantic color names** — `primary-600` instead of `blue-600` for
    theming flexibility
-4. **Mobile-first** — write base styles for mobile, use `sm:`, `md:`, `lg:`
-   for larger screens
+4. **Mobile-first** — write base styles for mobile, use `sm:`, `md:`, `lg:` for
+   larger screens
 5. **Consistent spacing** — stick to the spacing scale (4, 6, 8, etc.)
 6. **Accessibility** — always include `focus:` styles and sufficient color
    contrast
@@ -233,7 +256,7 @@ export const Button = component$(({
 ```css
 /* BAD */
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-white;
+  @apply bg-primary-600 inline-flex items-center justify-center rounded-lg px-4 py-2 text-white;
 }
 
 /* GOOD — Create a component instead */

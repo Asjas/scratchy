@@ -101,4 +101,123 @@ describe("createPool", () => {
       expect.any(Function),
     );
   });
+
+  it("should execute the connect handler and set keepalive on stream", async () => {
+    await createPool("postgresql://localhost:5432/testdb");
+
+    // Extract the connect handler
+    const connectCall = mockPoolInstance.on.mock.calls.find(
+      (call: unknown[]) => call[0] === "connect",
+    );
+    const connectHandler = connectCall?.[1] as (client: unknown) => void;
+
+    const mockStream = { setKeepAlive: vi.fn() };
+    const mockClient = {
+      connection: { stream: mockStream },
+      on: vi.fn(),
+    };
+
+    connectHandler(mockClient);
+
+    expect(mockStream.setKeepAlive).toHaveBeenCalledWith(true, 10_000);
+    expect(mockClient.on).toHaveBeenCalledWith("error", expect.any(Function));
+  });
+
+  it("should handle connect handler when stream is missing", async () => {
+    await createPool("postgresql://localhost:5432/testdb");
+
+    const connectCall = mockPoolInstance.on.mock.calls.find(
+      (call: unknown[]) => call[0] === "connect",
+    );
+    const connectHandler = connectCall?.[1] as (client: unknown) => void;
+
+    const mockClient = {
+      connection: {},
+      on: vi.fn(),
+    };
+
+    // Should not throw when stream is missing
+    connectHandler(mockClient);
+    expect(mockClient.on).toHaveBeenCalledWith("error", expect.any(Function));
+  });
+
+  it("should log client errors through the logger", async () => {
+    const logger = { error: vi.fn() };
+    await createPool("postgresql://localhost:5432/testdb", {}, logger);
+
+    // Extract the connect handler
+    const connectCall = mockPoolInstance.on.mock.calls.find(
+      (call: unknown[]) => call[0] === "connect",
+    );
+    const connectHandler = connectCall?.[1] as (client: unknown) => void;
+
+    const mockClient = {
+      on: vi.fn(),
+    };
+    connectHandler(mockClient);
+
+    // Extract the client error handler
+    const clientErrorHandler = mockClient.on.mock.calls.find(
+      (call: unknown[]) => call[0] === "error",
+    )?.[1] as (err: Error) => void;
+
+    const testError = new Error("connection lost");
+    clientErrorHandler(testError);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      "Database client error: connection lost",
+    );
+  });
+
+  it("should log pool-level errors through the logger", async () => {
+    const logger = { error: vi.fn() };
+    await createPool("postgresql://localhost:5432/testdb", {}, logger);
+
+    // Extract the pool error handler
+    const errorCall = mockPoolInstance.on.mock.calls.find(
+      (call: unknown[]) => call[0] === "error",
+    );
+    const errorHandler = errorCall?.[1] as (err: Error) => void;
+
+    const testError = new Error("pool error");
+    errorHandler(testError);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      "Unexpected database pool error: pool error",
+    );
+  });
+
+  it("should not log errors when no logger is provided", async () => {
+    await createPool("postgresql://localhost:5432/testdb");
+
+    // Extract the pool error handler
+    const errorCall = mockPoolInstance.on.mock.calls.find(
+      (call: unknown[]) => call[0] === "error",
+    );
+    const errorHandler = errorCall?.[1] as (err: Error) => void;
+
+    // Should not throw when logger is undefined
+    errorHandler(new Error("pool error without logger"));
+  });
+
+  it("should throw and end pool when startup SELECT 1 fails", async () => {
+    const queryError = new Error("connection refused");
+    mockPoolInstance.query.mockRejectedValueOnce(queryError);
+
+    await expect(
+      createPool("postgresql://localhost:5432/testdb"),
+    ).rejects.toThrow("connection refused");
+
+    expect(mockPoolInstance.end).toHaveBeenCalledOnce();
+  });
+
+  it("should propagate original error even if pool.end fails during startup", async () => {
+    const queryError = new Error("connection refused");
+    mockPoolInstance.query.mockRejectedValueOnce(queryError);
+    mockPoolInstance.end.mockRejectedValueOnce(new Error("end failed"));
+
+    await expect(
+      createPool("postgresql://localhost:5432/testdb"),
+    ).rejects.toThrow("connection refused");
+  });
 });

@@ -1,0 +1,39 @@
+{
+  "name": "SCRATCHY_PROJECT_NAME",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.config.ts"
+  },
+  "dependencies": {
+    "@scratchyjs/auth": "latest",
+    "@scratchyjs/core": "latest",
+    "@scratchyjs/drizzle": "latest",
+    "@scratchyjs/renderer": "latest",
+    "@scratchyjs/trpc": "latest",
+    "@scratchyjs/utils": "latest",
+    "@scratchyjs/vite-plugin": "latest",
+    "better-auth": "1.5.5",
+    "drizzle-orm": "0.45.1",
+    "ulid": "3.0.2"
+  },
+  "devDependencies": {
+    "@builder.io/qwik": "^1.5.0",
+    "@builder.io/qwik-city": "^1.5.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@trpc/server": "11.14.1",
+    "@types/node": "22.16.0",
+    "drizzle-kit": "0.31.0",
+    "fastify": "5.8.2",
+    "superjson": "2.2.6",
+    "tsx": "4.21.0",
+    "typescript": "5.8.3",
+    "vite": "^5.4.0",
+    "zod": "4.3.6"
+  }
+}

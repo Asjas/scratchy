@@ -55,4 +55,54 @@ describe("getClientLocales", () => {
     expect(locales?.length).toBeGreaterThanOrEqual(2);
     expect(locales?.[0]).toBe("en-US");
   });
+
+  it("handles array-type accept-language header", () => {
+    const locales = getClientLocales(
+      req({ "accept-language": ["en-US", "fr-FR;q=0.8"] }),
+    );
+    expect(locales).toBeDefined();
+    expect(locales).toContain("en-US");
+  });
+
+  it("filters out entries with quality <= 0", () => {
+    const locales = getClientLocales(
+      req({ "accept-language": "en-US;q=0, fr-FR" }),
+    );
+    expect(locales).toBeDefined();
+    expect(locales).not.toContain("en-US");
+    expect(locales).toContain("fr-FR");
+  });
+
+  it("filters out entries with quality > 1", () => {
+    const locales = getClientLocales(
+      req({ "accept-language": "en-US;q=1.5, fr-FR" }),
+    );
+    expect(locales).toBeDefined();
+    expect(locales).not.toContain("en-US");
+    expect(locales).toContain("fr-FR");
+  });
+
+  it("filters out entries with non-numeric quality", () => {
+    const locales = getClientLocales(
+      req({ "accept-language": "en-US;q=abc, fr-FR" }),
+    );
+    expect(locales).toBeDefined();
+    expect(locales).not.toContain("en-US");
+    expect(locales).toContain("fr-FR");
+  });
+
+  it("returns undefined for empty accept-language header", () => {
+    expect(getClientLocales(req({ "accept-language": "" }))).toBeUndefined();
+  });
+
+  it("filters out locales that cause Intl.DateTimeFormat to throw", () => {
+    // Locale tags with empty subtags throw a RangeError in the Intl API.
+    // The catch block in getClientLocales should gracefully return false.
+    const locales = getClientLocales(req({ "accept-language": "en-US, und-" }));
+    // "und-" is structurally invalid and triggers a RangeError
+    // Only en-US should survive
+    if (locales) {
+      expect(locales).not.toContain("und-");
+    }
+  });
 });

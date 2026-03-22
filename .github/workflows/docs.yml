@@ -30,8 +30,9 @@ jobs:
   # ── Build (shared) ──────────────────────────────────────────────────────────
   build:
     if: >
-      (github.event_name != 'pull_request' || github.event.action != 'closed') &&
-      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+      (github.event_name != 'pull_request' || github.event.action != 'closed')
+      && (github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -40,7 +41,9 @@ jobs:
           # Publish pushes the release commit near the end of the job, so use
           # the latest main branch state when this workflow is triggered from
           # the publish workflow completion event.
-          ref: ${{ github.event_name == 'workflow_run' && 'refs/heads/main' || github.ref }}
+          ref:
+            ${{ github.event_name == 'workflow_run' && 'refs/heads/main' ||
+            github.ref }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -70,7 +73,8 @@ jobs:
   deploy-production:
     if: >
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      (github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success')
     needs: build
     runs-on: ubuntu-latest
 
@@ -78,7 +82,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event_name == 'workflow_run' && 'refs/heads/main' || github.ref }}
+          ref:
+            ${{ github.event_name == 'workflow_run' && 'refs/heads/main' ||
+            github.ref }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -110,8 +116,7 @@ jobs:
   # ── Deploy PR preview ───────────────────────────────────────────────────────
   deploy-preview:
     if: >
-      github.event_name == 'pull_request' &&
-      github.event.action != 'closed'
+      github.event_name == 'pull_request' && github.event.action != 'closed'
     needs: build
     runs-on: ubuntu-latest
 
@@ -146,7 +151,9 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # Each PR gets its own named worker so previews are isolated
-          command: deploy --name scratchyjs-docs-pr-${{ github.event.pull_request.number }}
+          command:
+            deploy --name scratchyjs-docs-pr-${{
+            github.event.pull_request.number }}
 
       - name: Comment preview URL on PR
         uses: actions/github-script@v7
@@ -186,8 +193,7 @@ jobs:
   # ── Clean up PR preview when PR is closed ──────────────────────────────────
   cleanup-preview:
     if: >
-      github.event_name == 'pull_request' &&
-      github.event.action == 'closed'
+      github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -212,4 +218,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: delete --name scratchyjs-docs-pr-${{ github.event.pull_request.number }} --force
+          command:
+            delete --name scratchyjs-docs-pr-${{
+            github.event.pull_request.number }} --force

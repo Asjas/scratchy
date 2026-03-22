@@ -1,6 +1,13 @@
 ---
 name: worker-threads-piscina
-description: "Guides development of Worker Thread patterns using Piscina within the Scratchy framework for SSR, SSG, and heavy computation. Use when setting up the worker pool, creating worker entry points, communicating between main thread and workers, implementing SharedArrayBuffer, or configuring fastify-piscina. Trigger terms: Worker Threads, Piscina, worker pool, SharedArrayBuffer, Atomics, SSR worker, SSG worker, fastify-piscina, off-main-thread."
+description:
+  "Guides development of Worker Thread patterns using Piscina within the
+  Scratchy framework for SSR, SSG, and heavy computation. Use when setting up
+  the worker pool, creating worker entry points, communicating between main
+  thread and workers, implementing SharedArrayBuffer, or configuring
+  fastify-piscina. Trigger terms: Worker Threads, Piscina, worker pool,
+  SharedArrayBuffer, Atomics, SSR worker, SSG worker, fastify-piscina,
+  off-main-thread."
 metadata:
   tags: worker-threads, piscina, concurrency, ssr, ssg, performance
 applyTo: "**/worker*.ts,**/pool.ts,**/renderer/**/*.ts"
@@ -60,7 +67,10 @@ export default fp(async function workerPool(fastify) {
   });
 
   fastify.log.info(
-    { minThreads: 2, maxThreads: Math.max(4, navigator.hardwareConcurrency || 4) },
+    {
+      minThreads: 2,
+      maxThreads: Math.max(4, navigator.hardwareConcurrency || 4),
+    },
     "worker pool initialized",
   );
 });
@@ -108,13 +118,19 @@ export default async function handler(task: RenderTask): Promise<RenderResult> {
   }
 }
 
-async function renderSSR(route: string, props?: Record<string, unknown>): Promise<RenderResult> {
+async function renderSSR(
+  route: string,
+  props?: Record<string, unknown>,
+): Promise<RenderResult> {
   // Qwik SSR rendering logic here
   const html = `<!DOCTYPE html><html><body>SSR: ${route}</body></html>`;
   return { html, head: "", statusCode: 200 };
 }
 
-async function renderSSG(route: string, props?: Record<string, unknown>): Promise<RenderResult> {
+async function renderSSG(
+  route: string,
+  props?: Record<string, unknown>,
+): Promise<RenderResult> {
   // Qwik SSG rendering logic here
   const html = `<!DOCTYPE html><html><body>SSG: ${route}</body></html>`;
   return { html, head: "", statusCode: 200 };
@@ -151,8 +167,8 @@ export default routes;
 
 ### Pattern 1: SharedArrayBuffer + Atomics
 
-Use for **zero-copy data sharing** between the main thread and workers. Best
-for large data that would be expensive to serialize.
+Use for **zero-copy data sharing** between the main thread and workers. Best for
+large data that would be expensive to serialize.
 
 ```typescript
 // Shared data structure for rendering context
@@ -174,7 +190,9 @@ const { sharedBuffer, statusArray, dataArray } = createSharedBuffer();
 
 // Write data to shared buffer
 const encoder = new TextEncoder();
-const data = encoder.encode(JSON.stringify({ route: "/about", user: { id: "123" } }));
+const data = encoder.encode(
+  JSON.stringify({ route: "/about", user: { id: "123" } }),
+);
 dataArray.set(data);
 
 // Signal the worker that data is ready
@@ -280,13 +298,13 @@ export default async function handler(task: { requestId: string }) {
 
 ### Choosing a Communication Pattern
 
-| Factor                  | SharedArrayBuffer + Atomics | Redis (DragonflyDB)         |
-| ----------------------- | --------------------------- | --------------------------- |
-| Latency                 | Lowest (zero-copy)          | Higher (network roundtrip)  |
-| Data size               | Limited by buffer size      | Virtually unlimited         |
-| Multi-server            | Single process only         | Works across instances      |
-| Complexity              | Higher (manual memory mgmt) | Lower (key-value API)       |
-| Best for                | Large payloads, same server | Distributed, cached data    |
+| Factor       | SharedArrayBuffer + Atomics | Redis (DragonflyDB)        |
+| ------------ | --------------------------- | -------------------------- |
+| Latency      | Lowest (zero-copy)          | Higher (network roundtrip) |
+| Data size    | Limited by buffer size      | Virtually unlimited        |
+| Multi-server | Single process only         | Works across instances     |
+| Complexity   | Higher (manual memory mgmt) | Lower (key-value API)      |
+| Best for     | Large payloads, same server | Distributed, cached data   |
 
 ## Piscina Configuration Options
 

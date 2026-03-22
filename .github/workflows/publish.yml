@@ -94,9 +94,7 @@ jobs:
         with:
           config: cliff.toml
           args: >-
-            --unreleased
-            --tag v${{ steps.calver.outputs.version }}
-            --strip all
+            --unreleased --tag v${{ steps.calver.outputs.version }} --strip all
         env:
           # The action writes the generated content to this file.
           OUTPUT: RELEASE_NOTES.md

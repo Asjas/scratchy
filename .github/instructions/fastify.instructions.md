@@ -1,6 +1,12 @@
 ---
 name: fastify-server
-description: "Guides development of Fastify server configuration, plugins, routes, hooks, and production deployment within the Scratchy framework. Use when setting up the Fastify server, creating plugins, defining REST routes, implementing lifecycle hooks, configuring CORS, rate limiting, or error handling. Trigger terms: Fastify, server, plugin, route, hook, middleware, CORS, rate limit, helmet, autoload, decorator, error handler."
+description:
+  "Guides development of Fastify server configuration, plugins, routes, hooks,
+  and production deployment within the Scratchy framework. Use when setting up
+  the Fastify server, creating plugins, defining REST routes, implementing
+  lifecycle hooks, configuring CORS, rate limiting, or error handling. Trigger
+  terms: Fastify, server, plugin, route, hook, middleware, CORS, rate limit,
+  helmet, autoload, decorator, error handler."
 metadata:
   tags: fastify, server, plugins, routes, hooks, rest-api, backend
 applyTo: "**/server.ts,**/plugins/**/*.ts,**/routes/**/*.ts,**/hooks/**/*.ts"
@@ -144,8 +150,8 @@ won't recognize the properties.
 
 ### Internal Routes (tRPC)
 
-Internal routes are handled by tRPC (see `trpc.instructions.md`). Don't
-create Fastify routes for internal API calls.
+Internal routes are handled by tRPC (see `trpc.instructions.md`). Don't create
+Fastify routes for internal API calls.
 
 ### External RESTful Routes
 
@@ -356,8 +362,8 @@ export default fp(async function security(fastify) {
 
 ### Strip internal-routing and framework headers
 
-The `@scratchyjs/core` package auto-loads a `strip-internal-headers` plugin
-that removes generic internal-routing request headers and the Fastify `server`
+The `@scratchyjs/core` package auto-loads a `strip-internal-headers` plugin that
+removes generic internal-routing request headers and the Fastify `server`
 response header.
 
 **Request headers stripped:** `x-internal-request`, `x-internal-token`
@@ -419,8 +425,9 @@ fastify.addHook("onSend", (request, reply, _payload, done) => {
 });
 ```
 
-tRPC responses already include `cache-control: no-store, no-cache,
-must-revalidate, private` via the `responseMeta()` in `@scratchyjs/trpc`.
+tRPC responses already include
+`cache-control: no-store, no-cache, must-revalidate, private` via the
+`responseMeta()` in `@scratchyjs/trpc`.
 
 ## Logging
 

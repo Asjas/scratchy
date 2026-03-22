@@ -39,4 +39,35 @@ describe("interval", () => {
 
     expect(count).toBeGreaterThanOrEqual(2);
   });
+
+  it("aborts iteration when signal is triggered mid-loop", async () => {
+    const controller = new AbortController();
+    let count = 0;
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for await (const _ of interval(10, { signal: controller.signal })) {
+        count++;
+        if (count >= 1) {
+          controller.abort();
+        }
+      }
+    } catch {
+      // Expected — abort triggers an error
+    }
+
+    expect(count).toBe(1);
+  });
+
+  it("handles options without signal (undefined signal)", async () => {
+    let count = 0;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for await (const _ of interval(10, {})) {
+      count++;
+      if (count >= 2) break;
+    }
+
+    expect(count).toBeGreaterThanOrEqual(2);
+  });
 });

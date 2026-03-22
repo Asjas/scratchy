@@ -129,4 +129,81 @@ describe("tRPC plugin", () => {
 
     await server.close();
   });
+
+  it("should return error response when a procedure throws", async () => {
+    const appRouter = router({
+      failing: publicProcedure.query(() => {
+        throw new Error("intentional failure");
+      }),
+    });
+
+    const plugin = (await import("./plugin.js")).default;
+    const server = Fastify({ logger: false });
+
+    await server.register(plugin, { router: appRouter });
+    await server.ready();
+
+    const response = await server.inject({
+      method: "GET",
+      url: "/trpc/failing",
+    });
+
+    // tRPC returns errors in the response body
+    const body = response.json();
+    expect(body.error).toBeDefined();
+    expect(body.error.json).toBeDefined();
+    expect(body.error.json.message).toBe("intentional failure");
+
+    await server.close();
+  });
+
+  it("should return 404 for non-existent procedures", async () => {
+    const appRouter = router({
+      ping: publicProcedure.query(() => ({ pong: true })),
+    });
+
+    const plugin = (await import("./plugin.js")).default;
+    const server = Fastify({ logger: false });
+
+    await server.register(plugin, { router: appRouter });
+    await server.ready();
+
+    const response = await server.inject({
+      method: "GET",
+      url: "/trpc/nonExistent",
+    });
+
+    // tRPC returns a NOT_FOUND error for unknown procedures
+    expect(response.statusCode).toBe(404);
+
+    await server.close();
+  });
+
+  it("should handle input validation errors", async () => {
+    const appRouter = router({
+      greet: publicProcedure
+        .input(z.object({ name: z.string().min(1) }))
+        .query(({ input }) => `Hello, ${input.name}`),
+    });
+
+    const plugin = (await import("./plugin.js")).default;
+    const server = Fastify({ logger: false });
+
+    await server.register(plugin, { router: appRouter });
+    await server.ready();
+
+    // Send invalid input (empty object)
+    const encodedInput = encodeURIComponent(
+      JSON.stringify(superjson.serialize({})),
+    );
+
+    const response = await server.inject({
+      method: "GET",
+      url: `/trpc/greet?input=${encodedInput}`,
+    });
+
+    expect(response.statusCode).toBe(400);
+
+    await server.close();
+  });
 });

@@ -1,8 +1,17 @@
 ---
 name: auth-better-auth
-description: "Guides development of authentication and authorization within the Scratchy framework using @scratchyjs/auth and Better Auth. Use when setting up authentication, creating protected routes, managing sessions, configuring the Better Auth instance, registering the Fastify plugin, or using requireAuth/requireAdmin preHandler hooks. Trigger terms: auth, authentication, authorization, Better Auth, session, login, sign-in, sign-up, requireAuth, requireAdmin, authPlugin, createAuth, protected route, BETTER_AUTH_SECRET."
+description:
+  "Guides development of authentication and authorization within the Scratchy
+  framework using @scratchyjs/auth and Better Auth. Use when setting up
+  authentication, creating protected routes, managing sessions, configuring the
+  Better Auth instance, registering the Fastify plugin, or using
+  requireAuth/requireAdmin preHandler hooks. Trigger terms: auth,
+  authentication, authorization, Better Auth, session, login, sign-in, sign-up,
+  requireAuth, requireAdmin, authPlugin, createAuth, protected route,
+  BETTER_AUTH_SECRET."
 metadata:
-  tags: auth, better-auth, authentication, authorization, sessions, fastify, hooks
+  tags:
+    auth, better-auth, authentication, authorization, sessions, fastify, hooks
 applyTo: "**/auth.ts,**/auth/**/*.ts,**/plugins/**/*.ts,**/routes/**/*.ts,**/routers/**/*.ts"
 ---
 
@@ -41,16 +50,17 @@ Use `@scratchyjs/auth` when:
 ```typescript
 // Server factory
 import { createAuth } from "@scratchyjs/auth";
-
 // Browser client factory
 import { createAuthClient } from "@scratchyjs/auth/client";
-
+// Prehandler hooks
+import { requireAdmin, requireAuth } from "@scratchyjs/auth/hooks";
 // Fastify plugin
 import authPlugin from "@scratchyjs/auth/plugin";
-import type { AuthPluginOptions, AuthSession, AuthUser } from "@scratchyjs/auth/plugin";
-
-// Prehandler hooks
-import { requireAuth, requireAdmin } from "@scratchyjs/auth/hooks";
+import type {
+  AuthPluginOptions,
+  AuthSession,
+  AuthUser,
+} from "@scratchyjs/auth/plugin";
 ```
 
 ## Server Setup
@@ -61,9 +71,9 @@ Create the Better Auth instance once at module scope and export it for reuse:
 
 ```typescript
 // src/auth.ts
+import type { AppConfig } from "./config.js";
 import { createAuth } from "@scratchyjs/auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import type { AppConfig } from "./config.js";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 /**
@@ -107,8 +117,8 @@ export function createAppAuth(config: AppConfig, db: NodePgDatabase) {
 
 ```typescript
 // src/server.ts
-import authPlugin from "@scratchyjs/auth/plugin";
 import { createAppAuth } from "./auth.js";
+import authPlugin from "@scratchyjs/auth/plugin";
 
 export async function buildServer(opts: ServerOpts = {}) {
   const config = opts.config ?? loadAppConfig();
@@ -116,7 +126,8 @@ export async function buildServer(opts: ServerOpts = {}) {
 
   // ── Database ──────────────────────────────────────────────────────────
   if (config.DATABASE_URL) {
-    const { default: drizzlePlugin } = await import("@scratchyjs/drizzle/plugin");
+    const { default: drizzlePlugin } =
+      await import("@scratchyjs/drizzle/plugin");
     await server.register(drizzlePlugin, {
       connectionString: config.DATABASE_URL,
       schemas: dbSchemas,
@@ -141,12 +152,12 @@ before Better Auth's drizzle adapter is initialised.
 
 ## Request Decorators
 
-After `authPlugin` is registered, every request has two decorators set by
-the `onRequest` lifecycle hook:
+After `authPlugin` is registered, every request has two decorators set by the
+`onRequest` lifecycle hook:
 
-| Decorator         | Type                  | Populated when              |
-| ----------------- | --------------------- | --------------------------- |
-| `request.session` | `AuthSession \| null` | A valid session cookie is present |
+| Decorator         | Type                  | Populated when                                         |
+| ----------------- | --------------------- | ------------------------------------------------------ |
+| `request.session` | `AuthSession \| null` | A valid session cookie is present                      |
 | `request.user`    | `AuthUser \| null`    | Same — convenience shorthand of `request.session.user` |
 
 ```typescript
@@ -201,16 +212,12 @@ when no valid session is found.
 ```typescript
 import { requireAdmin } from "@scratchyjs/auth/hooks";
 
-fastify.delete(
-  "/users/:id",
-  { preHandler: requireAdmin },
-  async (request) => {
-    // Only users with role === "admin" reach this handler
-    const { id } = request.params as { id: string };
-    await deleteUser(id);
-    return { success: true };
-  },
-);
+fastify.delete("/users/:id", { preHandler: requireAdmin }, async (request) => {
+  // Only users with role === "admin" reach this handler
+  const { id } = request.params as { id: string };
+  await deleteUser(id);
+  return { success: true };
+});
 ```
 
 `requireAdmin` sends HTTP 401 for unauthenticated requests and HTTP 403 for
@@ -228,11 +235,14 @@ export const postMutations = {
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx.request.server;
       // ctx.user is AuthUser here (non-null — enforced by protectedProcedure)
-      return db.insert(post).values({
-        id: ulid(),
-        authorId: ctx.user.id,
-        ...input,
-      }).returning();
+      return db
+        .insert(post)
+        .values({
+          id: ulid(),
+          authorId: ctx.user.id,
+          ...input,
+        })
+        .returning();
     }),
 };
 ```
@@ -242,8 +252,8 @@ export const postMutations = {
 
 ## Database Schema for Better Auth
 
-Better Auth requires four tables when using the drizzle adapter. Create them
-in your schema directory:
+Better Auth requires four tables when using the drizzle adapter. Create them in
+your schema directory:
 
 ### `src/db/schema/user.ts` (updated)
 
@@ -356,14 +366,14 @@ export const verification = appSchema.table(
 Once `authPlugin` is registered, Better Auth mounts the following HTTP routes
 under `basePath` (default `/api/auth`):
 
-| Method | Path                             | Description           |
-| ------ | -------------------------------- | --------------------- |
-| POST   | `/api/auth/sign-up/email`        | Register a new user   |
-| POST   | `/api/auth/sign-in/email`        | Sign in with email    |
-| POST   | `/api/auth/sign-out`             | Sign out              |
-| GET    | `/api/auth/get-session`          | Get current session   |
-| POST   | `/api/auth/forgot-password`      | Request password reset|
-| POST   | `/api/auth/reset-password`       | Reset password        |
+| Method | Path                        | Description            |
+| ------ | --------------------------- | ---------------------- |
+| POST   | `/api/auth/sign-up/email`   | Register a new user    |
+| POST   | `/api/auth/sign-in/email`   | Sign in with email     |
+| POST   | `/api/auth/sign-out`        | Sign out               |
+| GET    | `/api/auth/get-session`     | Get current session    |
+| POST   | `/api/auth/forgot-password` | Request password reset |
+| POST   | `/api/auth/reset-password`  | Reset password         |
 
 ```typescript
 // Sign up (fetch example)
@@ -390,8 +400,8 @@ await fetch("/api/auth/sign-in/email", {
 
 ## Browser Client (`createAuthClient`)
 
-Use `createAuthClient()` from `@scratchyjs/auth/client` in browser code
-(e.g., Qwik components):
+Use `createAuthClient()` from `@scratchyjs/auth/client` in browser code (e.g.,
+Qwik components):
 
 ```typescript
 // src/client/lib/auth.ts
@@ -421,10 +431,10 @@ import type { AuthUser } from "@scratchyjs/auth/plugin";
 
 ## Environment Variables
 
-| Variable            | Description                                   | Required |
-| ------------------- | --------------------------------------------- | -------- |
-| `BETTER_AUTH_SECRET`| Secret key for signing auth tokens/cookies.   | Yes      |
-| `ORIGIN`            | The application's base URL (for CORS check).  | Recommended |
+| Variable             | Description                                  | Required    |
+| -------------------- | -------------------------------------------- | ----------- |
+| `BETTER_AUTH_SECRET` | Secret key for signing auth tokens/cookies.  | Yes         |
+| `ORIGIN`             | The application's base URL (for CORS check). | Recommended |
 
 ```bash
 # .env
@@ -478,17 +488,22 @@ existence check or ensure the plugin is always registered when auth is needed.
 
 ```typescript
 // BAD
-secret: "my-secret"
+secret: "my-secret";
 
 // GOOD — load from config/environment
-secret: config.BETTER_AUTH_SECRET
+secret: config.BETTER_AUTH_SECRET;
 ```
 
 ## Reference Links
 
 - <a href="https://www.better-auth.com/docs">Better Auth Documentation</a>
-- <a href="https://www.better-auth.com/docs/integrations/fastify">Better Auth Fastify Integration</a>
-- <a href="https://github.com/johannschopplich/fastify-better-auth">fastify-better-auth Plugin</a>
-- <a href="https://www.better-auth.com/docs/adapters/drizzle">Better Auth Drizzle Adapter</a>
-- <a href="https://www.better-auth.com/docs/concepts/session-management">Session Management</a>
-- <a href="https://www.better-auth.com/docs/plugins/admin">Better Auth Admin Plugin</a>
+- <a href="https://www.better-auth.com/docs/integrations/fastify">Better Auth
+  Fastify Integration</a>
+- <a href="https://github.com/johannschopplich/fastify-better-auth">fastify-better-auth
+  Plugin</a>
+- <a href="https://www.better-auth.com/docs/adapters/drizzle">Better Auth
+  Drizzle Adapter</a>
+- <a href="https://www.better-auth.com/docs/concepts/session-management">Session
+  Management</a>
+- <a href="https://www.better-auth.com/docs/plugins/admin">Better Auth Admin
+  Plugin</a>

@@ -1,6 +1,12 @@
 ---
 name: react-qwik-interop
-description: "Guides development of React components within the Scratchy framework's Qwik rendering layer. Use when creating React components that will be wrapped with qwikify$(), building shared component libraries, or integrating React ecosystem libraries (e.g., chart libraries, rich text editors) into Qwik pages. Trigger terms: React component, qwikify, React in Qwik, useSignal, JSX, React interop, React wrapper."
+description:
+  "Guides development of React components within the Scratchy framework's Qwik
+  rendering layer. Use when creating React components that will be wrapped with
+  qwikify$(), building shared component libraries, or integrating React
+  ecosystem libraries (e.g., chart libraries, rich text editors) into Qwik
+  pages. Trigger terms: React component, qwikify, React in Qwik, useSignal, JSX,
+  React interop, React wrapper."
 metadata:
   tags: react, qwik, components, interop, jsx, frontend
 applyTo: "**/*.tsx"
@@ -17,8 +23,8 @@ Use React components in Scratchy when:
 - Building components that need React-specific hooks or lifecycle methods
 - Using React UI libraries (e.g., chart libraries, rich text editors)
 
-**Prefer native Qwik components** whenever possible for better performance
-and resumability. Only use React components through `qwikify$()` when necessary.
+**Prefer native Qwik components** whenever possible for better performance and
+resumability. Only use React components through `qwikify$()` when necessary.
 
 ## Core Pattern — qwikify$()
 
@@ -40,8 +46,8 @@ export const QGreeting = qwikify$(Greeting);
 Use in a Qwik component:
 
 ```tsx
-import { component$ } from "@builder.io/qwik";
 import { QGreeting } from "./greeting";
+import { component$ } from "@builder.io/qwik";
 
 export default component$(() => {
   return (
@@ -106,19 +112,15 @@ interface CounterProps {
 }
 
 function Counter({ count, onIncrement }: CounterProps) {
-  return (
-    <button onClick={onIncrement}>
-      Count: {count}
-    </button>
-  );
+  return <button onClick={onIncrement}>Count: {count}</button>;
 }
 
 export const QCounter = qwikify$(Counter, { eagerness: "hover" });
 ```
 
 ```tsx
-import { component$, useSignal, $ } from "@builder.io/qwik";
 import { QCounter } from "./counter";
+import { $, component$, useSignal } from "@builder.io/qwik";
 
 export default component$(() => {
   const count = useSignal(0);
@@ -126,7 +128,12 @@ export default component$(() => {
     count.value++;
   });
 
-  return <QCounter count={count.value} onIncrement={increment} />;
+  return (
+    <QCounter
+      count={count.value}
+      onIncrement={increment}
+    />
+  );
 });
 ```
 
@@ -137,7 +144,7 @@ React hooks work normally inside qwikified components:
 ```tsx
 /** @jsxImportSource react */
 import { qwikify$ } from "@builder.io/qwik-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function Timer() {
   const [seconds, setSeconds] = useState(0);
@@ -165,11 +172,7 @@ import { qwikify$ } from "@builder.io/qwik-react";
 import { ThemeProvider } from "some-react-lib";
 
 function ThemedWidget({ children }: { children: React.ReactNode }) {
-  return (
-    <ThemeProvider theme="dark">
-      {children}
-    </ThemeProvider>
-  );
+  return <ThemeProvider theme="dark">{children}</ThemeProvider>;
 }
 
 export const QThemedWidget = qwikify$(ThemedWidget);

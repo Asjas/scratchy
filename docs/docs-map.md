@@ -26,14 +26,15 @@
 
 ### Reference — information-oriented
 
-| Document                                    | Description                                                          |
-| ------------------------------------------- | -------------------------------------------------------------------- |
-| [API Design](./api-design.md)               | tRPC 11 (internal) + REST Fastify routes (external)                  |
-| [CLI](./cli.md)                             | `create-scratchy-app`, generators, and templates                     |
-| [Data Layer](./data-layer.md)               | Drizzle ORM, schemas, queries, caching                               |
-| [Project Structure](./project-structure.md) | Directory layout and naming conventions                              |
-| [References](./references.md)               | External links to all technologies                                   |
-| [Security](./security.md)                   | Defense-in-depth: auth, CORS, CSRF, CSP, rate limiting, OWASP Top 10 |
+| Document                                        | Description                                                          |
+| ----------------------------------------------- | -------------------------------------------------------------------- |
+| [API Design](./api-design.md)                   | tRPC 11 (internal) + REST Fastify routes (external)                  |
+| [CLI](./cli.md)                                 | `scratchy` generators and templates                                  |
+| [create-scratchy-app](./create-scratchy-app.md) | Project scaffolding CLI — options, features, generated structure     |
+| [Data Layer](./data-layer.md)                   | Drizzle ORM, schemas, queries, caching                               |
+| [Project Structure](./project-structure.md)     | Directory layout and naming conventions                              |
+| [References](./references.md)                   | External links to all technologies                                   |
+| [Security](./security.md)                       | Defense-in-depth: auth, CORS, CSRF, CSP, rate limiting, OWASP Top 10 |
 
 ### Explanation — understanding-oriented
 

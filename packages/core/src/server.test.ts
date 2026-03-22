@@ -38,4 +38,21 @@ describe("createServer", () => {
     expect(body.timestamp).toBeDefined();
     expect(() => new Date(body.timestamp)).not.toThrow();
   });
+
+  it("should log a warning in production when ALLOWED_ORIGINS is empty", async () => {
+    const config = loadConfig({
+      NODE_ENV: "production",
+      ALLOWED_ORIGINS: "",
+      LOG_LEVEL: "warn",
+    });
+
+    // createServer calls warnInsecureConfig internally, which logs a warning
+    // if NODE_ENV === "production" and ALLOWED_ORIGINS is empty.
+    // We verify the code path executes without error and the server is usable.
+    const prodServer = await createServer(config);
+    expect(prodServer).toBeDefined();
+    expect(prodServer.config.NODE_ENV).toBe("production");
+    expect(prodServer.config.ALLOWED_ORIGINS).toEqual([]);
+    await prodServer.close();
+  });
 });

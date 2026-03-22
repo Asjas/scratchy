@@ -1,0 +1,28 @@
+{
+  "name": "@scratchyjs/create-scratchy-app",
+  "version": "26.3.22-1774210082544",
+  "description": "Create a new Scratchy application",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "bin": {
+    "create-scratchy": "./src/index.ts",
+    "create-scratchy-app": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clack/prompts": "0.10.1",
+    "picocolors": "1.1.1",
+    "tsx": "4.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.16.0",
+    "typescript": "5.8.3"
+  }
+}

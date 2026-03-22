@@ -49,7 +49,10 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .cache
-          key: ${{ runner.os }}-lint-cache-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml', 'eslint.config.mjs', '.prettierrc') }}
+          key:
+            ${{ runner.os }}-lint-cache-${{ matrix.node-version }}-${{
+            hashFiles('**/pnpm-lock.yaml', 'eslint.config.mjs', '.prettierrc')
+            }}
           restore-keys: |
             ${{ runner.os }}-lint-cache-${{ matrix.node-version }}-
             ${{ runner.os }}-lint-cache-
@@ -154,4 +157,6 @@ jobs:
         with:
           json-summary-path: coverage/coverage-summary.json
           json-final-path: coverage/coverage-final.json
-          json-summary-compare-path: ${{ steps.coverage-files.outputs.base-coverage == 'true' && 'base-coverage/coverage-summary.json' || '' }}
+          json-summary-compare-path:
+            ${{ steps.coverage-files.outputs.base-coverage == 'true' &&
+            'base-coverage/coverage-summary.json' || '' }}

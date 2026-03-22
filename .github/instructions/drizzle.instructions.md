@@ -1,6 +1,12 @@
 ---
 name: drizzle-orm
-description: "Guides development of database schemas, queries, mutations, and migrations using Drizzle ORM with PostgreSQL in the Scratchy framework. Use when defining tables, writing queries, creating relations, setting up prepared statements, running migrations, or configuring the database connection pool. Trigger terms: Drizzle, ORM, schema, table, query, migration, PostgreSQL, database, pgSchema, relations, prepared statement, drizzle-kit."
+description:
+  "Guides development of database schemas, queries, mutations, and migrations
+  using Drizzle ORM with PostgreSQL in the Scratchy framework. Use when defining
+  tables, writing queries, creating relations, setting up prepared statements,
+  running migrations, or configuring the database connection pool. Trigger
+  terms: Drizzle, ORM, schema, table, query, migration, PostgreSQL, database,
+  pgSchema, relations, prepared statement, drizzle-kit."
 metadata:
   tags: drizzle, orm, database, postgresql, schema, migration, queries
 applyTo: "**/db/**/*.ts,**/schema/**/*.ts,**/queries/**/*.ts,**/mutations/**/*.ts,**/drizzle.config.ts"
@@ -147,9 +153,7 @@ export const user = mySchema.table(
     banReason: text(),
     ...timestamps,
   },
-  (table) => [
-    index("user_email_idx").on(table.email),
-  ],
+  (table) => [index("user_email_idx").on(table.email)],
 );
 
 // 4. Relations
@@ -210,8 +214,7 @@ export const post = mySchema.table("post", {
   authorId: text()
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  categoryId: text()
-    .references(() => category.id, { onDelete: "set null" }),
+  categoryId: text().references(() => category.id, { onDelete: "set null" }),
   ...timestamps,
 });
 ```
@@ -240,10 +243,7 @@ export const findUserById = db
 // const result = await findUserById.execute({ id: "some-id" });
 
 // ✅ Module-scoped query without parameters
-export const findAllUsers = db
-  .select()
-  .from(user)
-  .prepare("find_all_users");
+export const findAllUsers = db.select().from(user).prepare("find_all_users");
 
 // Type export for consumers
 export type FindUserById = Awaited<ReturnType<typeof findUserById.execute>>;
@@ -252,17 +252,14 @@ export type FindUserById = Awaited<ReturnType<typeof findUserById.execute>>;
 ### Query Builder Patterns
 
 ```typescript
-import { eq, and, gt, like, desc, sql } from "drizzle-orm";
+import { and, desc, eq, gt, like, sql } from "drizzle-orm";
 
 // Select with conditions
 const activeUsers = await db
   .select()
   .from(user)
   .where(
-    and(
-      eq(user.banned, false),
-      gt(user.createdAt, new Date("2025-01-01")),
-    ),
+    and(eq(user.banned, false), gt(user.createdAt, new Date("2025-01-01"))),
   );
 
 // Select specific columns
@@ -307,9 +304,9 @@ const usersWithPosts = await db.query.user.findMany({
 ```typescript
 // db/mutations/users.ts
 import { eq } from "drizzle-orm";
-import { db } from "~/db/index.js";
-import { user, type NewUser } from "~/db/schema/user.js";
 import { ulid } from "ulid";
+import { db } from "~/db/index.js";
+import { type NewUser, user } from "~/db/schema/user.js";
 
 export async function createUser(data: Omit<NewUser, "id">) {
   const [newUser] = await db
@@ -357,7 +354,11 @@ export async function upsertUser(data: NewUser) {
 ```typescript
 import { db } from "~/db/index.js";
 
-export async function transferCredits(fromId: string, toId: string, amount: number) {
+export async function transferCredits(
+  fromId: string,
+  toId: string,
+  amount: number,
+) {
   return await db.transaction(async (tx) => {
     const [sender] = await tx
       .select()

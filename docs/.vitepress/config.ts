@@ -73,6 +73,10 @@ export default defineConfig({
         items: [
           { text: "Testing", link: "/testing" },
           { text: "CLI", link: "/cli" },
+          {
+            text: "create-scratchy-app",
+            link: "/create-scratchy-app",
+          },
         ],
       },
       {

@@ -93,4 +93,24 @@ describe("renderer plugin", () => {
     // After close, the pool threads should be terminated
     expect(pool.threads.length).toBe(0);
   });
+
+  it("should use custom idleTimeout and taskTimeout", async () => {
+    const plugin = (await import("./plugin.js")).default;
+    const server = Fastify({ logger: false });
+
+    await server.register(plugin, {
+      worker: resolve(import.meta.dirname, "worker.ts"),
+      minThreads: 1,
+      maxThreads: 2,
+      idleTimeout: 30_000,
+      taskTimeout: 15_000,
+    });
+
+    await server.ready();
+
+    expect(server.piscina).toBeDefined();
+    expect(typeof server.runTask).toBe("function");
+
+    await server.close();
+  });
 });

@@ -1,6 +1,12 @@
 ---
 name: qwik-framework
-description: "Guides development of Qwik components, routing, and rendering patterns within the Scratchy framework. Use when creating Qwik components, setting up file-based routing, working with Qwik's reactivity system (signals, stores), implementing SSR/SSG, or optimizing component loading. Trigger terms: Qwik, component$, useSignal, useStore, useTask$, useVisibleTask$, $() dollar sign, resumability, Qwik City, QRL, lazy loading."
+description:
+  "Guides development of Qwik components, routing, and rendering patterns within
+  the Scratchy framework. Use when creating Qwik components, setting up
+  file-based routing, working with Qwik's reactivity system (signals, stores),
+  implementing SSR/SSG, or optimizing component loading. Trigger terms: Qwik,
+  component$, useSignal, useStore, useTask$, useVisibleTask$, $() dollar sign,
+  resumability, Qwik City, QRL, lazy loading."
 metadata:
   tags: qwik, components, rendering, ssr, ssg, routing, frontend
 applyTo: "**/*.tsx,**/*.ts"
@@ -36,7 +42,7 @@ Functions suffixed with `$` are lazy-loadable boundaries. Qwik's optimizer
 splits code at these boundaries:
 
 ```tsx
-import { component$, $ } from "@builder.io/qwik";
+import { $, component$ } from "@builder.io/qwik";
 
 // component$ — lazy-loadable component boundary
 export const MyComponent = component$(() => {
@@ -124,7 +130,12 @@ export const ContactForm = component$(() => {
         onInput$={(_, el) => (form.email = el.value)}
       />
       {form.errors.map((error) => (
-        <p key={error} class="error">{error}</p>
+        <p
+          key={error}
+          class="error"
+        >
+          {error}
+        </p>
       ))}
       <button type="submit">Submit</button>
     </form>
@@ -186,7 +197,7 @@ checks when possible.
 ### Computed Values with useComputed$
 
 ```tsx
-import { component$, useSignal, useComputed$ } from "@builder.io/qwik";
+import { component$, useComputed$, useSignal } from "@builder.io/qwik";
 
 export const PriceDisplay = component$(() => {
   const price = useSignal(100);
@@ -203,7 +214,12 @@ export const PriceDisplay = component$(() => {
 ### Resource Loading with useResource$
 
 ```tsx
-import { component$, useSignal, useResource$, Resource } from "@builder.io/qwik";
+import {
+  Resource,
+  component$,
+  useResource$,
+  useSignal,
+} from "@builder.io/qwik";
 
 export const UserList = component$(() => {
   const page = useSignal(1);
@@ -253,7 +269,7 @@ src/client/routes/
 ### Layout Component
 
 ```tsx
-import { component$, Slot } from "@builder.io/qwik";
+import { Slot, component$ } from "@builder.io/qwik";
 
 export default component$(() => {
   return (
@@ -322,7 +338,7 @@ export default component$(() => {
 
 ```tsx
 import { component$ } from "@builder.io/qwik";
-import { routeAction$, Form, zod$, z } from "@builder.io/qwik-city";
+import { Form, routeAction$, z, zod$ } from "@builder.io/qwik-city";
 
 export const useCreatePost = routeAction$(
   async (data, { fail }) => {
@@ -357,7 +373,7 @@ export default component$(() => {
 ### Named Slots
 
 ```tsx
-import { component$, Slot } from "@builder.io/qwik";
+import { Slot, component$ } from "@builder.io/qwik";
 
 export const Card = component$(() => {
   return (
@@ -393,18 +409,20 @@ Qwik components use Tailwind CSS classes directly:
 ```tsx
 import { component$ } from "@builder.io/qwik";
 
-export const Alert = component$(({ message, type }: { message: string; type: "info" | "error" }) => {
-  const styles = {
-    info: "bg-blue-50 text-blue-800 border-blue-200",
-    error: "bg-red-50 text-red-800 border-red-200",
-  };
+export const Alert = component$(
+  ({ message, type }: { message: string; type: "info" | "error" }) => {
+    const styles = {
+      info: "bg-blue-50 text-blue-800 border-blue-200",
+      error: "bg-red-50 text-red-800 border-red-200",
+    };
 
-  return (
-    <div class={`rounded-lg border p-4 ${styles[type]}`}>
-      <p>{message}</p>
-    </div>
-  );
-});
+    return (
+      <div class={`rounded-lg border p-4 ${styles[type]}`}>
+        <p>{message}</p>
+      </div>
+    );
+  },
+);
 ```
 
 ## Anti-Patterns
