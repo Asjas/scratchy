@@ -37,7 +37,13 @@
   "pnpm": {
     "overrides": {
       "esbuild": ">=0.25.0"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "cypress",
+      "esbuild",
+      "sharp",
+      "workerd"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
