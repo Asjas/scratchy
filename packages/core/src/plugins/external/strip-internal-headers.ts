@@ -10,7 +10,7 @@ import fastifyPlugin from "fastify-plugin";
  *
  * **Outbound (response) headers stripped:**
  * - `server` — Fastify sets this to `"Fastify"` by default, advertising the
- *   framework version. Removing it reduces the server's attack surface by
+ *   framework identity. Removing it reduces the server's attack surface by
  *   hiding implementation details from potential attackers.
  */
 const INTERNAL_REQUEST_HEADERS = [
@@ -34,7 +34,7 @@ export default fastifyPlugin(
     });
 
     // Strip the `server` response header that Fastify adds automatically.
-    // This prevents leaking framework/version information to clients.
+    // This prevents leaking framework identity information to clients.
     fastify.addHook("onSend", (_request, reply, _payload, hookDone) => {
       reply.removeHeader("server");
       hookDone();
