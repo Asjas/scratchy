@@ -30,7 +30,6 @@ export const session = appSchema.table(
   },
   (table) => [
     index("session_user_id_idx").on(table.userId),
-    index("session_token_idx").on(table.token),
   ],
 );
 
