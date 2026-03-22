@@ -51,8 +51,8 @@ jobs:
         id: calver
         run: |
           YY=$(date -u +%y)
-          MM=$(date -u +%m)
-          DD=$(date -u +%d)
+          MM=$(date -u +%-m)
+          DD=$(date -u +%-d)
           MILLIS=$(date -u +%s%3N) # GNU date only — fine on ubuntu-latest
           VERSION="${YY}.${MM}.${DD}-${MILLIS}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
