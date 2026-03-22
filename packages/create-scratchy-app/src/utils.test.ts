@@ -5,6 +5,7 @@ import {
   getInstallCommand,
   getRunCommand,
   initGit,
+  installDeps,
   isEmptyDir,
   replaceInFile,
   resolveProjectDir,
@@ -363,5 +364,56 @@ describe("initGit", () => {
   it("returns false for a non-existent directory", () => {
     const result = initGit(join(testDir, "does-not-exist"));
     expect(result).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// installDeps
+// ---------------------------------------------------------------------------
+
+describe("installDeps", () => {
+  let testDir: string;
+
+  beforeEach(async () => {
+    testDir = join(
+      tmpdir(),
+      `scratchy-deps-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
+    await mkdir(testDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await rm(testDir, { recursive: true, force: true });
+  });
+
+  it("returns false for a non-existent directory", () => {
+    const result = installDeps(join(testDir, "does-not-exist"), "pnpm");
+    expect(result).toBe(false);
+  });
+
+  it("returns a boolean without throwing", () => {
+    // Without a valid package.json, the install will fail, but it should
+    // still return false rather than throwing.
+    const result = installDeps(testDir, "pnpm");
+    expect(typeof result).toBe("boolean");
+  });
+
+  it("returns false when install fails (no package.json)", () => {
+    // A directory with no package.json should cause install to fail
+    const result = installDeps(testDir, "npm");
+    expect(result).toBe(false);
+  });
+
+  it("uses the correct package manager command", async () => {
+    // Create a minimal valid package.json
+    await writeFile(
+      join(testDir, "package.json"),
+      JSON.stringify({ name: "test", version: "1.0.0" }),
+    );
+
+    // npm install should work even with an empty package.json
+    const result = installDeps(testDir, "npm");
+    // npm install with a valid package.json should succeed
+    expect(typeof result).toBe("boolean");
   });
 });

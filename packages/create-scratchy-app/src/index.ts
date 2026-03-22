@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+import { buildNextSteps, helpText, parseArgs } from "./cli.js";
 import {
   cleanSentinelComments,
   stripAuthFiles,
@@ -11,7 +12,6 @@ import {
   defaultProjectName,
   detectPackageManager,
   getInstallCommand,
-  getRunCommand,
   initGit,
   installDeps,
   isEmptyDir,
@@ -45,47 +45,20 @@ const { version: VERSION } = require("../package.json") as {
 
 // ─── Parse argv ──────────────────────────────────────────────────────────────
 
-const args = process.argv.slice(2);
+const parsed = parseArgs(process.argv.slice(2));
 
-/** First positional argument — the project name / path. */
-let argProjectName: string | undefined;
-/** `--yes` / `-y` flag — skip interactive prompts and use defaults. */
-let argYes = false;
-
-for (const arg of args) {
-  if (arg === "--yes" || arg === "-y") {
-    argYes = true;
-  } else if (arg === "--version" || arg === "-v") {
-    console.log(VERSION);
-    process.exit(0);
-  } else if (arg === "--help" || arg === "-h") {
-    printHelp();
-    process.exit(0);
-  } else if (!arg.startsWith("-")) {
-    argProjectName = arg;
-  }
+if (parsed.version) {
+  console.log(VERSION);
+  process.exit(0);
 }
 
-function printHelp(): void {
-  console.log(`
-${pc.bold("create-scratchy-app")} v${VERSION}
-
-${pc.bold("Usage:")}
-  create-scratchy [project-name] [options]
-  create-scratchy-app [project-name] [options]
-
-${pc.bold("Options:")}
-  --yes, -y     Skip prompts and use defaults
-  --version, -v Print version
-  --help, -h    Show this help message
-
-${pc.bold("Examples:")}
-  pnpm create scratchy-app
-  pnpm create scratchy-app my-app
-  npx create-scratchy-app my-app
-  npx create-scratchy-app my-app --yes
-`);
+if (parsed.help) {
+  console.log(helpText(VERSION));
+  process.exit(0);
 }
+
+const argProjectName = parsed.projectName;
+const argYes = parsed.yes;
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
@@ -288,39 +261,13 @@ async function main(): Promise<void> {
 
   // ── Done ─────────────────────────────────────────────────────────────────
 
-  const relativeDir =
-    projectDir === process.cwd() ? "." : `./${rawProjectName}`;
-
-  const nextSteps: string[] = [];
-
-  if (projectDir !== process.cwd()) {
-    nextSteps.push(`cd ${relativeDir}`);
-  }
-
-  if (!installDepsChoice) {
-    nextSteps.push(getInstallCommand(packageManager));
-  }
-
-  nextSteps.push("cp .env.example .env   # configure environment variables");
-
-  if (includeDb) {
-    nextSteps.push("docker compose up -d   # start PostgreSQL + DragonflyDB");
-  }
-
-  nextSteps.push(
-    getRunCommand(packageManager, "dev") + "         # start the dev server",
-  );
-
-  if (includeDb) {
-    nextSteps.push(
-      getRunCommand(packageManager, "drizzle-kit generate") +
-        "  # generate initial migration",
-    );
-    nextSteps.push(
-      getRunCommand(packageManager, "drizzle-kit migrate") +
-        "   # apply migrations",
-    );
-  }
+  const nextSteps = buildNextSteps({
+    projectDir,
+    rawProjectName,
+    includeDb,
+    installDepsChoice,
+    packageManager,
+  });
 
   outro(
     [
