@@ -352,6 +352,24 @@ const value = someFunction() as any;
 const value: ExpectedType = someFunction();
 ```
 
+## Validation — Mandatory Before Every Commit
+
+Run **all four steps** before committing — CI rejects on any failure:
+
+```bash
+pnpm format                        # Prettier — fix code formatting
+pnpm lint                          # ESLint — catch lint errors
+pnpm typecheck                     # tsc --noEmit — catch type errors across all packages
+pnpm build                         # Build all packages
+
+# Or as a single command chain:
+pnpm format && pnpm lint && pnpm typecheck && pnpm build
+```
+
+`pnpm typecheck` runs `tsc --noEmit` across all packages via Turbo. It catches
+type errors that tests and linting miss — for example, missing properties on
+objects, incorrect type assignments, and unresolved imports.
+
 ## Reference Links
 
 - [TypeScript Documentation](https://www.typescriptlang.org/docs/)

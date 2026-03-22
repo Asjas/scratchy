@@ -868,6 +868,26 @@ export function loadAppConfig(): AppConfig {
 
 ---
 
+## Validation — Mandatory Before Every Commit
+
+Run **all four steps** before committing — CI rejects on any failure:
+
+```bash
+pnpm format                        # Prettier — fix code formatting
+pnpm lint                          # ESLint — catch lint errors
+pnpm typecheck                     # tsc --noEmit — catch type errors
+pnpm build                         # Build all packages
+
+# Or as a single command chain:
+pnpm format && pnpm lint && pnpm typecheck && pnpm build
+```
+
+`pnpm typecheck` runs `tsc --noEmit` and catches type errors that tests and
+linting miss — for example, missing properties on objects, incorrect type
+assignments, and unresolved imports.
+
+---
+
 ## Anti-Patterns (Do NOT Do These)
 
 ```typescript
