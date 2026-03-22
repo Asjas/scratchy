@@ -108,7 +108,7 @@ describe("writeToBuffer / readFromBuffer round-trip", () => {
     const encoder = new TextEncoder();
     const invalid = encoder.encode("{not valid json}");
 
-    // First call — should throw SyntaxError with our message
+    // First call — should throw the original SyntaxError from JSON.parse
     const shared1 = createSharedBuffer(1024);
     shared1.data.set(invalid);
     Atomics.store(shared1.dataLength, 0, invalid.byteLength);
@@ -119,15 +119,14 @@ describe("writeToBuffer / readFromBuffer round-trip", () => {
     // After the parse failure, status must be ERROR so the buffer is not silently reused
     expect(Atomics.load(shared1.status, 0)).toBe(BufferStatus.ERROR);
 
-    // Second buffer — verify the error message matches
+    // Second buffer — the thrown SyntaxError contains the native JSON.parse message
     const shared2 = createSharedBuffer(1024);
     shared2.data.set(invalid);
     Atomics.store(shared2.dataLength, 0, invalid.byteLength);
     Atomics.store(shared2.status, 0, BufferStatus.DATA_READY);
 
-    expect(() => readFromBuffer(shared2)).toThrow(
-      /Failed to parse JSON payload/,
-    );
+    // The native JSON.parse SyntaxError is rethrown directly to preserve stack/context.
+    expect(() => readFromBuffer(shared2)).toThrow(SyntaxError);
   });
 });
 

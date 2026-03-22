@@ -49,5 +49,14 @@ export function safeRedirect(
     return defaultRedirect;
   }
 
+  // Reject the decoded path if it contains ASCII control characters
+  // (U+0000–U+001F, U+007F). Control characters such as CR (\r) and LF (\n)
+  // could break the HTTP Location header and enable header-injection attacks
+  // if the decoded value were returned and used in a redirect response.
+  // eslint-disable-next-line no-control-regex
+  if (/[\x00-\x1F\x7F]/.test(trimmed)) {
+    return defaultRedirect;
+  }
+
   return trimmed;
 }

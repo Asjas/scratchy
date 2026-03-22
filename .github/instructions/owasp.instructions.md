@@ -263,15 +263,23 @@ if (!SAFE_IDENTIFIER.test(name)) {
 
 Insecure design covers missing or ineffective security controls at the
 architectural level. In Scratchy, the defense-in-depth plugin order
-enforces secure design:
+enforces secure design. The core external plugins live in
+`packages/core/src/plugins/external/` and are registered in alphabetical
+order via `@fastify/autoload`:
 
 ```
-plugins/external/
-├── 01-helmet.ts       # ✅ Security headers — first plugin
-├── 02-rate-limit.ts   # ✅ Rate limiting
-├── 03-cors.ts         # ✅ CORS — scoped to /external/api only
-└── 04-auth.ts         # ✅ Authentication — after rate limit
+packages/core/src/plugins/external/
+├── cors.ts         # CORS — restrict origin allowlist in production
+├── helmet.ts       # Security headers
+├── rate-limit.ts   # Rate limiting
+└── sensible.ts     # HTTP utilities (@fastify/sensible)
 ```
+
+> **Load order note:** `@fastify/autoload` processes files alphabetically, so
+> `cors.ts` is registered before `helmet.ts`. If your application requires a
+> strict loading sequence (e.g. to ensure helmet headers apply to all
+> responses including CORS preflight errors), use numeric prefixes in your own
+> application plugins directory: `01-helmet.ts`, `02-rate-limit.ts`, etc.
 
 ### Rate limiting — protect all routes, stricter on auth endpoints
 
@@ -324,12 +332,37 @@ overly permissive CORS, missing security headers, or verbose error messages.
 
 ### Security headers — always register `@fastify/helmet` first
 
-```typescript
-// plugins/external/helmet.ts
-import fastifyHelmet from "@fastify/helmet";
+Scratchy ships with a baseline helmet configuration. `contentSecurityPolicy`
+is disabled by default because CSP directives are highly app-specific; enable
+and configure it per-application:
 
-export const autoConfig = {
+```typescript
+// packages/core/src/plugins/external/helmet.ts (actual Scratchy config)
+import fastifyHelmet, { type FastifyHelmetOptions } from "@fastify/helmet";
+
+export const autoConfig: FastifyHelmetOptions = {
   hidePoweredBy: true,
+  contentSecurityPolicy: false,    // ⚠️ disabled by default — enable per-app (see below)
+  xContentTypeOptions: true,
+  xFrameOptions: { action: "deny" },      // Prevents clickjacking
+  hsts: { maxAge: 31536000, includeSubDomains: true },
+  referrerPolicy: { policy: "no-referrer" },
+  xPermittedCrossDomainPolicies: { permittedPolicies: "none" },
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
+};
+
+export default fastifyHelmet;
+```
+
+**Recommended production hardening** — enable CSP with a strict policy.
+Override `autoConfig` in your application's plugin or pass options directly:
+
+```typescript
+// ✅ Hardened helmet config for production — add nonce support when inline
+// scripts are needed instead of using 'unsafe-inline'.
+fastify.register(fastifyHelmet, {
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -339,31 +372,41 @@ export const autoConfig = {
       connectSrc: ["'self'"],
     },
   },
-  xFrameOptions: { action: "deny" },      // Prevents clickjacking
-  hsts: {
-    maxAge: 31_536_000,
-    includeSubDomains: true,
-    preload: true,
-  },
-  referrerPolicy: { policy: "no-referrer" },
-};
-
-export default fastifyHelmet;
+});
 ```
 
 ### CORS — restrict to known origins; never `origin: true` in production
 
-```typescript
-// plugins/external/cors.ts
-// ✅ Restrict to explicit origins in production
-import fastifyCors from "@fastify/cors";
+Scratchy's default CORS configuration allows all origins (`origin: true`).
+This is intentional for development, but **must be restricted to an explicit
+allowlist in production**:
 
-export const autoConfig = {
+```typescript
+// packages/core/src/plugins/external/cors.ts (actual Scratchy default)
+import fastifyCors, { type FastifyCorsOptions } from "@fastify/cors";
+
+export const autoConfig: FastifyCorsOptions = {
+  credentials: true,
+  maxAge: 86400,
+  origin: true,   // ⚠️ allows all origins — restrict to explicit allowlist in production
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+};
+
+export default fastifyCors;
+```
+
+**Recommended production hardening** — replace `origin: true` with an
+explicit allowlist via the `ALLOWED_ORIGINS` environment variable:
+
+```typescript
+// ✅ Production CORS config — restrict to known origins
+import fastifyCors, { type FastifyCorsOptions } from "@fastify/cors";
+
+export const autoConfig: FastifyCorsOptions = {
   credentials: true,
   maxAge: 86_400,
-  // ❌ BAD: origin: true — allows all origins with credentials
-  // ✅ GOOD: explicit allowlist
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  // ✅ Explicit allowlist — never use origin: true with credentials in production
+  origin: (origin, callback) => {
     const allowed = process.env.ALLOWED_ORIGINS?.split(",") ?? [];
     if (!origin || allowed.includes(origin)) {
       callback(null, true);
