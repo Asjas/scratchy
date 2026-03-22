@@ -8,7 +8,7 @@ export default defineConfig({
 
   appearance: true,
 
-  head: [["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }]],
+  head: [],
 
   themeConfig: {
     siteTitle: "Scratchy.js Framework",
