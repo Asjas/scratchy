@@ -50,8 +50,11 @@ To authenticate cache reads/writes, set `TURBO_TOKEN`:
 export TURBO_TOKEN=your_token_here
 ```
 
-In GitHub Actions, add `TURBO_TOKEN` as a repository secret so CI jobs can use
-the remote cache.
+In GitHub Actions, configure these repository secrets:
+
+- `TURBO_TOKEN` (for Turbo remote cache)
+- `CLOUDFLARE_API_TOKEN` (Cloudflare API token with Workers deploy permissions)
+- `CLOUDFLARE_ACCOUNT_ID` (your Cloudflare account ID)
 
 ## Documentation
 
