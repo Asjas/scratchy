@@ -24,8 +24,8 @@ export interface ServerOpts {
 /**
  * Creates and configures the Fastify server with all framework packages wired up:
  * - `@scratchy/core` — base server (CORS, helmet, rate-limit, health route)
- * - `@scratchy/drizzle` — Drizzle ORM database plugin (when `DATABASE_URL` is set)
- * - `@scratchy/auth` — Better Auth plugin (when `BETTER_AUTH_SECRET` is set)
+ * - `@scratchy/drizzle` — Drizzle ORM database plugin (when `DATABASE_URL` is set and `skipDb` is false)
+ * - `@scratchy/auth` — Better Auth plugin (when both `DATABASE_URL` and `BETTER_AUTH_SECRET` are set, and neither `skipDb` nor `skipAuth` is true)
  * - `@scratchy/trpc` — tRPC router at `/trpc`
  * - `@scratchy/renderer` — Piscina SSR worker pool
  */

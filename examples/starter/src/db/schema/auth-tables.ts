@@ -28,9 +28,7 @@ export const session = appSchema.table(
     userAgent: text(),
     ...timestamps,
   },
-  (table) => [
-    index("session_user_id_idx").on(table.userId),
-  ],
+  (table) => [index("session_user_id_idx").on(table.userId)],
 );
 
 // ── account ───────────────────────────────────────────────────────────────────
