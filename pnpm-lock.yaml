@@ -62,6 +62,9 @@ importers:
 
   examples/starter:
     dependencies:
+      '@scratchy/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@scratchy/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -80,6 +83,9 @@ importers:
       '@scratchy/vite-plugin':
         specifier: workspace:*
         version: link:../../packages/vite-plugin
+      better-auth:
+        specifier: 1.5.5
+        version: 1.5.5(drizzle-kit@0.31.10)(drizzle-orm@0.45.1(@types/pg@8.20.0)(kysely@0.28.14)(pg@8.20.0))(mongodb@7.1.0)(pg@8.20.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@3.2.4(@types/debug@4.1.13)(@types/node@22.16.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))
       drizzle-orm:
         specifier: 0.45.1
         version: 0.45.1(@types/pg@8.20.0)(kysely@0.28.14)(pg@8.20.0)
