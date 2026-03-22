@@ -19,5 +19,13 @@ export {
 export { createSSRHandler } from "./ssr-handler.js";
 export type { SSRHandlerOptions } from "./ssr-handler.js";
 
+export { runSsgPipeline } from "./ssg-pipeline.js";
+export type {
+  SsgPipelineOptions,
+  SsgPipelineResult,
+  SsgRouteFailure,
+  SsgRouteResult,
+} from "./ssg-pipeline.js";
+
 export type { RendererPluginOptions } from "./plugin.js";
 export type { RenderResult, RenderTask } from "./worker.js";
