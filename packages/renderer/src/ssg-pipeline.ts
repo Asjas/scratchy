@@ -123,6 +123,21 @@ export async function runSsgPipeline(
     taskTimeout = 30_000,
   } = opts;
 
+  if (!Number.isInteger(maxThreads) || maxThreads <= 0) {
+    throw new RangeError(
+      `Invalid "maxThreads" option: expected a positive integer, received ${String(
+        maxThreads,
+      )}.`,
+    );
+  }
+
+  if (!Number.isInteger(taskTimeout) || taskTimeout <= 0) {
+    throw new RangeError(
+      `Invalid "taskTimeout" option: expected a positive integer (milliseconds), received ${String(
+        taskTimeout,
+      )}.`,
+    );
+  }
   if (routes.length === 0) {
     return { rendered: [], failed: [], duration: 0 };
   }
