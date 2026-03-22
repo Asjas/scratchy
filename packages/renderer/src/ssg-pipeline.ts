@@ -140,7 +140,18 @@ export async function runSsgPipeline(
   const failed: SsgRouteFailure[] = [];
 
   const tasks = routes.map(async (route) => {
-    const props = getProps ? await getProps(route) : undefined;
+    let props: Record<string, unknown> | undefined;
+    if (getProps) {
+      try {
+        props = await getProps(route);
+      } catch (err) {
+        failed.push({
+          route,
+          error: err instanceof Error ? err : new Error(String(err)),
+        });
+        return;
+      }
+    }
 
     const task: RenderTask = { type: "ssg", route, props };
 
