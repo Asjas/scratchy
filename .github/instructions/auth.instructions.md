@@ -361,7 +361,7 @@ under `basePath` (default `/api/auth`):
 | POST   | `/api/auth/sign-up/email`        | Register a new user   |
 | POST   | `/api/auth/sign-in/email`        | Sign in with email    |
 | POST   | `/api/auth/sign-out`             | Sign out              |
-| GET    | `/api/auth/session`              | Get current session   |
+| GET    | `/api/auth/get-session`          | Get current session   |
 | POST   | `/api/auth/forgot-password`      | Request password reset|
 | POST   | `/api/auth/reset-password`       | Reset password        |
 
