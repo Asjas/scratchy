@@ -11,7 +11,8 @@
   "scripts": {
     "dev": "pnpm run --parallel --filter \"./examples/**\" --if-present dev",
     "build": "turbo build",
-    "test": "vitest run",
+    "test": "turbo test:run",
+    "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint --cache --cache-location .cache/eslint --cache-strategy content .",
     "prettier": "prettier \"**/*.+(ts|tsx|json|md|yaml|yml)\"",
