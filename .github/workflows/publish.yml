@@ -160,7 +160,19 @@ jobs:
         # Only reached if npm publish succeeded. Pushing here (rather than before
         # the publish step) ensures that a failed publish never leaves an orphaned
         # tag or a duplicate CHANGELOG entry on main.
-        run: git push origin HEAD:main --follow-tags
+        #
+        # A second rebase handles any commits that landed on main while the
+        # (potentially slow) npm publish was in progress. Without it a
+        # non-fast-forward push would abort the step and leave packages published
+        # without a corresponding commit or tag on main.
+        # -X theirs keeps our version-bump commit when conflicts arise.
+        # The rebase rewrites commit SHAs, so we force-move the local tag to the
+        # new HEAD before pushing so --follow-tags sends the correct tag object.
+        run: |
+          git pull --rebase -X theirs origin main
+          git tag -f "v${{ steps.calver.outputs.version }}" \
+            -m "Release v${{ steps.calver.outputs.version }} (CalVer)"
+          git push origin HEAD:main --follow-tags
 
       - name: 🎉 Create GitHub Release
         env:
