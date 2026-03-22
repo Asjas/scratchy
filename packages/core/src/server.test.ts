@@ -43,7 +43,7 @@ describe("createServer", () => {
     const config = loadConfig({
       NODE_ENV: "production",
       ALLOWED_ORIGINS: "",
-      LOG_LEVEL: "warn",
+      LOG_LEVEL: "silent",
     });
 
     // createServer calls warnInsecureConfig internally, which logs a warning
