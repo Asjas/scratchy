@@ -1,6 +1,7 @@
+import { pathToFileURL } from "node:url";
 import { db } from "~/db/index.js";
 {{#if model}}
-import { {{camelName}} } from "~/db/schema/{{kebabName}}.js";
+import { {{modelCamelName}} } from "~/db/schema/{{modelKebabName}}.js";
 import { ulid } from "ulid";
 {{/if}}
 
@@ -10,7 +11,7 @@ import { ulid } from "ulid";
  */
 export async function seed{{pascalName}}() {
 {{#if model}}
-  await db.insert({{camelName}}).values([
+  await db.insert({{modelCamelName}}).values([
     {
       id: ulid(),
       // TODO: fill in seed data
@@ -23,7 +24,8 @@ export async function seed{{pascalName}}() {
 }
 
 // Allow running this file directly
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+const scriptUrl = process.argv[1] ? pathToFileURL(process.argv[1]).href : "";
+if (scriptUrl === import.meta.url) {
   await seed{{pascalName}}();
   process.exit(0);
 }

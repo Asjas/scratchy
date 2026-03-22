@@ -549,11 +549,16 @@ describe("renderTemplate (seed.ts.hbs)", () => {
       camelName: "initialData",
       kebabName: "initial-data",
       model: "",
+      modelPascalName: "",
+      modelCamelName: "",
+      modelKebabName: "",
     });
 
     expect(content).toContain("seedInitialData");
     expect(content).toContain("~/db/index.js");
     expect(content).toContain("process.exit(0)");
+    expect(content).toContain("pathToFileURL");
+    expect(content).toContain("import.meta.url");
   });
 
   it("renders a seed file with a model import", () => {
@@ -562,12 +567,15 @@ describe("renderTemplate (seed.ts.hbs)", () => {
       camelName: "users",
       kebabName: "users",
       model: "User",
+      modelPascalName: "User",
+      modelCamelName: "user",
+      modelKebabName: "user",
     });
 
     expect(content).toContain("seedUsers");
-    expect(content).toContain('import { users } from "~/db/schema/users.js"');
+    expect(content).toContain('import { user } from "~/db/schema/user.js"');
     expect(content).toContain("ulid");
-    expect(content).toContain("db.insert");
+    expect(content).toContain("db.insert(user)");
   });
 });
 

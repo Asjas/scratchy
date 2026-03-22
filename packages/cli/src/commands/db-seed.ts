@@ -51,6 +51,7 @@ export const dbSeedCommand = defineCommand({
       }
       files = entries
         .filter((f) => f.endsWith(".ts"))
+        .sort()
         .map((f) => join(seedsDir, f));
     }
 

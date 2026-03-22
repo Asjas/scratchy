@@ -35,13 +35,22 @@ export const makeSeedCommand = defineCommand({
     const kebabName = toKebabCase(name);
     const cwd = args.cwd || process.cwd();
 
+    // Derive model-specific variables from --model (not from the seed name)
+    const modelName = args.model || "";
+    const modelPascalName = modelName ? toPascalCase(modelName) : "";
+    const modelCamelName = modelName ? toCamelCase(modelName) : "";
+    const modelKebabName = modelName ? toKebabCase(modelName) : "";
+
     consola.info(`Generating seed: ${kebabName}`);
 
     const context = {
       pascalName,
       camelName,
       kebabName,
-      model: args.model || "",
+      model: modelName,
+      modelPascalName,
+      modelCamelName,
+      modelKebabName,
     };
 
     const content = renderTemplate("seed.ts.hbs", context);

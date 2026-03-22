@@ -2,7 +2,7 @@ import { renderTemplate } from "../utils/render.js";
 import { writeFile } from "../utils/write-file.js";
 import { defineCommand } from "citty";
 import { consola } from "consola";
-import { basename, join } from "node:path";
+import { basename, isAbsolute, join, normalize } from "node:path";
 
 export const makeTestCommand = defineCommand({
   meta: {
@@ -25,6 +25,15 @@ export const makeTestCommand = defineCommand({
   async run({ args }) {
     const testPath = args.path.startsWith("/") ? args.path.slice(1) : args.path;
     const cwd = args.cwd || process.cwd();
+
+    // Reject paths that escape the src/ directory
+    const normalized = normalize(testPath);
+    if (isAbsolute(normalized) || normalized.startsWith("..")) {
+      consola.error(
+        `Invalid path: "${args.path}". Path must not escape the src/ directory.`,
+      );
+      process.exit(1);
+    }
 
     // Derive a human-readable description from the last path segment
     const name = basename(testPath);
