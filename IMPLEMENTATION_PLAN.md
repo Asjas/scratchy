@@ -797,6 +797,6 @@ be planned for:
 - [ ] Lock-free ring buffer for high-throughput SharedArrayBuffer communication
 - [ ] Multi-server cache invalidation via Redis Pub/Sub
 - [ ] Turborepo or Nx for optimized monorepo task execution
-- [ ] `create-scratchyjs-app` initializer package
+- [ ] `create-scratchy-app` initializer package
 - [ ] Plugin marketplace / community plugin conventions
 - [ ] Performance benchmarking suite

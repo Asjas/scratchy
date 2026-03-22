@@ -29,7 +29,7 @@
 | Document                                    | Description                                            |
 | ------------------------------------------- | ------------------------------------------------------ |
 | [API Design](./api-design.md)               | tRPC 11 (internal) + REST Fastify routes (external)    |
-| [CLI](./cli.md)                             | `create-scratchyjs-app`, generators, and templates     |
+| [CLI](./cli.md)                             | `create-scratchy-app`, generators, and templates       |
 | [Data Layer](./data-layer.md)               | Drizzle ORM, schemas, queries, caching                 |
 | [Project Structure](./project-structure.md) | Directory layout and naming conventions                |
 | [References](./references.md)               | External links to all technologies                     |
