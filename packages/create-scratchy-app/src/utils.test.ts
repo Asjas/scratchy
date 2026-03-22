@@ -1,5 +1,4 @@
 import {
-  type PackageManager,
   copyTemplate,
   defaultProjectName,
   detectPackageManager,
@@ -10,10 +9,11 @@ import {
   replaceInFile,
   resolveProjectDir,
 } from "./utils.js";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 // ---------------------------------------------------------------------------
 // detectPackageManager
@@ -344,11 +344,24 @@ describe("initGit", () => {
     await rm(testDir, { recursive: true, force: true });
   });
 
-  it("returns a boolean (true if git succeeds, false if it fails)", () => {
+  it("returns a boolean without throwing", () => {
     // In CI, git may not have user.email configured, so the commit step may
     // fail. The important thing is that initGit returns a boolean without
     // throwing.
     const result = initGit(testDir);
     expect(typeof result).toBe("boolean");
+  });
+
+  it("creates a .git directory when git is available", async () => {
+    const result = initGit(testDir);
+    if (result) {
+      // If git init succeeded, the .git directory must exist
+      expect(existsSync(join(testDir, ".git"))).toBe(true);
+    }
+  });
+
+  it("returns false for a non-existent directory", () => {
+    const result = initGit(join(testDir, "does-not-exist"));
+    expect(result).toBe(false);
   });
 });

@@ -126,9 +126,11 @@ When run without `--yes`, the CLI walks you through these prompts:
 If the target directory already exists and is not empty, you will be asked
 whether to continue and potentially overwrite files.
 
-::: tip Auth requires Database If you select **Better Auth** but deselect
-**Database**, the CLI automatically enables the database — auth needs Drizzle
-ORM for session and account storage. :::
+<!-- prettier-ignore -->
+::: tip Auth requires Database
+If you select **Better Auth** but deselect **Database**, the CLI automatically
+enables the database — auth needs Drizzle ORM for session and account storage.
+:::
 
 ## Feature Selection
 
