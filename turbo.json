@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": ["*"],
+  "globalPassThroughEnv": ["TURBO_TOKEN"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -16,14 +16,33 @@
         "pnpm-lock.yaml",
         "tsconfig.json"
       ],
+      "env": ["CI", "NODE_ENV", "DATABASE_URL", "DATABASE_SCHEMA"],
       "outputs": []
+    },
+    "//#test:coverage:run": {
+      "inputs": [
+        "packages/*/src/**/*.{ts,tsx}",
+        "examples/*/src/**/*.{ts,tsx}",
+        "vitest.config.ts",
+        "vitest.setup.ts",
+        "package.json",
+        "pnpm-lock.yaml",
+        "tsconfig.json"
+      ],
+      "env": ["CI", "NODE_ENV", "DATABASE_URL", "DATABASE_SCHEMA"],
+      "outputs": ["coverage/**"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"],
       "outputs": []
     }
   },
-  "globalDependencies": ["package.json", "tsconfig.json", "turbo.json"],
+  "globalDependencies": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "tsconfig.json",
+    "turbo.json"
+  ],
   "remoteCache": {
     "teamSlug": "codewizard",
     "enabled": true,
