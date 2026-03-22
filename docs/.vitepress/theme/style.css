@@ -1,0 +1,86 @@
+/**
+ * Custom styles for the Scratchy.js VitePress documentation site.
+ *
+ * Layout goal:
+ *   [Title/Logo]  ........  [Search]  ........  [GitHub | Theme] [Docs | Changelog | Releases]
+ *
+ * VitePress default order (left→right inside .VPNavBar .wrapper):
+ *   .title | .content { .menu .VPNavBarSearch .VPNavBarTranslations .appearance .socialLinks .extra .menuButton }
+ *
+ * We reorder with flexbox `order` so that:
+ *   1. Social links + theme toggle appear BEFORE the nav menu links
+ *   2. Search sits in the centre, expanding to fill available space
+ */
+
+/* ─── Brand / accent colour ──────────────────────────────────────────────── */
+:root {
+  --vp-c-brand-1: #e85d04;
+  --vp-c-brand-2: #f48c06;
+  --vp-c-brand-3: #faa307;
+  --vp-c-brand-soft: rgba(232, 93, 4, 0.14);
+}
+
+.dark {
+  --vp-c-brand-1: #faa307;
+  --vp-c-brand-2: #f48c06;
+  --vp-c-brand-3: #e85d04;
+  --vp-c-brand-soft: rgba(250, 163, 7, 0.16);
+}
+
+/* ─── Navbar layout ──────────────────────────────────────────────────────── */
+
+/*
+ * The inner content wrapper holds: search | menu | appearance | social-links
+ * We use flex + order to position them: search (centre) → appearance → social → nav-menu
+ */
+.VPNavBar .content-body {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Search fills the centre space */
+.VPNavBarSearch {
+  flex: 1 1 auto;
+  order: 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* Theme-toggle (appearance) */
+.VPNavBarAppearance {
+  order: 1;
+  flex-shrink: 0;
+}
+
+/* GitHub and other social links */
+.VPNavBarSocialLinks {
+  order: 2;
+  flex-shrink: 0;
+}
+
+/* Nav menu links (Docs | Changelog | Releases) – always last */
+.VPNavBarMenu {
+  order: 3;
+  flex-shrink: 0;
+}
+
+/* Extra items (hamburger etc.) stay at the end */
+.VPNavBarExtra {
+  order: 4;
+}
+
+/* ─── Sidebar ────────────────────────────────────────────────────────────── */
+.VPSidebarItem .text {
+  font-size: 0.9rem;
+}
+
+/* ─── Code blocks ────────────────────────────────────────────────────────── */
+:root {
+  --vp-code-block-bg: #1e1e2e;
+}
+
+/* ─── Smooth scrolling ───────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}

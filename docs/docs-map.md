@@ -26,15 +26,14 @@
 
 ### Reference — information-oriented
 
-| Document                                                            | Description                                                |
-| ------------------------------------------------------------------- | ---------------------------------------------------------- |
-| [API Design](./api-design.md)                                       | tRPC 11 (internal) + REST Fastify routes (external)        |
-| [CLI](./cli.md)                                                     | `create-scratchy-app`, generators, and templates           |
-| [Data Layer](./data-layer.md)                                       | Drizzle ORM, schemas, queries, caching                     |
-| [Project Structure](./project-structure.md)                         | Directory layout and naming conventions                    |
-| [References](./references.md)                                       | External links to all technologies                         |
-| [Security](./security.md)                                           | Defense-in-depth: auth, CORS, CSRF, CSP, rate limiting     |
-| [OWASP AI Reference](../.github/instructions/owasp.instructions.md) | OWASP Top 10 mapped to Scratchy libraries (AI cheat-sheet) |
+| Document                                    | Description                                                          |
+| ------------------------------------------- | -------------------------------------------------------------------- |
+| [API Design](./api-design.md)               | tRPC 11 (internal) + REST Fastify routes (external)                  |
+| [CLI](./cli.md)                             | `create-scratchy-app`, generators, and templates                     |
+| [Data Layer](./data-layer.md)               | Drizzle ORM, schemas, queries, caching                               |
+| [Project Structure](./project-structure.md) | Directory layout and naming conventions                              |
+| [References](./references.md)               | External links to all technologies                                   |
+| [Security](./security.md)                   | Defense-in-depth: auth, CORS, CSRF, CSP, rate limiting, OWASP Top 10 |
 
 ### Explanation — understanding-oriented
 
@@ -80,10 +79,8 @@
 
 ### Security & Auth
 
-1. [Security](./security.md) — defense-in-depth reference
+1. [Security](./security.md) — defense-in-depth reference, OWASP Top 10 patterns
 2. [Sessions](./sessions.md) — cookie signing, CSRF tokens
-3. [OWASP AI Reference](./../.github/instructions/owasp.instructions.md) — OWASP
-   Top 10 mapped to Scratchy patterns (AI cheat-sheet)
 
 ### Testing & Tooling
 

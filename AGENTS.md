@@ -77,6 +77,16 @@ pnpm format && pnpm lint && pnpm typecheck && pnpm build
 
 # Testing
 pnpm test                          # Run all tests
+
+# Documentation site (VitePress)
+pnpm docs:dev                      # Start the VitePress dev server (http://localhost:5173)
+pnpm docs:build                    # Build the static docs site to docs/.vitepress/dist/
+pnpm docs:preview                  # Preview the built docs locally (http://localhost:4173)
+
+# Docs E2E tests (Cypress) — requires the docs to be built and preview running
+pnpm docs:build && pnpm docs:preview &
+pnpm cy:run:docs                   # Run all Cypress e2e specs against the docs site
+pnpm cy:open                       # Open the Cypress interactive test runner
 ```
 
 ## Critical Rules
@@ -252,3 +262,59 @@ Comprehensive guides are maintained in the `/docs` directory:
 | `worker-communication.md` | SharedArrayBuffer, Atomics, and Redis patterns    |
 | `references.md`           | Links to all external documentation               |
 | `nitro-inspiration.md`    | Nitro v3 concepts adapted for Scratchy            |
+
+## Documentation Website
+
+The public documentation site lives at **https://scratchyjs.com** and is built
+with [VitePress](https://vitepress.dev). The Markdown source files are the same
+`/docs/*.md` files used for AI instruction context — no separate copies.
+
+### Structure
+
+```
+docs/
+├── .vitepress/
+│   ├── config.ts               # VitePress config — nav, sidebar, search
+│   ├── components/
+│   │   └── GitHubReleases.vue  # Fetches GitHub releases API at runtime
+│   └── theme/
+│       ├── index.ts            # Extends DefaultTheme, registers global components
+│       └── style.css           # Brand colours + navbar layout overrides
+├── changelog.md                # Includes root CHANGELOG.md via <!--@include: -->
+├── releases.md                 # Renders the GitHubReleases Vue component
+├── index.md                    # Client-side redirect to /getting-started
+└── *.md                        # All existing framework documentation pages
+```
+
+### Deployment
+
+| Event                                                 | Target                 | URL / How to Access                                  |
+| ----------------------------------------------------- | ---------------------- | ---------------------------------------------------- |
+| Push to `main` (docs/\*\* or CHANGELOG.md changed)    | Production Worker      | https://scratchyjs.com                               |
+| PR opened/updated (docs/\*\* or CHANGELOG.md changed) | Preview Worker         | Cloudflare `workers.dev` preview URL (see PR checks) |
+| PR closed                                             | Preview Worker deleted | —                                                    |
+
+Deployment uses Cloudflare Workers Static Assets (`wrangler.toml` at repo root).
+
+**Preview URL discovery:** This repository does not configure
+`preview-{pr}.scratchyjs.com` routes or DNS records. When a PR touches `docs/**`
+or `CHANGELOG.md`, CI deploys a named Worker for that PR. Cloudflare exposes it
+on a `workers.dev` subdomain derived from the Worker name and account (for
+example, `https://<worker-name>.<account>.workers.dev`). The exact preview URL
+is shown in the GitHub Actions "Deploy docs preview" job summary and in the
+Cloudflare Workers dashboard for the corresponding Worker.
+
+### Required GitHub Secrets
+
+| Secret                  | Description                                                                 |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | Cloudflare API token with **Workers:Edit** and **Account:Read** permissions |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID (found in the Cloudflare dashboard)              |
+
+### Docs E2E Tests
+
+Cypress e2e tests for the docs site live in `cypress/e2e/`. They run
+automatically in CI when `docs/**`, `CHANGELOG.md`, or `cypress/**` changes.
+Specs are intentionally broad — they verify page existence, nav links, sidebar
+sections, layout elements, and theme switching. Do **not** add fine-grained
+unit-style assertions to the Cypress specs.
