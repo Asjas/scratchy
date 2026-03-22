@@ -1,6 +1,14 @@
 ---
 name: documentation
-description: "Creates, structures, and reviews technical documentation for the Scratchy framework following the Diátaxis framework (tutorials, how-to guides, reference, and explanation pages). Use when writing or reorganizing docs, structuring a tutorial vs. a how-to guide, building reference docs or API documentation, creating explanation pages, choosing between Diátaxis documentation types, or improving existing documentation structure. Trigger terms: documentation, docs, technical writing, tutorial, how-to guide, reference, explanation, Diátaxis, user guide, API docs, restructure docs."
+description:
+  "Creates, structures, and reviews technical documentation for the Scratchy
+  framework following the Diátaxis framework (tutorials, how-to guides,
+  reference, and explanation pages). Use when writing or reorganizing docs,
+  structuring a tutorial vs. a how-to guide, building reference docs or API
+  documentation, creating explanation pages, choosing between Diátaxis
+  documentation types, or improving existing documentation structure. Trigger
+  terms: documentation, docs, technical writing, tutorial, how-to guide,
+  reference, explanation, Diátaxis, user guide, API docs, restructure docs."
 applyTo: "docs/**/*.md"
 ---
 
@@ -46,17 +54,18 @@ Each type serves a different need. Never mix types in a single document.
 
 Use the following decision checklist based on user signals:
 
-| User signal                                            | Documentation type |
-| ------------------------------------------------------ | ------------------ |
-| "I'm new to Scratchy and want to learn it"             | **Tutorial**       |
-| "How do I configure X?" / "I need to accomplish X"     | **How-to guide**   |
-| "What are the options/parameters/API for X?"           | **Reference**      |
-| "Why does Scratchy use X?" / "Help me understand X"    | **Explanation**    |
+| User signal                                         | Documentation type |
+| --------------------------------------------------- | ------------------ |
+| "I'm new to Scratchy and want to learn it"          | **Tutorial**       |
+| "How do I configure X?" / "I need to accomplish X"  | **How-to guide**   |
+| "What are the options/parameters/API for X?"        | **Reference**      |
+| "Why does Scratchy use X?" / "Help me understand X" | **Explanation**    |
 
 Quick decision tree:
 
 - Is the user **learning by doing** for the first time? → Tutorial
-- Do they need to **solve a specific problem** they already understand? → How-to guide
+- Do they need to **solve a specific problem** they already understand? → How-to
+  guide
 - Do they need **technical facts** to look up? → Reference
 - Do they want **conceptual background**? → Explanation
 
@@ -69,8 +78,8 @@ Always ask clarifying questions about the user's context, audience, and goals
 
 ### Tutorials (learning-oriented)
 
-- **Title pattern:** Start with a verb — *"Build your first Scratchy API"*,
-  *"Create a tRPC router from scratch"*
+- **Title pattern:** Start with a verb — _"Build your first Scratchy API"_,
+  _"Create a tRPC router from scratch"_
 - **Structure:** Goal → Prerequisites → Numbered steps → Immediate verifiable
   result at each step → Final outcome
 - Minimise explanation; maximise doing
@@ -80,10 +89,11 @@ Always ask clarifying questions about the user's context, audience, and goals
 
 **Example intro for Scratchy:**
 
-> *"In this tutorial, you will build a simple API with Scratchy using Fastify
+> \*"In this tutorial, you will build a simple API with Scratchy using Fastify
 > and tRPC. By the end, you will have a running server that responds to
 > type-safe queries. No prior Scratchy experience is needed — only Node.js
-> >= 22 and pnpm >= 10."*
+>
+> > = 22 and pnpm >= 10."\*
 
 **Scratchy tutorial patterns:**
 
@@ -137,8 +147,8 @@ export type User = typeof user.$inferSelect;
 
 ### How-to Guides (problem-oriented)
 
-- **Title pattern:** Frame as a task — *"How to add authentication"*,
-  *"How to configure Redis caching"*, *"How to deploy with Docker"*
+- **Title pattern:** Frame as a task — _"How to add authentication"_, _"How to
+  configure Redis caching"_, _"How to deploy with Docker"_
 - **Structure:** Goal statement → Assumptions/prerequisites → Numbered steps →
   Expected result
 - Assume baseline knowledge of Scratchy; skip conceptual explanations
@@ -148,9 +158,9 @@ export type User = typeof user.$inferSelect;
 
 **Example intro for Scratchy:**
 
-> *"This guide shows how to add session-based authentication to an existing
+> _"This guide shows how to add session-based authentication to an existing
 > Scratchy application. It assumes you have a working Fastify server with the
-> Drizzle ORM data layer configured."*
+> Drizzle ORM data layer configured."_
 
 **Scratchy how-to patterns:**
 
@@ -191,8 +201,8 @@ const result = await findUserByEmail.execute({ email: input.email });
 ```typescript
 // How to define a tRPC mutation with Zod validation
 import { z } from "zod";
-import { protectedProcedure } from "~/router.js";
 import { createPost } from "~/db/mutations/posts.js";
+import { protectedProcedure } from "~/router.js";
 
 export const create = protectedProcedure
   .input(
@@ -232,8 +242,8 @@ export default component$(() => {
 
 ### Reference (information-oriented)
 
-- **Title pattern:** Name the thing — *"Configuration options"*,
-  *"CLI commands"*, *"tRPC procedure types"*, *"Fastify lifecycle hooks"*
+- **Title pattern:** Name the thing — _"Configuration options"_, _"CLI
+  commands"_, _"tRPC procedure types"_, _"Fastify lifecycle hooks"_
 - **Structure:** Consistent repeatable format per entry (name → type → default →
   description → example)
 - State facts; avoid instruction beyond minimal usage examples
@@ -243,32 +253,27 @@ export default component$(() => {
 
 **Example entries for Scratchy:**
 
-> **`routeLoader$()`**
-> Server-side data loader that runs before route rendering. Returns a read-only
-> signal in the component.
-> *Returns:* `Signal<T>` accessible via `.value`
-> *Runs:* On every navigation (server and client-side)
-> *Example:*
+> **`routeLoader$()`** Server-side data loader that runs before route rendering.
+> Returns a read-only signal in the component. _Returns:_ `Signal<T>` accessible
+> via `.value` _Runs:_ On every navigation (server and client-side) _Example:_
+>
 > ```typescript
 > export const useUser = routeLoader$(async (event) => {
 >   return findUserById.execute({ id: event.params.id });
 > });
 > ```
 
-> **`createError()`** *(factory function)*
-> Creates a structured `AppError` with status code, message, code, and optional
-> metadata.
-> *Parameters:*
-> | Param        | Type                     | Required | Default              |
+> **`createError()`** _(factory function)_ Creates a structured `AppError` with
+> status code, message, code, and optional metadata. _Parameters:_ | Param |
+> Type | Required | Default |
 > |--------------|--------------------------|----------|----------------------|
-> | `statusCode` | `StatusCode`             | Yes      | —                    |
-> | `message`    | `string`                 | Yes      | —                    |
-> | `code`       | `string`                 | No       | `E_HTTP_{statusCode}`|
-> | `fatal`      | `boolean`                | No       | `false`              |
-> | `data`       | `Record<string, unknown>`| No       | `{}`                 |
-> | `cause`      | `unknown`                | No       | —                    |
+> | `statusCode` | `StatusCode` | Yes | — | | `message` | `string` | Yes | — | |
+> `code` | `string` | No | `E_HTTP_{statusCode}`| | `fatal` | `boolean` | No |
+> `false` | | `data` | `Record<string, unknown>`| No | `{}` | | `cause` |
+> `unknown` | No | — |
 >
-> *Example:*
+> _Example:_
+>
 > ```typescript
 > throw createError({ statusCode: 404, message: "Post not found" });
 > ```
@@ -291,31 +296,31 @@ export default component$(() => {
 | `mutation`     | POST        | Write data (create, update, delete)      |
 | `subscription` | SSE         | Real-time data streams                   |
 
-| CLI Command                    | What It Generates                                    |
-| ------------------------------ | ---------------------------------------------------- |
-| `scratchy make:model <Name>`   | Schema, queries, and mutations for a DB entity       |
-| `scratchy make:router <name>`  | tRPC router with queries and mutations files          |
-| `scratchy make:route <path>`   | Fastify REST route file under `routes/external/`     |
-| `scratchy make:component <n>`  | Qwik component file with TypeScript props            |
+| CLI Command                   | What It Generates                                |
+| ----------------------------- | ------------------------------------------------ |
+| `scratchy make:model <Name>`  | Schema, queries, and mutations for a DB entity   |
+| `scratchy make:router <name>` | tRPC router with queries and mutations files     |
+| `scratchy make:route <path>`  | Fastify REST route file under `routes/external/` |
+| `scratchy make:component <n>` | Qwik component file with TypeScript props        |
 
 ---
 
 ### Explanations (understanding-oriented)
 
-- **Title pattern:** Frame as a concept — *"How Worker Thread rendering works"*,
-  *"Understanding tRPC vs REST in Scratchy"*, *"Why Scratchy uses Drizzle over
-  Prisma"*
-- **Structure:** Context → Core concept → Alternatives/trade-offs →
-  Higher-level perspective
+- **Title pattern:** Frame as a concept — _"How Worker Thread rendering works"_,
+  _"Understanding tRPC vs REST in Scratchy"_, _"Why Scratchy uses Drizzle over
+  Prisma"_
+- **Structure:** Context → Core concept → Alternatives/trade-offs → Higher-level
+  perspective
 - Avoid step-by-step instruction or technical specification
 - **Validation:** After reading, the user can explain the concept in their own
   words and understands the rationale behind design decisions
 
 **Example intro for Scratchy:**
 
-> *"Scratchy uses two API patterns — tRPC for internal communication and REST
+> _"Scratchy uses two API patterns — tRPC for internal communication and REST
 > for external consumers. This page explains why both exist, where the boundary
-> lies, and how data flows through each path."*
+> lies, and how data flows through each path."_
 
 **Scratchy explanation topics (with summaries):**
 
@@ -358,37 +363,37 @@ export default component$(() => {
 
 ### Scratchy Cross-Reference Map
 
-| Document                | Primary Type    | Links To                                       |
-| ----------------------- | --------------- | ---------------------------------------------- |
-| `getting-started.md`    | Tutorial        | `project-structure.md`, `architecture.md`      |
-| `api-design.md`         | How-to / Ref    | `error-handling.md`, `middleware.md`            |
-| `data-layer.md`         | How-to / Ref    | `cli.md`, `testing.md`                         |
-| `data-loading.md`       | How-to          | `api-design.md`, `streaming.md`                |
-| `error-handling.md`     | How-to / Ref    | `api-design.md`, `security.md`                 |
-| `forms-and-actions.md`  | How-to          | `api-design.md`, `security.md`                 |
-| `middleware.md`         | How-to / Ref    | `security.md`, `sessions.md`                   |
-| `rendering.md`          | How-to / Expl   | `streaming.md`, `worker-communication.md`      |
-| `sessions.md`           | How-to / Ref    | `security.md`, `middleware.md`                  |
-| `security.md`           | Reference       | `sessions.md`, `middleware.md`, `api-design.md`|
-| `streaming.md`          | How-to / Expl   | `rendering.md`, `worker-communication.md`      |
-| `testing.md`            | How-to          | `api-design.md`, `data-layer.md`               |
-| `cli.md`                | Reference       | `data-layer.md`, `project-structure.md`        |
-| `worker-communication`  | How-to / Expl   | `rendering.md`, `streaming.md`                 |
-| `project-structure.md`  | Reference       | `getting-started.md`                           |
-| `architecture.md`       | Explanation     | All other docs                                 |
-| `nitro-inspiration.md`  | Explanation     | `architecture.md`                              |
-| `references.md`         | Reference       | External links only                            |
+| Document               | Primary Type  | Links To                                        |
+| ---------------------- | ------------- | ----------------------------------------------- |
+| `getting-started.md`   | Tutorial      | `project-structure.md`, `architecture.md`       |
+| `api-design.md`        | How-to / Ref  | `error-handling.md`, `middleware.md`            |
+| `data-layer.md`        | How-to / Ref  | `cli.md`, `testing.md`                          |
+| `data-loading.md`      | How-to        | `api-design.md`, `streaming.md`                 |
+| `error-handling.md`    | How-to / Ref  | `api-design.md`, `security.md`                  |
+| `forms-and-actions.md` | How-to        | `api-design.md`, `security.md`                  |
+| `middleware.md`        | How-to / Ref  | `security.md`, `sessions.md`                    |
+| `rendering.md`         | How-to / Expl | `streaming.md`, `worker-communication.md`       |
+| `sessions.md`          | How-to / Ref  | `security.md`, `middleware.md`                  |
+| `security.md`          | Reference     | `sessions.md`, `middleware.md`, `api-design.md` |
+| `streaming.md`         | How-to / Expl | `rendering.md`, `worker-communication.md`       |
+| `testing.md`           | How-to        | `api-design.md`, `data-layer.md`                |
+| `cli.md`               | Reference     | `data-layer.md`, `project-structure.md`         |
+| `worker-communication` | How-to / Expl | `rendering.md`, `streaming.md`                  |
+| `project-structure.md` | Reference     | `getting-started.md`                            |
+| `architecture.md`      | Explanation   | All other docs                                  |
+| `nitro-inspiration.md` | Explanation   | `architecture.md`                               |
+| `references.md`        | Reference     | External links only                             |
 
 ---
 
 ## Step 4 — Validate Before Delivering
 
-| Type        | Validation check                                                    |
-| ----------- | ------------------------------------------------------------------- |
-| Tutorial    | Can a beginner complete it end-to-end without external help?        |
-| How-to guide| Does it solve the stated problem for an experienced Scratchy user?  |
-| Reference   | Can the user find a specific fact in under 30 seconds?              |
-| Explanation | Does the user understand the *why*, not just the *what*?            |
+| Type         | Validation check                                                   |
+| ------------ | ------------------------------------------------------------------ |
+| Tutorial     | Can a beginner complete it end-to-end without external help?       |
+| How-to guide | Does it solve the stated problem for an experienced Scratchy user? |
+| Reference    | Can the user find a specific fact in under 30 seconds?             |
+| Explanation  | Does the user understand the _why_, not just the _what_?           |
 
 ---
 
@@ -399,66 +404,66 @@ Scratchy stack consists of:
 
 ### Core Runtime & Server
 
-| Technology          | Role                              | Import Pattern                                   |
-| ------------------- | --------------------------------- | ------------------------------------------------ |
-| **Node.js >= 22**   | Runtime with type stripping       | Use `import type` for type-only imports           |
-| **Fastify 5**       | HTTP server framework             | `import Fastify from "fastify"`                  |
-| **fastify-plugin**  | Plugin wrapper (shared scope)     | `import fp from "fastify-plugin"`                |
-| **@fastify/autoload** | Auto-load plugins and routes   | `import autoload from "@fastify/autoload"`       |
-| **Piscina**         | Worker Thread pool                | `import { resolve } from "node:path"`; via `fastify-piscina` |
-| **close-with-grace**| Graceful shutdown                 | `import closeWithGrace from "close-with-grace"`  |
-| **Pino**            | Structured logging                | Via `fastify.log` / `request.log`                |
+| Technology            | Role                          | Import Pattern                                               |
+| --------------------- | ----------------------------- | ------------------------------------------------------------ |
+| **Node.js >= 22**     | Runtime with type stripping   | Use `import type` for type-only imports                      |
+| **Fastify 5**         | HTTP server framework         | `import Fastify from "fastify"`                              |
+| **fastify-plugin**    | Plugin wrapper (shared scope) | `import fp from "fastify-plugin"`                            |
+| **@fastify/autoload** | Auto-load plugins and routes  | `import autoload from "@fastify/autoload"`                   |
+| **Piscina**           | Worker Thread pool            | `import { resolve } from "node:path"`; via `fastify-piscina` |
+| **close-with-grace**  | Graceful shutdown             | `import closeWithGrace from "close-with-grace"`              |
+| **Pino**              | Structured logging            | Via `fastify.log` / `request.log`                            |
 
 ### API Layer
 
-| Technology          | Role                              | Import Pattern                                   |
-| ------------------- | --------------------------------- | ------------------------------------------------ |
-| **tRPC 11**         | Internal type-safe RPC            | `import { initTRPC } from "@trpc/server"`        |
-| **superjson**       | tRPC transformer                  | `import superjson from "superjson"`              |
-| **Zod**             | Input validation (tRPC + REST)    | `import { z } from "zod"`                        |
-| **fastify-type-provider-zod** | Fastify + Zod integration | `import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod"` |
+| Technology                    | Role                           | Import Pattern                                                                      |
+| ----------------------------- | ------------------------------ | ----------------------------------------------------------------------------------- |
+| **tRPC 11**                   | Internal type-safe RPC         | `import { initTRPC } from "@trpc/server"`                                           |
+| **superjson**                 | tRPC transformer               | `import superjson from "superjson"`                                                 |
+| **Zod**                       | Input validation (tRPC + REST) | `import { z } from "zod"`                                                           |
+| **fastify-type-provider-zod** | Fastify + Zod integration      | `import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod"` |
 
 ### Data Layer
 
-| Technology             | Role                           | Import Pattern                                       |
-| ---------------------- | ------------------------------ | ---------------------------------------------------- |
-| **Drizzle ORM**        | Type-safe SQL ORM              | `import { drizzle } from "drizzle-orm/node-postgres"` |
-| **pg (node-postgres)**  | PostgreSQL driver              | `import { Pool } from "pg"`                          |
-| **Drizzle Kit**        | Migrations CLI                 | `pnpm drizzle-kit generate` / `migrate` / `studio`  |
-| **Redis / DragonflyDB** | Caching and sessions          | `import Redis from "ioredis"`                        |
-| **async-cache-dedupe** | Cache with request dedup       | `import { createCache } from "async-cache-dedupe"`   |
-| **ULID**               | ID generation                  | `import { ulid } from "ulid"`                        |
+| Technology              | Role                     | Import Pattern                                        |
+| ----------------------- | ------------------------ | ----------------------------------------------------- |
+| **Drizzle ORM**         | Type-safe SQL ORM        | `import { drizzle } from "drizzle-orm/node-postgres"` |
+| **pg (node-postgres)**  | PostgreSQL driver        | `import { Pool } from "pg"`                           |
+| **Drizzle Kit**         | Migrations CLI           | `pnpm drizzle-kit generate` / `migrate` / `studio`    |
+| **Redis / DragonflyDB** | Caching and sessions     | `import Redis from "ioredis"`                         |
+| **async-cache-dedupe**  | Cache with request dedup | `import { createCache } from "async-cache-dedupe"`    |
+| **ULID**                | ID generation            | `import { ulid } from "ulid"`                         |
 
 ### Rendering & Client
 
-| Technology           | Role                            | Import Pattern                                   |
-| -------------------- | ------------------------------- | ------------------------------------------------ |
-| **Qwik**             | Primary UI framework            | `import { component$ } from "@builder.io/qwik"`  |
-| **Qwik City**        | File-based routing + loaders    | `import { routeLoader$ } from "@builder.io/qwik-city"` |
-| **qwik-react**       | React interop                   | `import { qwikify$ } from "@builder.io/qwik-react"` |
-| **Vite**             | Bundler and dev server          | `vite.config.ts`                                 |
-| **Tailwind CSS**     | Utility-first styling           | Class names in JSX                               |
+| Technology       | Role                         | Import Pattern                                         |
+| ---------------- | ---------------------------- | ------------------------------------------------------ |
+| **Qwik**         | Primary UI framework         | `import { component$ } from "@builder.io/qwik"`        |
+| **Qwik City**    | File-based routing + loaders | `import { routeLoader$ } from "@builder.io/qwik-city"` |
+| **qwik-react**   | React interop                | `import { qwikify$ } from "@builder.io/qwik-react"`    |
+| **Vite**         | Bundler and dev server       | `vite.config.ts`                                       |
+| **Tailwind CSS** | Utility-first styling        | Class names in JSX                                     |
 
 ### Security Plugins
 
-| Technology                    | Role                    |
-| ----------------------------- | ----------------------- |
-| **@fastify/helmet**           | Security headers (CSP, HSTS) |
-| **@fastify/cors**             | Cross-origin requests   |
-| **@fastify/rate-limit**       | Rate limiting           |
-| **@fastify/csrf-protection**  | CSRF tokens             |
-| **@fastify/cookie**           | Cookie parsing/signing  |
-| **@fastify/secure-session**   | Encrypted sessions      |
+| Technology                   | Role                         |
+| ---------------------------- | ---------------------------- |
+| **@fastify/helmet**          | Security headers (CSP, HSTS) |
+| **@fastify/cors**            | Cross-origin requests        |
+| **@fastify/rate-limit**      | Rate limiting                |
+| **@fastify/csrf-protection** | CSRF tokens                  |
+| **@fastify/cookie**          | Cookie parsing/signing       |
+| **@fastify/secure-session**  | Encrypted sessions           |
 
 ### Testing
 
-| Technology           | Role                             |
-| -------------------- | -------------------------------- |
-| **Vitest**           | Unit, integration, component     |
-| **Cypress**          | End-to-end browser testing       |
-| **fastify.inject()** | In-process HTTP testing          |
-| **@qwik/testing**    | Qwik component testing           |
-| **Testing Library**  | DOM assertions                   |
+| Technology           | Role                         |
+| -------------------- | ---------------------------- |
+| **Vitest**           | Unit, integration, component |
+| **Cypress**          | End-to-end browser testing   |
+| **fastify.inject()** | In-process HTTP testing      |
+| **@qwik/testing**    | Qwik component testing       |
+| **Testing Library**  | DOM assertions               |
 
 ---
 
@@ -470,17 +475,20 @@ When including code examples in documentation, follow these rules:
    and type guards).
 
 2. **Server imports use `.js` extensions** (ESM resolution):
+
    ```typescript
    import { db } from "~/db/index.js";
    import { findUserById } from "~/db/queries/users.js";
    ```
 
 3. **Use path aliases** (`~/`) for clean imports:
+
    ```typescript
    import { protectedProcedure } from "~/router.js";
    ```
 
 4. **Zod schemas for all input validation:**
+
    ```typescript
    const createPostSchema = z.object({
      title: z.string().min(1).max(200),
@@ -490,12 +498,17 @@ When including code examples in documentation, follow these rules:
    ```
 
 5. **Drizzle schemas use custom schema namespace:**
+
    ```typescript
    import { mySchema } from "~/db/my-schema.js";
-   export const post = mySchema.table("post", { /* columns */ });
+
+   export const post = mySchema.table("post", {
+     /* columns */
+   });
    ```
 
 6. **Prepared statements are module-scoped:**
+
    ```typescript
    // ✅ Top-level — correct
    export const findPostById = db.select().from(post)
@@ -509,6 +522,7 @@ When including code examples in documentation, follow these rules:
    ```
 
 7. **Fastify plugins use `fastify-plugin` wrapper and type augmentation:**
+
    ```typescript
    import fp from "fastify-plugin";
 
@@ -524,13 +538,16 @@ When including code examples in documentation, follow these rules:
    ```
 
 8. **Structured logging with `request.log`:**
+
    ```typescript
    request.log.info({ userId, action: "login" }, "User authenticated");
    ```
 
 9. **IDs use ULID:**
+
    ```typescript
    import { ulid } from "ulid";
+
    const id = ulid();
    ```
 
@@ -588,26 +605,26 @@ src/
 All documentation lives in the `docs/` directory. When creating new
 documentation, place it in the correct category:
 
-| File                         | Diátaxis Type          | Audience                  |
-| ---------------------------- | ---------------------- | ------------------------- |
-| `getting-started.md`         | Tutorial               | New Scratchy developers   |
-| `api-design.md`              | How-to + Reference     | Backend developers        |
-| `data-layer.md`              | How-to + Reference     | Backend developers        |
-| `data-loading.md`            | How-to                 | Full-stack developers     |
-| `error-handling.md`          | How-to + Reference     | All developers            |
-| `forms-and-actions.md`       | How-to                 | Full-stack developers     |
-| `middleware.md`              | How-to + Reference     | Backend developers        |
-| `rendering.md`               | How-to + Explanation   | Full-stack developers     |
-| `sessions.md`                | How-to + Reference     | Backend developers        |
-| `security.md`                | Reference              | All developers            |
-| `streaming.md`               | How-to + Explanation   | Advanced developers       |
-| `testing.md`                 | How-to                 | All developers            |
-| `cli.md`                     | Reference              | All developers            |
-| `worker-communication.md`    | How-to + Explanation   | Advanced developers       |
-| `project-structure.md`       | Reference              | New Scratchy developers   |
-| `architecture.md`            | Explanation            | All developers            |
-| `nitro-inspiration.md`       | Explanation            | Framework contributors    |
-| `references.md`              | Reference              | All developers            |
+| File                      | Diátaxis Type        | Audience                |
+| ------------------------- | -------------------- | ----------------------- |
+| `getting-started.md`      | Tutorial             | New Scratchy developers |
+| `api-design.md`           | How-to + Reference   | Backend developers      |
+| `data-layer.md`           | How-to + Reference   | Backend developers      |
+| `data-loading.md`         | How-to               | Full-stack developers   |
+| `error-handling.md`       | How-to + Reference   | All developers          |
+| `forms-and-actions.md`    | How-to               | Full-stack developers   |
+| `middleware.md`           | How-to + Reference   | Backend developers      |
+| `rendering.md`            | How-to + Explanation | Full-stack developers   |
+| `sessions.md`             | How-to + Reference   | Backend developers      |
+| `security.md`             | Reference            | All developers          |
+| `streaming.md`            | How-to + Explanation | Advanced developers     |
+| `testing.md`              | How-to               | All developers          |
+| `cli.md`                  | Reference            | All developers          |
+| `worker-communication.md` | How-to + Explanation | Advanced developers     |
+| `project-structure.md`    | Reference            | New Scratchy developers |
+| `architecture.md`         | Explanation          | All developers          |
+| `nitro-inspiration.md`    | Explanation          | Framework contributors  |
+| `references.md`           | Reference            | All developers          |
 
 ---
 

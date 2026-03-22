@@ -1,6 +1,12 @@
 ---
 name: typescript-node
-description: "Guides TypeScript configuration and patterns for the Scratchy framework's Node.js server code. Use when configuring tsconfig.json, setting up type stripping, writing TypeScript for Node.js, handling module resolution, or applying strict typing patterns. Trigger terms: TypeScript, tsconfig, type stripping, strict mode, ESM, module resolution, import type, const enum, type guard."
+description:
+  "Guides TypeScript configuration and patterns for the Scratchy framework's
+  Node.js server code. Use when configuring tsconfig.json, setting up type
+  stripping, writing TypeScript for Node.js, handling module resolution, or
+  applying strict typing patterns. Trigger terms: TypeScript, tsconfig, type
+  stripping, strict mode, ESM, module resolution, import type, const enum, type
+  guard."
 metadata:
   tags: typescript, node, tsconfig, type-stripping, esm, strict
 applyTo: "**/*.ts,**/tsconfig.json"
@@ -91,14 +97,14 @@ node --experimental-strip-types server.ts
 
 ### Key Configuration Choices
 
-| Option                     | Value         | Reason                                         |
-| -------------------------- | ------------- | ---------------------------------------------- |
-| `strict`                   | `true`        | Maximum type safety                            |
-| `noEmit`                   | `true`        | Type stripping, no compilation needed          |
-| `verbatimModuleSyntax`     | `true`        | Forces `import type` for type-only imports     |
-| `noUncheckedIndexedAccess` | `true`        | Array/object access returns `T \| undefined`   |
-| `module`                   | `"NodeNext"`  | Native ESM support with `.js` extensions       |
-| `isolatedModules`          | `true`        | Required for type stripping compatibility      |
+| Option                     | Value        | Reason                                       |
+| -------------------------- | ------------ | -------------------------------------------- |
+| `strict`                   | `true`       | Maximum type safety                          |
+| `noEmit`                   | `true`       | Type stripping, no compilation needed        |
+| `verbatimModuleSyntax`     | `true`       | Forces `import type` for type-only imports   |
+| `noUncheckedIndexedAccess` | `true`       | Array/object access returns `T \| undefined` |
+| `module`                   | `"NodeNext"` | Native ESM support with `.js` extensions     |
+| `isolatedModules`          | `true`       | Required for type stripping compatibility    |
 
 ## Import Conventions
 
@@ -106,18 +112,16 @@ node --experimental-strip-types server.ts
 
 ```typescript
 // ✅ Always use .js extension for local imports in server code
-import { db } from "~/db/index.js";
-import { user } from "~/db/schema/user.js";
-import { createUser } from "~/db/mutations/users.js";
-
-// ✅ Node.js built-ins use node: prefix
-import { join } from "node:path";
-import { readFile } from "node:fs/promises";
-import { Worker } from "node:worker_threads";
-
 // ✅ npm packages don't need extensions
 import Fastify from "fastify";
+import { readFile } from "node:fs/promises";
+// ✅ Node.js built-ins use node: prefix
+import { join } from "node:path";
+import { Worker } from "node:worker_threads";
 import { z } from "zod";
+import { db } from "~/db/index.js";
+import { createUser } from "~/db/mutations/users.js";
+import { user } from "~/db/schema/user.js";
 ```
 
 ### Client-Side (Vite)
@@ -220,8 +224,12 @@ type Brand<T, B> = T & { __brand: B };
 type UserId = Brand<string, "UserId">;
 type PostId = Brand<string, "PostId">;
 
-function getUser(id: UserId): Promise<User> { /* ... */ }
-function getPost(id: PostId): Promise<Post> { /* ... */ }
+function getUser(id: UserId): Promise<User> {
+  /* ... */
+}
+function getPost(id: PostId): Promise<Post> {
+  /* ... */
+}
 
 // Usage
 const userId = ulid() as UserId;
@@ -236,18 +244,17 @@ getUser(postId); // ❌ Type error — can't pass PostId as UserId
 ### Result Type for Error Handling
 
 ```typescript
-type Result<T, E = Error> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
 
-async function safeOperation<T>(
-  fn: () => Promise<T>,
-): Promise<Result<T>> {
+async function safeOperation<T>(fn: () => Promise<T>): Promise<Result<T>> {
   try {
     const value = await fn();
     return { ok: true, value };
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error : new Error(String(error)) };
+    return {
+      ok: false,
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
   }
 }
 ```
@@ -271,7 +278,10 @@ function getEnvVar(key: string): string {
 
 ```typescript
 // BAD — Not compatible with type stripping
-enum Status { Active = "active", Inactive = "inactive" }
+enum Status {
+  Active = "active",
+  Inactive = "inactive",
+}
 
 // GOOD — Use const objects
 const Status = {
@@ -318,9 +328,9 @@ async function getUser(id: string) {
 ### ❌ Don't use `isNaN()` — use `Number.isNaN()` instead
 
 The global `isNaN()` coerces its argument to a number before checking, which
-leads to surprising results (e.g. `isNaN("hello")` is `true`).
-`Number.isNaN()` performs no coercion and only returns `true` for the actual
-IEEE 754 `NaN` value.
+leads to surprising results (e.g. `isNaN("hello")` is `true`). `Number.isNaN()`
+performs no coercion and only returns `true` for the actual IEEE 754 `NaN`
+value.
 
 ```typescript
 // BAD — coerces the argument, produces unexpected results

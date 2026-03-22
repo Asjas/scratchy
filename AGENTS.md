@@ -318,3 +318,22 @@ automatically in CI when `docs/**`, `CHANGELOG.md`, or `cypress/**` changes.
 Specs are intentionally broad — they verify page existence, nav links, sidebar
 sections, layout elements, and theme switching. Do **not** add fine-grained
 unit-style assertions to the Cypress specs.
+
+## Keeping `create-scratchy-app` Template in Sync
+
+The `packages/create-scratchy-app/src/template/` directory contains the starter
+template that end users receive when they scaffold a new Scratchy application.
+It includes its own `AGENTS.md` and `.github/instructions/` files.
+
+**When updating this root `AGENTS.md` or any file in `.github/instructions/`**,
+check whether the corresponding template files should also be updated:
+
+| Primary file                             | Template counterpart                                                               |
+| ---------------------------------------- | ---------------------------------------------------------------------------------- |
+| `AGENTS.md`                              | `packages/create-scratchy-app/src/template/AGENTS.md`                              |
+| `.github/instructions/*.instructions.md` | `packages/create-scratchy-app/src/template/.github/instructions/*.instructions.md` |
+
+The template files are **condensed** versions focused on app development (not
+framework contribution). When a critical rule, convention, or security pattern
+changes here, propagate the relevant parts to the template so new Scratchy apps
+start with up-to-date AI guidance.

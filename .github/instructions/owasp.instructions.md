@@ -1,16 +1,25 @@
 ---
 name: owasp-security
-description: "Maps the OWASP Top 10 (2021) web application security risks to safe-coding patterns using the exact libraries that ship with Scratchy. Use when writing authentication, authorisation, input validation, database queries, session handling, HTTP headers, CORS, rate limiting, error handling, or any security-sensitive code. Trigger terms: OWASP, security, vulnerability, injection, XSS, CSRF, access control, auth, rate limit, secret, sensitive data, logging, SSRF."
+description:
+  "Maps the OWASP Top 10 (2021) web application security risks to safe-coding
+  patterns using the exact libraries that ship with Scratchy. Use when writing
+  authentication, authorisation, input validation, database queries, session
+  handling, HTTP headers, CORS, rate limiting, error handling, or any
+  security-sensitive code. Trigger terms: OWASP, security, vulnerability,
+  injection, XSS, CSRF, access control, auth, rate limit, secret, sensitive
+  data, logging, SSRF."
 metadata:
-  tags: owasp, security, authentication, authorisation, injection, xss, csrf, rate-limit, headers
+  tags:
+    owasp, security, authentication, authorisation, injection, xss, csrf,
+    rate-limit, headers
 applyTo: "**/*.ts,**/*.tsx"
 ---
 
 # OWASP Top 10 — Scratchy Secure-Coding Reference
 
-This document maps every **OWASP Top 10 (2021)** risk to the specific
-libraries, packages, and patterns used in Scratchy. Every code example
-uses the real packages from this repository — no generic pseudocode.
+This document maps every **OWASP Top 10 (2021)** risk to the specific libraries,
+packages, and patterns used in Scratchy. Every code example uses the real
+packages from this repository — no generic pseudocode.
 
 > **Companion reading:** [docs/security.md](../../docs/security.md) — the
 > production security reference. This file is the AI-focused cheat-sheet
@@ -20,18 +29,18 @@ uses the real packages from this repository — no generic pseudocode.
 
 ## A01 — Broken Access Control
 
-Access control failures are the **#1 risk** in the OWASP Top 10. They occur
-when users can act outside their intended permissions.
+Access control failures are the **#1 risk** in the OWASP Top 10. They occur when
+users can act outside their intended permissions.
 
 ### tRPC — protect every state-changing procedure
 
 ```typescript
 // routers/posts/mutations.ts
+import { post } from "../../db/schema/post.js";
 import { protectedProcedure } from "../../router.js";
 import { isOwnerOrAdmin } from "@scratchyjs/trpc";
-import { post } from "../../db/schema/post.js";
-import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export const postMutations = {
@@ -66,7 +75,7 @@ export const postMutations = {
 
 ```typescript
 // routes/users/index.ts
-import { requireAuth, requireAdmin } from "@scratchyjs/auth/hooks";
+import { requireAdmin, requireAuth } from "@scratchyjs/auth/hooks";
 import type { FastifyPluginAsync } from "fastify";
 
 const routes: FastifyPluginAsync = async function (fastify) {
@@ -87,13 +96,13 @@ const routes: FastifyPluginAsync = async function (fastify) {
 
 Import from `@scratchyjs/trpc`:
 
-| Export             | Rejects                          | Passes when                    |
-| ------------------ | -------------------------------- | ------------------------------ |
-| `isAuthenticated`  | unauthenticated                  | any logged-in user             |
-| `isAdmin`          | unauthenticated, non-admin       | `role === "admin"`             |
-| `isOwner`          | unauthenticated, wrong user      | `ctx.user.id === input.id`     |
-| `isOwnerOrAdmin`   | unauthenticated, neither         | owner **or** admin             |
-| `protectedProcedure`| unauthenticated                 | any logged-in user             |
+| Export               | Rejects                     | Passes when                |
+| -------------------- | --------------------------- | -------------------------- |
+| `isAuthenticated`    | unauthenticated             | any logged-in user         |
+| `isAdmin`            | unauthenticated, non-admin  | `role === "admin"`         |
+| `isOwner`            | unauthenticated, wrong user | `ctx.user.id === input.id` |
+| `isOwnerOrAdmin`     | unauthenticated, neither    | owner **or** admin         |
+| `protectedProcedure` | unauthenticated             | any logged-in user         |
 
 ### Anti-patterns
 
@@ -122,8 +131,8 @@ transmitted without adequate protection.
 
 ### Session secrets — use `BETTER_AUTH_SECRET`
 
-Better Auth signs session tokens with the secret from your config. Keep it
-out of source code:
+Better Auth signs session tokens with the secret from your config. Keep it out
+of source code:
 
 ```typescript
 // src/auth.ts
@@ -152,18 +161,18 @@ export const configSchema = z.object({
 
 ### Cookie security — `httpOnly`, `secure`, `sameSite`
 
-Better Auth handles cookie security automatically when configured correctly.
-For custom cookies, always set:
+Better Auth handles cookie security automatically when configured correctly. For
+custom cookies, always set:
 
 ```typescript
 // ✅ Secure cookie settings
 reply.setCookie("session_id", value, {
-  httpOnly: true,                                     // No JS access
-  secure: config.NODE_ENV === "production",           // HTTPS-only in prod
-  sameSite: "lax",                                    // CSRF mitigation
+  httpOnly: true, // No JS access
+  secure: config.NODE_ENV === "production", // HTTPS-only in prod
+  sameSite: "lax", // CSRF mitigation
   path: "/",
-  maxAge: 60 * 60 * 24 * 7,                          // 7 days
-  signed: true,                                       // HMAC integrity
+  maxAge: 60 * 60 * 24 * 7, // 7 days
+  signed: true, // HMAC integrity
 });
 ```
 
@@ -180,7 +189,9 @@ function verifyToken(a: string, b: string): boolean {
 }
 
 // ❌ BAD — vulnerable to timing attacks
-if (token === expectedToken) { /* ... */ }
+if (token === expectedToken) {
+  /* ... */
+}
 ```
 
 ### Anti-patterns
@@ -210,13 +221,10 @@ automatically:
 
 ```typescript
 // ✅ SAFE — parameterized, user input cannot break the query
-import { eq } from "drizzle-orm";
 import { user } from "../db/schema/user.js";
+import { eq } from "drizzle-orm";
 
-const [found] = await db
-  .select()
-  .from(user)
-  .where(eq(user.email, userInput)); // userInput is a bound parameter
+const [found] = await db.select().from(user).where(eq(user.email, userInput)); // userInput is a bound parameter
 ```
 
 ```typescript
@@ -262,10 +270,10 @@ if (!SAFE_IDENTIFIER.test(name)) {
 ## A04 — Insecure Design
 
 Insecure design covers missing or ineffective security controls at the
-architectural level. In Scratchy, the defense-in-depth plugin order
-enforces secure design. The core external plugins live in
-`packages/core/src/plugins/external/` and are registered in alphabetical
-order via `@fastify/autoload`:
+architectural level. In Scratchy, the defense-in-depth plugin order enforces
+secure design. The core external plugins live in
+`packages/core/src/plugins/external/` and are registered in alphabetical order
+via `@fastify/autoload`:
 
 ```
 packages/core/src/plugins/external/
@@ -277,9 +285,9 @@ packages/core/src/plugins/external/
 
 > **Load order note:** `@fastify/autoload` processes files alphabetically, so
 > `cors.ts` is registered before `helmet.ts`. If your application requires a
-> strict loading sequence (e.g. to ensure helmet headers apply to all
-> responses including CORS preflight errors), use numeric prefixes in your own
-> application plugins directory: `01-helmet.ts`, `02-rate-limit.ts`, etc.
+> strict loading sequence (e.g. to ensure helmet headers apply to all responses
+> including CORS preflight errors), use numeric prefixes in your own application
+> plugins directory: `01-helmet.ts`, `02-rate-limit.ts`, etc.
 
 ### Rate limiting — protect all routes, stricter on auth endpoints
 
@@ -299,23 +307,27 @@ export default fastifyRateLimit;
 
 ```typescript
 // Apply a tighter limit to login routes
-fastify.post("/api/auth/sign-in/email", {
-  config: { rateLimit: { max: 10, timeWindow: "15 minutes" } },
-}, handler);
+fastify.post(
+  "/api/auth/sign-in/email",
+  {
+    config: { rateLimit: { max: 10, timeWindow: "15 minutes" } },
+  },
+  handler,
+);
 ```
 
 ### Input validation with Zod — validate all inputs at the boundary
 
 ```typescript
 // ✅ Validate every tRPC input
-import { z } from "zod";
 import { publicProcedure } from "../../router.js";
+import { z } from "zod";
 
 export const createPost = publicProcedure
   .input(
     z.object({
-      title: z.string().min(1).max(200),   // length limits
-      content: z.string().min(10),          // minimum content length
+      title: z.string().min(1).max(200), // length limits
+      content: z.string().min(10), // minimum content length
     }),
   )
   .mutation(async ({ ctx, input }) => {
@@ -332,9 +344,9 @@ overly permissive CORS, missing security headers, or verbose error messages.
 
 ### Security headers — always register `@fastify/helmet` first
 
-Scratchy ships with a baseline helmet configuration. `contentSecurityPolicy`
-is disabled by default because CSP directives are highly app-specific; enable
-and configure it per-application:
+Scratchy ships with a baseline helmet configuration. `contentSecurityPolicy` is
+disabled by default because CSP directives are highly app-specific; enable and
+configure it per-application:
 
 ```typescript
 // packages/core/src/plugins/external/helmet.ts (actual Scratchy config)
@@ -342,9 +354,9 @@ import fastifyHelmet, { type FastifyHelmetOptions } from "@fastify/helmet";
 
 export const autoConfig: FastifyHelmetOptions = {
   hidePoweredBy: true,
-  contentSecurityPolicy: false,    // ⚠️ disabled by default — enable per-app (see below)
+  contentSecurityPolicy: false, // ⚠️ disabled by default — enable per-app (see below)
   xContentTypeOptions: true,
-  xFrameOptions: { action: "deny" },      // Prevents clickjacking
+  xFrameOptions: { action: "deny" }, // Prevents clickjacking
   hsts: { maxAge: 31536000, includeSubDomains: true },
   referrerPolicy: { policy: "no-referrer" },
   xPermittedCrossDomainPolicies: { permittedPolicies: "none" },
@@ -356,8 +368,8 @@ export const autoConfig: FastifyHelmetOptions = {
 export default fastifyHelmet;
 ```
 
-**Recommended production hardening** — enable CSP with a strict policy.
-Override `autoConfig` in your application's plugin or pass options directly:
+**Recommended production hardening** — enable CSP with a strict policy. Override
+`autoConfig` in your application's plugin or pass options directly:
 
 ```typescript
 // ✅ Hardened helmet config for production — add nonce support when inline
@@ -366,7 +378,7 @@ fastify.register(fastifyHelmet, {
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],       // ✅ No 'unsafe-inline' for scripts
+      scriptSrc: ["'self'"], // ✅ No 'unsafe-inline' for scripts
       styleSrc: ["'self'"],
       imgSrc: ["'self'", "data:"],
       connectSrc: ["'self'"],
@@ -392,14 +404,15 @@ Set `ALLOWED_ORIGINS` to a comma-separated list of permitted origins:
 ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
 ```
 
-A startup warning is logged when `NODE_ENV=production` and `ALLOWED_ORIGINS`
-is unset so the misconfiguration is visible immediately.
+A startup warning is logged when `NODE_ENV=production` and `ALLOWED_ORIGINS` is
+unset so the misconfiguration is visible immediately.
 
-**Why `origin: true` + `credentials: true` is dangerous (CVE-2024-8024 pattern):**
-When both are set the server reflects *any* `Origin` header back as
-`Access-Control-Allow-Origin` while also sending `Access-Control-Allow-Credentials: true`.
-This allows any malicious site to make credentialed cross-origin requests
-(e.g. authenticated `fetch()` calls) and read the response.
+**Why `origin: true` + `credentials: true` is dangerous (CVE-2024-8024
+pattern):** When both are set the server reflects _any_ `Origin` header back as
+`Access-Control-Allow-Origin` while also sending
+`Access-Control-Allow-Credentials: true`. This allows any malicious site to make
+credentialed cross-origin requests (e.g. authenticated `fetch()` calls) and read
+the response.
 
 ```typescript
 // ❌ NEVER do this in production
@@ -417,15 +430,15 @@ export const autoConfig: FastifyCorsOptions = {
 ### Strip internal-routing and framework headers
 
 The `strip-internal-headers` plugin (auto-loaded from
-`packages/core/src/plugins/external/strip-internal-headers.ts`) removes
-generic internal-routing **request** headers and the Fastify `server`
-**response** header.
+`packages/core/src/plugins/external/strip-internal-headers.ts`) removes generic
+internal-routing **request** headers and the Fastify `server` **response**
+header.
 
-**Why this matters:** If any application code trusts `x-internal-request`
-or `x-internal-token` to identify an internal caller (e.g. to skip auth),
-an attacker can forge those headers. Stripping them before any hook runs
-ensures they can never be trusted. The `server` response header is stripped
-to hide implementation details from potential attackers.
+**Why this matters:** If any application code trusts `x-internal-request` or
+`x-internal-token` to identify an internal caller (e.g. to skip auth), an
+attacker can forge those headers. Stripping them before any hook runs ensures
+they can never be trusted. The `server` response header is stripped to hide
+implementation details from potential attackers.
 
 ```typescript
 // ✅ Already handled by @scratchyjs/core — do NOT remove the plugin
@@ -476,14 +489,14 @@ fastify.setErrorHandler((error, request, reply) => {
 
 The following CVEs have been researched and mitigated within Scratchy:
 
-| CVE | Component | Description | Mitigation |
-| --- | --------- | ----------- | ---------- |
-| CVE-2025-32442 | Fastify ≤ 5.3.1 | Content-Type validation bypass → injection | Keep Fastify ≥ 5.3.2; use single Zod schema per route (not per-content-type) |
-| CVE-2025-43855 | `@trpc/server` 11.0–11.1.0 | WebSocket `connectionParams` uncaught exception → DoS | `createContext()` wrapped in try/catch; keep `@trpc/server` ≥ 11.1.1 |
-| CVE-2025-29927 | Next.js (pattern) | Internal header bypass of auth middleware | `strip-internal-headers` plugin removes `x-internal-request` and `x-internal-token`; Fastify `server` response header suppressed |
-| CVE-2024-8024 | `@fastify/cors` (pattern) | `origin: true` + `credentials: true` → credential exfiltration | CORS plugin auto-uses `origin: false` in production unless `ALLOWED_ORIGINS` is set |
-| CVE-2024-22207 | `@fastify/swagger-ui` < 2.1.0 | Serves all module directory files → info disclosure | Keep `@fastify/swagger-ui` ≥ 5.x (already in use) |
-| CVE-2025-61928 | `better-auth` < 1.3.26 | API key plugin auth bypass → unauthenticated account takeover | Keep `better-auth` ≥ 1.3.26 (already in use); avoid enabling `apiKey` plugin unless required |
+| CVE            | Component                     | Description                                                    | Mitigation                                                                                                                       |
+| -------------- | ----------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| CVE-2025-32442 | Fastify ≤ 5.3.1               | Content-Type validation bypass → injection                     | Keep Fastify ≥ 5.3.2; use single Zod schema per route (not per-content-type)                                                     |
+| CVE-2025-43855 | `@trpc/server` 11.0–11.1.0    | WebSocket `connectionParams` uncaught exception → DoS          | `createContext()` wrapped in try/catch; keep `@trpc/server` ≥ 11.1.1                                                             |
+| CVE-2025-29927 | Next.js (pattern)             | Internal header bypass of auth middleware                      | `strip-internal-headers` plugin removes `x-internal-request` and `x-internal-token`; Fastify `server` response header suppressed |
+| CVE-2024-8024  | `@fastify/cors` (pattern)     | `origin: true` + `credentials: true` → credential exfiltration | CORS plugin auto-uses `origin: false` in production unless `ALLOWED_ORIGINS` is set                                              |
+| CVE-2024-22207 | `@fastify/swagger-ui` < 2.1.0 | Serves all module directory files → info disclosure            | Keep `@fastify/swagger-ui` ≥ 5.x (already in use)                                                                                |
+| CVE-2025-61928 | `better-auth` < 1.3.26        | API key plugin auth bypass → unauthenticated account takeover  | Keep `better-auth` ≥ 1.3.26 (already in use); avoid enabling `apiKey` plugin unless required                                     |
 
 ### Dependency auditing in CI
 
@@ -510,8 +523,8 @@ pnpm audit --fix
 
 ## A07 — Identification and Authentication Failures
 
-Authentication failures include brute-force, weak passwords, missing
-session invalidation, and insecure credential storage.
+Authentication failures include brute-force, weak passwords, missing session
+invalidation, and insecure credential storage.
 
 ### Authentication with `@scratchyjs/auth`
 
@@ -522,14 +535,19 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 export function createAppAuth(config: AppConfig, db: NodePgDatabase) {
   return createAuth({
-    secret: config.BETTER_AUTH_SECRET,       // ✅ Signed session tokens
+    secret: config.BETTER_AUTH_SECRET, // ✅ Signed session tokens
     trustedOrigins: config.ORIGIN ? [config.ORIGIN] : [],
     emailAndPassword: {
       enabled: true,
       // Better Auth hashes passwords with Argon2id by default
       // ✅ Minimum password length is enforced by input validation
     },
-    database: drizzleAdapter(db, { provider: "pg", schema: { /* ... */ } }),
+    database: drizzleAdapter(db, {
+      provider: "pg",
+      schema: {
+        /* ... */
+      },
+    }),
     advanced: {
       database: { generateId: () => ulid() },
     },
@@ -564,17 +582,21 @@ throw new TRPCError({
 
 ```typescript
 // ✅ Apply strict rate limit to sign-in to prevent brute-force
-fastify.post("/api/auth/sign-in/email", {
-  config: { rateLimit: { max: 10, timeWindow: "15 minutes" } },
-}, authHandler);
+fastify.post(
+  "/api/auth/sign-in/email",
+  {
+    config: { rateLimit: { max: 10, timeWindow: "15 minutes" } },
+  },
+  authHandler,
+);
 ```
 
 ---
 
 ## A08 — Software and Data Integrity Failures
 
-These failures include using unsigned packages, insecure CI/CD pipelines,
-or deserializing untrusted data without validation.
+These failures include using unsigned packages, insecure CI/CD pipelines, or
+deserializing untrusted data without validation.
 
 ### Validate all deserialized data with Zod
 
@@ -600,9 +622,9 @@ fastify.post("/webhooks/provider", async (request, reply) => {
 ### Shared buffer integrity
 
 The `@scratchyjs/renderer` `SharedBuffer` uses `Atomics` operations and
-validates data-length bounds before parsing. It will throw a `SyntaxError`
-(and set the buffer status to `ERROR`) if the JSON payload is malformed,
-preventing silent data corruption:
+validates data-length bounds before parsing. It will throw a `SyntaxError` (and
+set the buffer status to `ERROR`) if the JSON payload is malformed, preventing
+silent data corruption:
 
 ```typescript
 // ✅ readFromBuffer() already handles this — no extra code needed
@@ -620,24 +642,34 @@ try {
 
 The tRPC `createContext()` function in `@scratchyjs/trpc` is wrapped in a
 `try/catch` so that any exception during context creation (e.g. a malformed
-WebSocket `connectionParams` payload) returns an *unauthenticated* context
+WebSocket `connectionParams` payload) returns an _unauthenticated_ context
 rather than propagating as an uncaught exception that would crash the server:
 
 ```typescript
 // packages/trpc/src/context.ts — already implemented this way
-export function createContext({ req, res }: CreateFastifyContextOptions): Context {
+export function createContext({
+  req,
+  res,
+}: CreateFastifyContextOptions): Context {
   try {
     const user = (req as unknown as { user?: User | null }).user ?? null;
-    return { request: req, reply: res, user, hasRole: (role) => user?.role === role };
+    return {
+      request: req,
+      reply: res,
+      user,
+      hasRole: (role) => user?.role === role,
+    };
   } catch {
-    req.log.warn("tRPC createContext failed — returning unauthenticated context");
+    req.log.warn(
+      "tRPC createContext failed — returning unauthenticated context",
+    );
     return { request: req, reply: res, user: null, hasRole: () => false };
   }
 }
 ```
 
-Do **not** remove this try/catch — it is a direct mitigation for the class
-of DoS vulnerabilities described by CVE-2025-43855 (tRPC WebSocket uncaught
+Do **not** remove this try/catch — it is a direct mitigation for the class of
+DoS vulnerabilities described by CVE-2025-43855 (tRPC WebSocket uncaught
 exception crash).
 
 ### Cache-Control for SSR responses (Remix CVE-2025-43864 pattern)
@@ -651,19 +683,18 @@ authenticated / personalised SSR responses:
 
 ```typescript
 // ✅ In tRPC plugin — already set by @scratchyjs/trpc
-responseMeta: () => ({
+responseMeta: (() => ({
   headers: { "cache-control": "no-store, no-cache, must-revalidate, private" },
 }),
-
-// ✅ For SSR route handlers and Qwik routeLoader$ responses
-fastify.addHook("onSend", (request, reply, _payload, done) => {
-  // Never let authenticated pages be cached by CDNs
-  if (request.user) {
-    reply.header("Cache-Control", "private, no-store");
-    reply.header("Vary", "Cookie, Authorization");
-  }
-  done();
-});
+  // ✅ For SSR route handlers and Qwik routeLoader$ responses
+  fastify.addHook("onSend", (request, reply, _payload, done) => {
+    // Never let authenticated pages be cached by CDNs
+    if (request.user) {
+      reply.header("Cache-Control", "private, no-store");
+      reply.header("Vary", "Cookie, Authorization");
+    }
+    done();
+  }));
 ```
 
 ```typescript
@@ -711,13 +742,15 @@ export default fp(async function myPlugin(fastify) {
 
 ### Log auth plugin session errors
 
-The `@scratchyjs/auth` plugin already logs session resolution failures at
-`warn` level:
+The `@scratchyjs/auth` plugin already logs session resolution failures at `warn`
+level:
 
 ```typescript
 // packages/auth/src/plugin.ts (already implemented)
 try {
-  const session = await authInstance.api.getSession({ /* ... */ });
+  const session = await authInstance.api.getSession({
+    /* ... */
+  });
   request.session = session;
   request.user = session?.user ?? null;
 } catch (error) {
@@ -746,9 +779,9 @@ access to internal services.
 
 ### Validate and allowlist redirect destinations
 
-Use `safeRedirect()` from `@scratchyjs/utils` for **all** user-supplied
-redirect paths. It URL-decodes the input first, catching percent-encoded
-bypass attempts (`%2e%2e`, `%2F%2F`):
+Use `safeRedirect()` from `@scratchyjs/utils` for **all** user-supplied redirect
+paths. It URL-decodes the input first, catching percent-encoded bypass attempts
+(`%2e%2e`, `%2F%2F`):
 
 ```typescript
 import { safeRedirect } from "@scratchyjs/utils";
@@ -775,7 +808,7 @@ import { URL } from "node:url";
 const ALLOWED_HOSTS = new Set(["api.trusted-provider.com"]);
 
 function safeFetch(url: string, options?: RequestInit): Promise<Response> {
-  const parsed = new URL(url);               // Throws for invalid URLs
+  const parsed = new URL(url); // Throws for invalid URLs
   if (!ALLOWED_HOSTS.has(parsed.hostname)) {
     throw new Error(`Disallowed fetch target: ${parsed.hostname}`);
   }
@@ -790,11 +823,12 @@ function safeFetch(url: string, options?: RequestInit): Promise<Response> {
 ### Every new route
 
 - [ ] Uses `protectedProcedure` (tRPC) or `requireAuth` hook (REST) if it
-  handles user-specific data
+      handles user-specific data
 - [ ] Checks resource ownership or admin role before mutating data
 - [ ] Validates all inputs with a Zod schema
 - [ ] Returns generic error messages (no internal details)
-- [ ] Authenticated SSR responses set `Cache-Control: private, no-store` and `Vary: Cookie`
+- [ ] Authenticated SSR responses set `Cache-Control: private, no-store` and
+      `Vary: Cookie`
 
 ### Every new mutation / state-changing endpoint
 
@@ -809,7 +843,8 @@ function safeFetch(url: string, options?: RequestInit): Promise<Response> {
 - [ ] Session cookies are `httpOnly`, `secure` (prod), `sameSite: "lax"`
 - [ ] `@fastify/helmet` is registered before the new plugin
 - [ ] Rate limiting is applied where appropriate
-- [ ] Does not trust `x-internal-request`, `x-internal-token`, or other internal-routing headers
+- [ ] Does not trust `x-internal-request`, `x-internal-token`, or other
+      internal-routing headers
 
 ### Every redirect
 
@@ -836,4 +871,5 @@ function safeFetch(url: string, options?: RequestInit): Promise<Response> {
 - [Drizzle ORM — SQL injection prevention](https://orm.drizzle.team/docs/overview)
 - [CVE-2025-29927 — Next.js middleware bypass](https://github.com/advisories/GHSA-f82v-jwr5-mffw)
 - [CVE-2025-43855 — tRPC WebSocket DoS](https://github.com/advisories/GHSA-9m93-w8w6-76hh)
-- [docs/security.md](../../docs/security.md) — Scratchy production security reference
+- [docs/security.md](../../docs/security.md) — Scratchy production security
+  reference

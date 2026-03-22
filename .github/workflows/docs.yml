@@ -96,8 +96,7 @@ jobs:
   # ── Deploy PR preview ───────────────────────────────────────────────────────
   deploy-preview:
     if: >
-      github.event_name == 'pull_request' &&
-      github.event.action != 'closed'
+      github.event_name == 'pull_request' && github.event.action != 'closed'
     needs: build
     runs-on: ubuntu-latest
 
@@ -132,7 +131,9 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # Each PR gets its own named worker so previews are isolated
-          command: deploy --name scratchyjs-docs-pr-${{ github.event.pull_request.number }}
+          command:
+            deploy --name scratchyjs-docs-pr-${{
+            github.event.pull_request.number }}
 
       - name: Comment preview URL on PR
         uses: actions/github-script@v7
@@ -172,10 +173,8 @@ jobs:
   # ── Clean up PR preview when PR is closed ──────────────────────────────────
   cleanup-preview:
     if: >
-      github.event_name == 'pull_request' &&
-      github.event.action == 'closed'
+      github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -199,4 +198,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: delete --name scratchyjs-docs-pr-${{ github.event.pull_request.number }} --force
+          command:
+            delete --name scratchyjs-docs-pr-${{
+            github.event.pull_request.number }} --force

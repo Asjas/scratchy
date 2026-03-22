@@ -1,6 +1,7 @@
 ---
 applyTo: "cypress/**"
-description: "Cypress E2E test generation instructions for the Scratchy.js docs site"
+description:
+  "Cypress E2E test generation instructions for the Scratchy.js docs site"
 ---
 
 # Cypress E2E Testing Guidelines
@@ -45,8 +46,8 @@ VitePress-rendered pages and components.
 - **Existence**: Use `.should("exist")` for structural elements that may not be
   in the viewport.
 - **Retries**: VitePress pages may take a moment to hydrate. When asserting on
-  content that is rendered client-side, use `{ timeout: 8000 }` to give the
-  page extra time.
+  content that is rendered client-side, use `{ timeout: 8000 }` to give the page
+  extra time.
 
 ```typescript
 // ✅ CORRECT — extra timeout for client-side hydrated content
@@ -60,15 +61,15 @@ cy.get("h1").should("contain.text", "Getting Started");
 
 ### Key VitePress CSS Classes
 
-| Class               | Element                                    |
-| ------------------- | ------------------------------------------ |
-| `.VPNavBar`         | Top navigation bar                         |
-| `.VPNavBarMenu`     | Nav links section inside the bar           |
-| `.VPNavBarSearch`   | Search button in the navbar                |
-| `.VPNavBarAppearance` | Theme toggle button                      |
-| `.VPNavBarSocialLinks` | Social icon links (GitHub, etc.)        |
-| `.VPSidebar`        | Left sidebar                               |
-| `.VPDocAside`       | Right table-of-contents sidebar            |
+| Class                  | Element                          |
+| ---------------------- | -------------------------------- |
+| `.VPNavBar`            | Top navigation bar               |
+| `.VPNavBarMenu`        | Nav links section inside the bar |
+| `.VPNavBarSearch`      | Search button in the navbar      |
+| `.VPNavBarAppearance`  | Theme toggle button              |
+| `.VPNavBarSocialLinks` | Social icon links (GitHub, etc.) |
+| `.VPSidebar`           | Left sidebar                     |
+| `.VPDocAside`          | Right table-of-contents sidebar  |
 
 ### Page Navigation
 
@@ -111,12 +112,12 @@ verifies page existence, structural elements, navigation, and theme behaviour.
 Do **not** add unit-style assertions (e.g., checking exact word counts or
 asserting on individual code-block tokens).
 
-| Spec file              | What it verifies                                |
-| ---------------------- | ----------------------------------------------- |
-| `docs-layout.cy.ts`    | Navbar icons, search, sidebar, table of contents |
-| `docs-navigation.cy.ts`| Top-level nav links load the correct pages      |
-| `docs-sidebar.cy.ts`   | Sidebar sections exist and link to correct pages |
-| `docs-theme.cy.ts`     | Light/dark mode toggle, persistence in localStorage |
+| Spec file               | What it verifies                                    |
+| ----------------------- | --------------------------------------------------- |
+| `docs-layout.cy.ts`     | Navbar icons, search, sidebar, table of contents    |
+| `docs-navigation.cy.ts` | Top-level nav links load the correct pages          |
+| `docs-sidebar.cy.ts`    | Sidebar sections exist and link to correct pages    |
+| `docs-theme.cy.ts`      | Light/dark mode toggle, persistence in localStorage |
 
 ## Test Execution
 
@@ -149,8 +150,8 @@ spec.
 
 ### CI/CD
 
-Cypress E2E tests run in `.github/workflows/docs-cypress.yml` when
-`docs/**`, `CHANGELOG.md`, or `cypress/**` files change. The workflow:
+Cypress E2E tests run in `.github/workflows/docs-cypress.yml` when `docs/**`,
+`CHANGELOG.md`, or `cypress/**` files change. The workflow:
 
 1. Builds the VitePress site (`pnpm docs:build`)
 2. Starts the preview server (`pnpm docs:preview`)
@@ -159,7 +160,12 @@ Cypress E2E tests run in `.github/workflows/docs-cypress.yml` when
 
 ### Known Failure Modes (Do Not Repeat)
 
-- **Empty CHANGELOG.md** — `docs/changelog.md` uses `<!--@include: ../CHANGELOG.md-->`. When `CHANGELOG.md` is empty or has no `# Changelog` heading, the `/changelog` VitePress page renders with no `h1`, causing `cy.get("h1").should("contain.text", "Changelog")` to time out. Keep the git-cliff header (`# Changelog\n\nAll notable changes…`) in `CHANGELOG.md` at all times.
+- **Empty CHANGELOG.md** — `docs/changelog.md` uses
+  `<!--@include: ../CHANGELOG.md-->`. When `CHANGELOG.md` is empty or has no
+  `# Changelog` heading, the `/changelog` VitePress page renders with no `h1`,
+  causing `cy.get("h1").should("contain.text", "Changelog")` to time out. Keep
+  the git-cliff header (`# Changelog\n\nAll notable changes…`) in `CHANGELOG.md`
+  at all times.
 
 ## Example Test Structure
 

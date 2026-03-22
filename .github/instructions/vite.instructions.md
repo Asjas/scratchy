@@ -1,6 +1,11 @@
 ---
 name: vite-bundling
-description: "Guides Vite configuration and bundling patterns for the Scratchy framework's client-side code. Use when configuring Vite, setting up plugins, optimizing builds, configuring dev server proxying, or handling static assets. Trigger terms: Vite, bundling, build, dev server, HMR, plugin, chunk, code splitting, proxy, static assets."
+description:
+  "Guides Vite configuration and bundling patterns for the Scratchy framework's
+  client-side code. Use when configuring Vite, setting up plugins, optimizing
+  builds, configuring dev server proxying, or handling static assets. Trigger
+  terms: Vite, bundling, build, dev server, HMR, plugin, chunk, code splitting,
+  proxy, static assets."
 metadata:
   tags: vite, bundling, build, dev-server, hmr, frontend
 applyTo: "**/vite.config.ts,**/vite.config.js"
@@ -25,17 +30,13 @@ Use these patterns when:
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from "vite";
-import { qwikVite } from "@builder.io/qwik/optimizer";
 import { qwikCity } from "@builder.io/qwik-city/vite";
+import { qwikVite } from "@builder.io/qwik/optimizer";
+import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [
-    qwikCity(),
-    qwikVite(),
-    tsconfigPaths(),
-  ],
+  plugins: [qwikCity(), qwikVite(), tsconfigPaths()],
   server: {
     port: 4173,
     // Proxy API requests to the Fastify backend
@@ -74,17 +75,17 @@ export default defineConfig({
 ### With React Support (qwik-react)
 
 ```typescript
-import { defineConfig } from "vite";
-import { qwikVite } from "@builder.io/qwik/optimizer";
 import { qwikCity } from "@builder.io/qwik-city/vite";
 import { qwikReact } from "@builder.io/qwik-react/vite";
+import { qwikVite } from "@builder.io/qwik/optimizer";
+import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [
     qwikCity(),
     qwikVite(),
-    qwikReact(),    // Enable React component support
+    qwikReact(), // Enable React component support
     tsconfigPaths(),
   ],
   // ... rest of config
@@ -222,7 +223,12 @@ public/
 Reference in components:
 
 ```tsx
-<img src="/images/logo.svg" alt="Logo" width={120} height={40} />
+<img
+  src="/images/logo.svg"
+  alt="Logo"
+  width={120}
+  height={40}
+/>
 ```
 
 ## Anti-Patterns
@@ -232,9 +238,9 @@ Reference in components:
 ```typescript
 // BAD — This will bundle server code into the client
 import { db } from "~/db/index";
-
 // GOOD — Use tRPC to call server code from the client
 import { trpc } from "~/lib/trpc.client";
+
 const users = await trpc.users.list.query();
 ```
 

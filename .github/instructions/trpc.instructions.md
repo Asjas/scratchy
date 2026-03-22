@@ -1,6 +1,12 @@
 ---
 name: trpc-patterns
-description: "Guides development of tRPC routers, procedures, middleware, and client integration within the Scratchy framework. Use when creating API endpoints, defining tRPC routers, implementing authentication middleware, setting up the tRPC client, or working with tRPC SSE subscriptions. Trigger terms: tRPC, router, procedure, query, mutation, subscription, middleware, publicProcedure, protectedProcedure, superjson, context."
+description:
+  "Guides development of tRPC routers, procedures, middleware, and client
+  integration within the Scratchy framework. Use when creating API endpoints,
+  defining tRPC routers, implementing authentication middleware, setting up the
+  tRPC client, or working with tRPC SSE subscriptions. Trigger terms: tRPC,
+  router, procedure, query, mutation, subscription, middleware, publicProcedure,
+  protectedProcedure, superjson, context."
 metadata:
   tags: trpc, api, rpc, router, middleware, typescript, fastify
 applyTo: "**/routers/**/*.ts,**/router.ts,**/context.ts,**/trpc.client.ts"
@@ -58,7 +64,10 @@ export interface Context {
   hasRole: (role: string) => boolean;
 }
 
-export async function createContext({ req, res }: CreateFastifyContextOptions): Promise<Context> {
+export async function createContext({
+  req,
+  res,
+}: CreateFastifyContextOptions): Promise<Context> {
   const user = req.user ?? null;
 
   return {
@@ -141,7 +150,10 @@ export const isAdmin = t.middleware(({ ctx, next }) => {
 
 export const isOwner = t.middleware(({ ctx, next, input }) => {
   if (!ctx.user) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "You must be logged in" });
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be logged in",
+    });
   }
 
   const userId =
@@ -160,7 +172,10 @@ export const isOwner = t.middleware(({ ctx, next, input }) => {
 
 export const isOwnerOrAdmin = t.middleware(({ ctx, next, input }) => {
   if (!ctx.user) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "You must be logged in" });
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be logged in",
+    });
   }
 
   const userId =
@@ -206,10 +221,10 @@ src/routers/
 ```typescript
 // routers/index.ts
 import { router } from "~/router.js";
-import { userQueries } from "~/routers/users/queries.js";
-import { userMutations } from "~/routers/users/mutations.js";
-import { courseQueries } from "~/routers/courses/queries.js";
 import { courseMutations } from "~/routers/courses/mutations.js";
+import { courseQueries } from "~/routers/courses/queries.js";
+import { userMutations } from "~/routers/users/mutations.js";
+import { userQueries } from "~/routers/users/queries.js";
 
 export const appRouter = router({
   users: router({
@@ -230,8 +245,8 @@ export type AppRouter = typeof appRouter;
 ```typescript
 // routers/users/queries.ts
 import { z } from "zod";
-import { publicProcedure, protectedProcedure } from "~/router.js";
-import { findUserById, findAllUsers } from "~/db/queries/users.js";
+import { findAllUsers, findUserById } from "~/db/queries/users.js";
+import { protectedProcedure, publicProcedure } from "~/router.js";
 
 export const userQueries = {
   getById: protectedProcedure
@@ -264,8 +279,8 @@ export const userQueries = {
 ```typescript
 // routers/users/mutations.ts
 import { z } from "zod";
+import { createUser, deleteUser, updateUser } from "~/db/mutations/users.js";
 import { protectedProcedure } from "~/router.js";
-import { createUser, updateUser, deleteUser } from "~/db/mutations/users.js";
 
 export const userMutations = {
   create: protectedProcedure
@@ -307,9 +322,9 @@ export const userMutations = {
 
 ```typescript
 // lib/trpc.client.ts
+import type { AppRouter } from "@apps/server/routers/index.js";
 import { createTRPCClient, httpBatchStreamLink } from "@trpc/client";
 import superjson from "superjson";
-import type { AppRouter } from "@apps/server/routers/index.js";
 
 export const trpc = createTRPCClient<AppRouter>({
   links: [
@@ -351,12 +366,21 @@ import { TRPCError } from "@trpc/server";
 
 // Standard tRPC error codes
 throw new TRPCError({ code: "NOT_FOUND", message: "Resource not found" });
-throw new TRPCError({ code: "UNAUTHORIZED", message: "Authentication required" });
+throw new TRPCError({
+  code: "UNAUTHORIZED",
+  message: "Authentication required",
+});
 throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
 throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid input" });
-throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Something went wrong" });
+throw new TRPCError({
+  code: "INTERNAL_SERVER_ERROR",
+  message: "Something went wrong",
+});
 throw new TRPCError({ code: "CONFLICT", message: "Resource already exists" });
-throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Rate limit exceeded" });
+throw new TRPCError({
+  code: "TOO_MANY_REQUESTS",
+  message: "Rate limit exceeded",
+});
 ```
 
 ## Input Validation with Zod

@@ -1,6 +1,7 @@
 # SCRATCHY_PROJECT_NAME
 
-A new [Scratchy](https://scratchyjs.com) application — full-stack TypeScript, powered by Fastify, tRPC, Qwik & Drizzle.
+A new [Scratchy](https://scratchyjs.com) application — full-stack TypeScript,
+powered by Fastify, tRPC, Qwik & Drizzle.
 
 ## Stack
 
@@ -94,13 +95,13 @@ src/
 
 ## Scripts
 
-| Script                | Description                          |
-| --------------------- | ------------------------------------ |
-| `pnpm dev`            | Start the development server         |
-| `pnpm typecheck`      | Type-check with TypeScript           |
-| `pnpm db:generate`    | Generate Drizzle migration files     |
-| `pnpm db:migrate`     | Apply pending migrations             |
-| `pnpm db:studio`      | Open Drizzle Studio                  |
+| Script             | Description                      |
+| ------------------ | -------------------------------- |
+| `pnpm dev`         | Start the development server     |
+| `pnpm typecheck`   | Type-check with TypeScript       |
+| `pnpm db:generate` | Generate Drizzle migration files |
+| `pnpm db:migrate`  | Apply pending migrations         |
+| `pnpm db:studio`   | Open Drizzle Studio              |
 
 ## Learn More
 
