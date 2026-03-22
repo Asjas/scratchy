@@ -76,6 +76,9 @@ describe("safeRedirect", () => {
     expect(safeRedirect("/%GG/path")).toBe("/");
   });
 
+  it("returns the default redirect for percent-encoded CR/LF characters in the path", () => {
+    expect(safeRedirect("/%0d%0aevil.com")).toBe("/");
+  });
   it("accepts a safe path that contains percent-encoded characters (e.g. spaces)", () => {
     expect(safeRedirect("/my%20dashboard")).toBe("/my dashboard");
   });
