@@ -1,5 +1,22 @@
 # Middleware Guide
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/) +
+> [Reference](https://diataxis.fr/reference/)** — problem-oriented patterns for
+> composing middleware at every level, with reference tables for Fastify
+> lifecycle hooks.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Request Lifecycle Hooks](#request-lifecycle-hooks)
+- [Route Middleware](#route-middleware)
+- [Scoped Middleware Arrays](#scoped-middleware-arrays)
+- [Best Practices](#best-practices)
+- [Anti-Patterns](#anti-patterns)
+- [Related Documentation](#related-documentation)
+
+---
+
 ## Overview
 
 Scratchy uses a **layered middleware architecture** that combines Fastify's
@@ -899,3 +916,13 @@ export const goodErrorHandler: MiddlewareFn = async (event) => {
   }
 };
 ```
+
+## Related Documentation
+
+- [Security](./security.md) — Security headers, rate limiting, CSRF
+- [Sessions](./sessions.md) — Session middleware and cookie handling
+- [API Design](./api-design.md) — tRPC middleware for auth and ownership
+- [Architecture](./architecture.md) — Request lifecycle overview
+- [Error Handling](./error-handling.md) — Error hooks and structured error
+  responses
+- [Data Loading](./data-loading.md) — `onRequest` guards that run before loaders

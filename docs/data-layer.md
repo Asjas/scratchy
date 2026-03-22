@@ -1,5 +1,26 @@
 # Data Layer Guide
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/) +
+> [Reference](https://diataxis.fr/reference/)** — problem-oriented patterns for
+> database setup, schemas, queries, and migrations, with reference tables for
+> configuration.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Stack](#stack)
+- [Database Connection](#database-connection)
+- [Schema Design](#schema-design)
+- [Query Patterns](#query-patterns)
+- [Mutation Patterns](#mutation-patterns)
+- [Caching Layer](#caching-layer)
+- [Migrations](#migrations)
+- [Best Practices](#best-practices)
+- [Anti-Patterns](#anti-patterns)
+- [Related Documentation](#related-documentation)
+
+---
+
 ## Overview
 
 Scratchy uses **Drizzle ORM** with **PostgreSQL** as the primary data layer.
@@ -434,3 +455,25 @@ pnpm drizzle-kit migrate --config src/drizzle.config.ts
    passing to Drizzle
 8. **Cache read-heavy queries** — use async-cache-dedupe for frequently accessed
    data
+
+## Anti-Patterns
+
+- ❌ Don't create prepared statements inside functions — they re-prepare on
+  every call
+- ❌ Don't use the default `public` schema — always use a custom `pgSchema`
+- ❌ Don't edit generated `.sql` migration files — they are immutable
+- ❌ Don't use `drizzle-kit push` in production — only for development
+  prototyping
+- ❌ Don't skip indexes on foreign keys — Drizzle doesn't auto-create them
+- ❌ Don't return raw database responses to the client — map to response schemas
+  with Zod
+
+## Related Documentation
+
+- [API Design](./api-design.md) — How tRPC and REST consume the data layer
+- [CLI Scaffolding](./cli.md) — Generate schemas, queries, and mutations
+  automatically
+- [Testing](./testing.md) — Database isolation strategies for tests
+- [Architecture](./architecture.md) — Where the data layer fits in the stack
+- [Security](./security.md) — SQL injection prevention via parameterized queries
+- [Error Handling](./error-handling.md) — PostgreSQL error code mapping

@@ -1,5 +1,27 @@
 # External References
 
+> **Diátaxis type: [Reference](https://diataxis.fr/reference/)** —
+> information-oriented, a curated link directory to all external documentation
+> used by the Scratchy stack.
+
+## Table of Contents
+
+- [Core Technologies](#core-technologies)
+- [Rendering](#rendering)
+- [Data Layer](#data-layer)
+- [Styling](#styling)
+- [Worker Threads](#worker-threads)
+- [Validation](#validation)
+- [Authentication](#authentication)
+- [Utilities](#utilities)
+- [Framework Inspiration](#framework-inspiration)
+- [Security](#security)
+- [AI Development Resources](#ai-development-resources)
+- [Testing](#testing)
+- [DevOps](#devops)
+
+---
+
 ## Core Technologies
 
 ### Node.js

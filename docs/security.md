@@ -1,5 +1,9 @@
 # Security
 
+> **Diátaxis type: [Reference](https://diataxis.fr/reference/)** —
+> information-oriented, the single source of truth for all security concerns in
+> a Scratchy application.
+
 Scratchy takes a **defense-in-depth** approach to security. Every layer — from
 HTTP headers to database queries — enforces its own protections so that no
 single misconfiguration leads to a breach. This document is the single reference
@@ -1660,3 +1664,11 @@ await server.register(cors, { prefix: "/external/api" });
   — CSP reference
 - [Node.js Security Best Practices](https://nodejs.org/en/learn/getting-started/security-best-practices)
   — Node.js security
+
+## Related Documentation
+
+- [Sessions](./sessions.md) — Cookie signing, session storage, CSRF tokens
+- [Middleware](./middleware.md) — Security plugin ordering and lifecycle hooks
+- [API Design](./api-design.md) — Authentication for tRPC and REST
+- [Error Handling](./error-handling.md) — Preventing error information leakage
+- [Architecture](./architecture.md) — Defense-in-depth layer overview

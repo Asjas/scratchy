@@ -1,5 +1,21 @@
 # API Design Guide
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/) +
+> [Reference](https://diataxis.fr/reference/)** — problem-oriented patterns for
+> building APIs, with reference tables for procedure types and response formats.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [tRPC (Internal API)](#trpc-internal-api)
+- [REST (External API)](#rest-external-api)
+- [Shared Patterns](#shared-patterns)
+- [Best Practices](#best-practices)
+- [Anti-Patterns](#anti-patterns)
+- [Related Documentation](#related-documentation)
+
+---
+
 ## Overview
 
 Scratchy uses a **dual API approach**:
@@ -304,9 +320,7 @@ export async function listProducts(page: number, limit: number) {
 }
 ```
 
-## Guidelines
-
-### Do's
+## Best Practices
 
 - ✅ Use tRPC for all internal client-server communication
 - ✅ Use REST for external/third-party APIs
@@ -320,7 +334,7 @@ export async function listProducts(page: number, limit: number) {
 - ✅ Use `routeAction$` for form submissions and mutations
 - ✅ Use `server$()` for ad-hoc RPC calls from components
 
-### Don'ts
+## Anti-Patterns
 
 - ❌ Don't create REST endpoints for internal use
 - ❌ Don't enable CORS on tRPC endpoints
@@ -332,10 +346,11 @@ export async function listProducts(page: number, limit: number) {
 
 ## Related Documentation
 
-- [data-loading.md](data-loading.md) — routeLoader$, caching, revalidation
+- [Data Loading](./data-loading.md) — `routeLoader$`, caching, revalidation
   patterns
-- [forms-and-actions.md](forms-and-actions.md) — routeAction$, Form component,
-  file uploads
-- [middleware.md](middleware.md) — Request middleware and lifecycle hooks
-- [error-handling.md](error-handling.md) — Error handling in API routes
-- [security.md](security.md) — Authentication, CSRF, rate limiting
+- [Forms & Actions](./forms-and-actions.md) — `routeAction$`, `<Form>`
+  component, file uploads
+- [Middleware](./middleware.md) — Request middleware and lifecycle hooks
+- [Error Handling](./error-handling.md) — Error handling in API routes
+- [Security](./security.md) — Authentication, CSRF, rate limiting
+- [Architecture](./architecture.md) — Why tRPC for internal, REST for external

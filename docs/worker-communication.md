@@ -1,5 +1,23 @@
 # Worker Communication
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/) +
+> [Explanation](https://diataxis.fr/explanation/)** — shows how to pass data
+> between the main thread and Worker Threads using SharedArrayBuffer and Redis,
+> and explains when to use each approach.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Choosing a Pattern](#choosing-a-pattern)
+- [Pattern 1: SharedArrayBuffer + Atomics](#pattern-1-sharedarraybuffer--atomics)
+- [Pattern 2: Redis (DragonflyDB)](#pattern-2-redis-dragonflydb)
+- [DragonflyDB](#dragonflydb)
+- [Performance Comparison](#performance-comparison)
+- [Best Practices](#best-practices)
+- [Related Documentation](#related-documentation)
+
+---
+
 ## Overview
 
 Scratchy supports two communication patterns between the main Node.js thread and
@@ -469,3 +487,12 @@ payload size, and network topology._
    worker is done
 7. **Handle failures gracefully** — if Redis is down, fall back to passing data
    through the Piscina task payload
+
+## Related Documentation
+
+- [Rendering](./rendering.md) — Worker pool setup, SSR/SSG data flow
+- [Streaming](./streaming.md) — Streaming HTML chunks from workers
+- [Architecture](./architecture.md) — Why Worker Threads for rendering
+- [Nitro Inspiration](./nitro-inspiration.md) — Comparison with Nitro's
+  same-thread rendering
+- [Data Layer](./data-layer.md) — Caching with async-cache-dedupe and Redis

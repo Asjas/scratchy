@@ -1,5 +1,21 @@
 # Nitro v3 Inspiration
 
+> **Diátaxis type: [Explanation](https://diataxis.fr/explanation/)** —
+> understanding-oriented, explains what Scratchy adopts and skips from Nitro's
+> architecture and why.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Concepts from Nitro](#key-concepts-from-nitro)
+- [Concepts We Adopt](#concepts-we-adopt)
+- [Concepts We Skip](#concepts-we-skip)
+- [Source Code Study Areas](#source-code-study-areas)
+- [Key Takeaways](#key-takeaways)
+- [Related Documentation](#related-documentation)
+
+---
+
 ## Overview
 
 [Nitro](https://nitro.build/) is a powerful server toolkit that powers
@@ -203,3 +219,13 @@ these areas for inspiration:
 5. **Server-specific optimization** — Since we don't need universal runtime
    support, we can leverage Node.js-specific features (Worker Threads,
    SharedArrayBuffer) that Nitro can't use in its universal model.
+
+## Related Documentation
+
+- [Architecture](./architecture.md) — Full system design and design decisions
+- [Middleware](./middleware.md) — Fastify hooks vs. Nitro middleware
+- [Rendering](./rendering.md) — Worker-based SSR vs. Nitro's same-thread
+  approach
+- [Worker Communication](./worker-communication.md) — SharedArrayBuffer and
+  Redis patterns
+- [Project Structure](./project-structure.md) — Directory conventions
