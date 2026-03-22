@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     include: ["packages/*/src/**/*.test.ts", "examples/*/src/**/*.test.ts"],
+    setupFiles: ["./vitest.setup.ts"],
     coverage: {
       provider: "v8",
       include: ["packages/*/src/**/*.ts"],
