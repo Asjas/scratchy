@@ -1,5 +1,5 @@
 import { runSsgPipeline } from "./ssg-pipeline.js";
-import { readFile } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -13,10 +13,13 @@ function makeTmpDir(): string {
 }
 
 describe("runSsgPipeline", () => {
-  // Track directories created by tests so we can verify them.
+  // Track temporary directories created by each test for cleanup.
   const dirsCreated: string[] = [];
 
-  afterEach(() => {
+  afterEach(async () => {
+    await Promise.all(
+      dirsCreated.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
     dirsCreated.length = 0;
   });
 
@@ -137,5 +140,77 @@ describe("runSsgPipeline", () => {
     });
 
     expect(result.duration).toBeGreaterThan(0);
+  });
+
+  it("strips query strings and fragments from routes when building file paths", async () => {
+    const outDir = makeTmpDir();
+    dirsCreated.push(outDir);
+
+    const result = await runSsgPipeline({
+      worker: resolve(import.meta.dirname, "worker.ts"),
+      routes: ["/page?lang=en#section"],
+      outDir,
+      maxThreads: 1,
+    });
+
+    // The file should be written to /page/index.html, not /page?lang=en#section/index.html
+    expect(result.rendered).toHaveLength(1);
+    expect(result.rendered[0]?.path).toBe(join(outDir, "page", "index.html"));
+  });
+
+  it("resolves .. in routes safely via URL normalisation", async () => {
+    const outDir = makeTmpDir();
+    dirsCreated.push(outDir);
+
+    // /a/../b normalises to /b — the rendered path must be inside outDir
+    const result = await runSsgPipeline({
+      worker: resolve(import.meta.dirname, "worker.ts"),
+      routes: ["/a/../b"],
+      outDir,
+      maxThreads: 1,
+    });
+
+    expect(result.rendered).toHaveLength(1);
+    expect(result.rendered[0]?.path).toBe(join(outDir, "b", "index.html"));
+  });
+
+  it("records a failure when getProps throws", async () => {
+    const outDir = makeTmpDir();
+    dirsCreated.push(outDir);
+
+    const result = await runSsgPipeline({
+      worker: resolve(import.meta.dirname, "worker.ts"),
+      routes: ["/props-error"],
+      outDir,
+      maxThreads: 1,
+      getProps: () => Promise.reject(new Error("props fetch failed")),
+    });
+
+    expect(result.rendered).toHaveLength(0);
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0]?.route).toBe("/props-error");
+    expect(result.failed[0]?.error.message).toBe("props fetch failed");
+  });
+
+  it("throws RangeError for invalid maxThreads", async () => {
+    await expect(
+      runSsgPipeline({
+        worker: resolve(import.meta.dirname, "worker.ts"),
+        routes: ["/"],
+        outDir: makeTmpDir(),
+        maxThreads: 0,
+      }),
+    ).rejects.toThrow(RangeError);
+  });
+
+  it("throws RangeError for invalid taskTimeout", async () => {
+    await expect(
+      runSsgPipeline({
+        worker: resolve(import.meta.dirname, "worker.ts"),
+        routes: ["/"],
+        outDir: makeTmpDir(),
+        taskTimeout: -1,
+      }),
+    ).rejects.toThrow(RangeError);
   });
 });

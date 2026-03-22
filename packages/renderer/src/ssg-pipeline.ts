@@ -13,6 +13,7 @@ export interface SsgPipelineOptions {
    * This value is passed directly to Piscina's {@link Piscina} `filename`
    * option, so it must be a file path or file URL, not a package import
    * specifier (e.g. `/absolute/path/to/renderer/worker.cjs`).
+   */
   worker: string;
   /**
    * List of routes to pre-render (e.g. `["/", "/about", "/blog/hello"]`).
@@ -81,13 +82,26 @@ export interface SsgPipelineResult {
  * - `"/"` → `"index.html"`
  * - `"/about"` → `"about/index.html"`
  * - `"/blog/hello"` → `"blog/hello/index.html"`
+ *
+ * Uses {@link URL} to parse the route so that query strings, fragments, and
+ * repeated slashes are stripped and `..` segments are resolved, preventing
+ * directory traversal outside `outDir`.
  */
 function routeToFilePath(route: string): string {
-  const normalised = route.replace(/^\//, "").replace(/\/$/, "");
-  if (normalised === "") {
+  // URL parsing strips query strings, fragments, and resolves ".." segments.
+  let pathname: string;
+  try {
+    pathname = new URL(route, "http://local").pathname;
+  } catch {
+    throw new Error(`Route "${route}" is not a valid URL path.`);
+  }
+
+  const segments = pathname.split("/").filter((s) => s !== "");
+
+  if (segments.length === 0) {
     return "index.html";
   }
-  return `${normalised}/index.html`;
+  return `${segments.join("/")}/index.html`;
 }
 
 /**
@@ -154,64 +168,81 @@ export async function runSsgPipeline(
   const rendered: SsgRouteResult[] = [];
   const failed: SsgRouteFailure[] = [];
 
-  const tasks = routes.map(async (route) => {
-    let props: Record<string, unknown> | undefined;
-    if (getProps) {
+  // Process routes through a worker-queue so that at most `maxThreads`
+  // tasks (getProps + Piscina render) are in-flight at any one time.
+  // This prevents unbounded upstream calls when getProps fetches from a DB
+  // or remote API for a large number of routes.
+  const queue = [...routes];
+
+  async function processQueue() {
+    while (queue.length > 0) {
+      const route = queue.shift();
+      if (route === undefined) break;
+
+      let props: Record<string, unknown> | undefined;
+      if (getProps) {
+        try {
+          props = await getProps(route);
+        } catch (err) {
+          failed.push({
+            route,
+            error: err instanceof Error ? err : new Error(String(err)),
+          });
+          continue;
+        }
+      }
+
+      const task: RenderTask = { type: "ssg", route, props };
+
+      let result: RenderResult;
       try {
-        props = await getProps(route);
+        result = (await pool.run(task, {
+          signal: AbortSignal.timeout(taskTimeout),
+        })) as RenderResult;
+      } catch (err) {
+        const isTimeoutError =
+          err instanceof Error &&
+          (err.name === "TimeoutError" || err.name === "AbortError");
+        const message = isTimeoutError
+          ? `SSG render timed out for route "${route}" after ${taskTimeout}ms`
+          : err instanceof Error
+            ? err.message
+            : String(err);
+        failed.push({
+          route,
+          error: isTimeoutError
+            ? new Error(message, { cause: err })
+            : err instanceof Error
+              ? err
+              : new Error(message),
+        });
+        continue;
+      }
+
+      const relPath = routeToFilePath(route);
+      const absPath = join(outDir, relPath);
+      const dir = dirname(absPath);
+
+      try {
+        await mkdir(dir, { recursive: true });
+        await writeFile(absPath, result.html, "utf8");
+        rendered.push({ route, path: absPath });
       } catch (err) {
         failed.push({
           route,
           error: err instanceof Error ? err : new Error(String(err)),
         });
-        return;
       }
     }
+  }
 
-    const task: RenderTask = { type: "ssg", route, props };
+  // Spin up `maxThreads` concurrent queue processors.
+  const workers = Array.from(
+    { length: Math.min(maxThreads, routes.length) },
+    () => processQueue(),
+  );
 
-    let result: RenderResult;
-    try {
-      result = (await pool.run(task, {
-        signal: AbortSignal.timeout(taskTimeout),
-      })) as RenderResult;
-    } catch (err) {
-      const isTimeoutError =
-        err instanceof Error &&
-        (err.name === "TimeoutError" || err.name === "AbortError");
-      const message = isTimeoutError
-        ? `SSG render timed out for route "${route}" after ${taskTimeout}ms`
-        : err instanceof Error
-          ? err.message
-          : String(err);
-      failed.push({
-        route,
-        error: isTimeoutError
-          ? new Error(message, { cause: err })
-          : err instanceof Error
-            ? err
-            : new Error(message),
-      });
-      return;
-    }
-
-    const relPath = routeToFilePath(route);
-    const absPath = join(outDir, relPath);
-    const dir = dirname(absPath);
-
-    try {
-      await mkdir(dir, { recursive: true });
-      await writeFile(absPath, result.html, "utf8");
-      rendered.push({ route, path: absPath });
-    } catch (err) {
-      failed.push({
-        route,
-        error: err instanceof Error ? err : new Error(String(err)),
-      });
-    }
-  });
-
-  await Promise.allSettled(tasks);
+  await Promise.all(workers);
   await pool.close();
 
   return { rendered, failed, duration: Date.now() - start };
