@@ -1451,6 +1451,7 @@ entry lists the status and what action (if any) is required:
 | CVE-2024-22207 | `@fastify/swagger-ui` < 2.1.0 | Serves module directory files → info disclosure        | Medium   | ✅ Using swagger-ui ≥ 5.x                                 | No action needed                                                                |
 | CVE-2025-43864 | Remix (pattern)               | Cache poisoning + persistent XSS                       | High     | ✅ tRPC uses `no-store`; add `Vary: Cookie` for SSR pages | Add `Cache-Control: private, no-store` + `Vary: Cookie` to authenticated routes |
 | CVE-2025-61686 | Remix (pattern)               | Path traversal via file-based session storage          | Critical | ✅ Redis sessions + signed cookies                        | Never use file-based session storage                                            |
+| CVE-2025-61928 | `better-auth` < 1.3.26        | API key plugin auth bypass → unauthenticated takeover  | Critical | ✅ Using better-auth 1.5.5 (patched)                      | Keep `better-auth` ≥ 1.3.26; avoid enabling `apiKey` plugin unless required     |
 
 **Upgrade guidance for CVE-2025-32442 (Fastify Content-Type bypass):** This CVE
 affects per-content-type schema configurations. The Scratchy pattern of using a

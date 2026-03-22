@@ -483,6 +483,7 @@ The following CVEs have been researched and mitigated within Scratchy:
 | CVE-2025-29927 | Next.js (pattern) | Internal header bypass of auth middleware | `strip-internal-headers` plugin removes `x-internal-request` and `x-internal-token`; Fastify `server` response header suppressed |
 | CVE-2024-8024 | `@fastify/cors` (pattern) | `origin: true` + `credentials: true` → credential exfiltration | CORS plugin auto-uses `origin: false` in production unless `ALLOWED_ORIGINS` is set |
 | CVE-2024-22207 | `@fastify/swagger-ui` < 2.1.0 | Serves all module directory files → info disclosure | Keep `@fastify/swagger-ui` ≥ 5.x (already in use) |
+| CVE-2025-61928 | `better-auth` < 1.3.26 | API key plugin auth bypass → unauthenticated account takeover | Keep `better-auth` ≥ 1.3.26 (already in use); avoid enabling `apiKey` plugin unless required |
 
 ### Dependency auditing in CI
 
