@@ -45,6 +45,7 @@ describe("interval", () => {
     let count = 0;
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for await (const _ of interval(10, { signal: controller.signal })) {
         count++;
         if (count >= 1) {
@@ -61,6 +62,7 @@ describe("interval", () => {
   it("handles options without signal (undefined signal)", async () => {
     let count = 0;
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for await (const _ of interval(10, {})) {
       count++;
       if (count >= 2) break;
