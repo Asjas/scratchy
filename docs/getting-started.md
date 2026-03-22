@@ -1,5 +1,25 @@
 # Getting Started with Scratchy
 
+> **Diátaxis type: [Tutorial](https://diataxis.fr/tutorials/)** —
+> learning-oriented, guides you through first steps.
+
+In this tutorial, you will set up a Scratchy development environment, install
+dependencies, configure infrastructure, and start the development server. By the
+end, you will have a running Scratchy application. No prior Scratchy experience
+is needed — only Node.js >= 22 and pnpm >= 10.
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Project Setup from Scratch](#project-setup-from-scratch)
+- [Common Development Commands](#common-development-commands)
+- [Editor Setup](#editor-setup)
+- [Troubleshooting](#troubleshooting)
+- [Next Steps](#next-steps)
+
+---
+
 ## Prerequisites
 
 ### Required Software
@@ -261,12 +281,13 @@ pnpm typecheck
 
 ## Next Steps
 
-- Read the [Architecture Guide](./architecture.md) to understand the system
-  design
-- Read the [Project Structure Guide](./project-structure.md) for directory
-  conventions
-- Read the [API Design Guide](./api-design.md) to understand tRPC and REST
-  patterns
-- Read the [Data Layer Guide](./data-layer.md) to understand database patterns
-- Check the [References](./references.md) for links to all external
-  documentation
+Now that your environment is running, explore these guides to start building:
+
+| Next Step             | Guide                                       | What You Will Learn                                        |
+| --------------------- | ------------------------------------------- | ---------------------------------------------------------- |
+| Understand the system | [Architecture](./architecture.md)           | How layers connect — Fastify, tRPC, Workers, Drizzle       |
+| Learn the layout      | [Project Structure](./project-structure.md) | Directory conventions, naming rules, file responsibilities |
+| Build an API          | [API Design](./api-design.md)               | tRPC routers and REST endpoints                            |
+| Connect a database    | [Data Layer](./data-layer.md)               | Drizzle schemas, queries, migrations                       |
+| Scaffold code         | [CLI](./cli.md)                             | Generate models, routers, components                       |
+| Browse all references | [References](./references.md)               | Links to all external documentation                        |

@@ -1,5 +1,9 @@
 # Testing
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/)** —
+> problem-oriented, shows how to write and organize tests at every layer of the
+> Scratchy stack.
+
 This guide covers the testing strategy, tools, patterns, and best practices for
 Scratchy applications. It draws on proven approaches from Remix, Qwik City,
 Next.js, Nuxt, SolidStart, and RedwoodJS — adapted for Scratchy's server-first,
@@ -1790,3 +1794,13 @@ await server.listen({ port: 0, host: "127.0.0.1" });
 - [Testing Library](https://testing-library.com/)
 - [Drizzle ORM](https://orm.drizzle.team/)
 - [Piscina Worker Pool](https://github.com/piscinajs/piscina)
+
+## Related Documentation
+
+- [Data Layer](./data-layer.md) — Database isolation patterns for integration
+  tests
+- [API Design](./api-design.md) — tRPC and REST endpoints under test
+- [Error Handling](./error-handling.md) — Testing error boundaries and error
+  responses
+- [Middleware](./middleware.md) — Testing auth guards and lifecycle hooks
+- [Getting Started](./getting-started.md) — Test commands overview

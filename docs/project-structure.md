@@ -1,5 +1,19 @@
 # Project Structure
 
+> **Diátaxis type: [Reference](https://diataxis.fr/reference/)** —
+> information-oriented, look up conventions and file responsibilities.
+
+## Table of Contents
+
+- [Directory Layout](#directory-layout)
+- [Naming Conventions](#naming-conventions)
+- [Key File Responsibilities](#key-file-responsibilities)
+- [Route File Conventions](#route-file-conventions)
+- [Adding New Features](#adding-new-features)
+- [Related Documentation](#related-documentation)
+
+---
+
 ## Directory Layout
 
 ```
@@ -303,3 +317,11 @@ export const head: DocumentHead = {
    `src/plugins/external/<name>.ts`
 2. Wrap with `fp()` from `fastify-plugin`
 3. Add TypeScript augmentation in `src/types/fastify.d.ts` if adding decorators
+
+## Related Documentation
+
+- [Getting Started](./getting-started.md) — Tutorial for first-time setup
+- [Architecture](./architecture.md) — Why the layers are organized this way
+- [CLI Scaffolding](./cli.md) — Generate files automatically
+- [Middleware](./middleware.md) — How plugins and hooks work
+- [Data Layer](./data-layer.md) — Database file conventions

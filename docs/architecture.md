@@ -1,5 +1,23 @@
 # Scratchy Framework Architecture
 
+> **Diátaxis type: [Explanation](https://diataxis.fr/explanation/)** —
+> understanding-oriented, covers the _why_ behind design decisions.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [High-Level Architecture](#high-level-architecture)
+- [Design Decisions](#design-decisions)
+- [Layer Responsibilities](#layer-responsibilities)
+- [Request Lifecycle](#request-lifecycle)
+- [Error Handling Architecture](#error-handling-architecture)
+- [Session and Cookie Management](#session-and-cookie-management)
+- [Security Layers](#security-layers)
+- [Scalability Model](#scalability-model)
+- [Related Documentation](#related-documentation)
+
+---
+
 ## Overview
 
 Scratchy is a full-stack TypeScript framework designed for building APIs and
@@ -286,3 +304,20 @@ See [security.md](security.md) for full security patterns.
 - PostgreSQL handles data persistence with connection pooling
 - Redis handles caching, session storage, and inter-server communication
 - Horizontal scaling by adding more server instances
+
+## Related Documentation
+
+| Topic                       | Guide                                             | Diátaxis Type        |
+| --------------------------- | ------------------------------------------------- | -------------------- |
+| First-time setup            | [Getting Started](./getting-started.md)           | Tutorial             |
+| Directory layout            | [Project Structure](./project-structure.md)       | Reference            |
+| tRPC and REST               | [API Design](./api-design.md)                     | How-to / Reference   |
+| Drizzle ORM                 | [Data Layer](./data-layer.md)                     | How-to / Reference   |
+| SSR pipeline                | [Rendering](./rendering.md)                       | How-to / Explanation |
+| HTML streaming              | [Streaming](./streaming.md)                       | How-to / Explanation |
+| Piscina + SharedArrayBuffer | [Worker Communication](./worker-communication.md) | How-to / Explanation |
+| Sessions and cookies        | [Sessions](./sessions.md)                         | How-to / Reference   |
+| Defense-in-depth            | [Security](./security.md)                         | Reference            |
+| Hooks and guards            | [Middleware](./middleware.md)                     | How-to / Reference   |
+| Errors and boundaries       | [Error Handling](./error-handling.md)             | How-to / Reference   |
+| Nitro comparisons           | [Nitro Inspiration](./nitro-inspiration.md)       | Explanation          |

@@ -1,5 +1,10 @@
 # Streaming & Progressive Rendering
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/) +
+> [Explanation](https://diataxis.fr/explanation/)** — shows how to stream HTML
+> from workers, and explains the progressive rendering architecture and Qwik
+> resumability model.
+
 Scratchy streams HTML from Piscina workers to the client progressively,
 delivering a fast shell first and filling in deferred content as it resolves.
 Combined with Qwik's resumability model, the client becomes interactive with
@@ -1230,3 +1235,12 @@ const stream = new ReadableStream({
 - [Node.js Web Streams API](https://nodejs.org/api/webstreams.html)
 - [MDN Transfer-Encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Transfer-Encoding)
 - [web.dev Streaming SSR](https://web.dev/articles/streaming-ssr)
+
+## Related Documentation
+
+- [Rendering](./rendering.md) — Worker pool setup, SSR/SSG modes, data flow
+- [Worker Communication](./worker-communication.md) — SharedArrayBuffer and
+  Redis patterns for passing data to workers
+- [Data Loading](./data-loading.md) — `defer()` and streaming data with loaders
+- [Error Handling](./error-handling.md) — Error handling during streaming
+- [Architecture](./architecture.md) — Where streaming fits in the system

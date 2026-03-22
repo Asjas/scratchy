@@ -1,5 +1,10 @@
 # Error Handling
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/) +
+> [Reference](https://diataxis.fr/reference/)** — problem-oriented patterns for
+> handling errors at every layer, with reference tables for error codes and
+> error classes.
+
 Scratchy provides a layered error handling architecture that spans the full
 stack — from database errors through API responses to client-side error
 boundaries. Every layer produces structured, type-safe errors with consistent
@@ -1639,3 +1644,12 @@ async function getUser(id: string) {
 - [Pino Logger](https://getpino.io/)
 - [close-with-grace](https://github.com/fastify/close-with-grace)
 - [Node.js Error Handling Best Practices](https://nodejs.org/api/errors.html)
+
+## Related Documentation
+
+- [API Design](./api-design.md) — tRPC error codes and REST error envelopes
+- [Security](./security.md) — Error information leakage prevention
+- [Middleware](./middleware.md) — Error hooks and lifecycle
+- [Data Layer](./data-layer.md) — Database error patterns and transactions
+- [Rendering](./rendering.md) — Worker error propagation
+- [Streaming](./streaming.md) — Error handling during streaming SSR

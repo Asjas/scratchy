@@ -1,5 +1,10 @@
 # Sessions & Cookie Management
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/) +
+> [Reference](https://diataxis.fr/reference/)** — problem-oriented patterns for
+> creating cookies, configuring session storage, and managing authentication
+> flows, with reference for cookie options and session API.
+
 Scratchy provides a layered session and cookie system built on top of Fastify 5.
 Cookies handle low-level signed values; sessions build on cookies to provide
 server-side state with multiple storage backends.
@@ -1239,3 +1244,13 @@ const safe =
 - [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
 - [Node.js crypto — HMAC](https://nodejs.org/api/crypto.html#class-hmac)
 - [DragonflyDB](https://www.dragonflydb.io/)
+
+## Related Documentation
+
+- [Security](./security.md) — Authentication strategies, CSRF, and cookie
+  hardening
+- [Middleware](./middleware.md) — Session middleware and hook registration
+- [API Design](./api-design.md) — tRPC context integration with sessions
+- [Forms & Actions](./forms-and-actions.md) — Flash messages after form
+  submissions
+- [Architecture](./architecture.md) — Session and cookie management overview

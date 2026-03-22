@@ -1,5 +1,9 @@
 # Forms & Server Actions
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/)** —
+> problem-oriented, shows how to build forms with progressive enhancement,
+> validate input, and handle file uploads.
+
 Scratchy provides a **progressive enhancement-first** form system built on Qwik
 City's `routeAction$()` primitive, tRPC mutations, and Fastify multipart
 handling. Forms work without JavaScript, gain SPA-like behavior when JavaScript
@@ -1312,3 +1316,13 @@ await pipeline(file.file, createWriteStream(dest));
 - [@fastify/multipart](https://github.com/fastify/fastify-multipart)
 - [Fastify Request Validation](https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/)
 - [OWASP CSRF Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+
+## Related Documentation
+
+- [API Design](./api-design.md) — tRPC mutations as an alternative to
+  `routeAction$`
+- [Data Loading](./data-loading.md) — `routeLoader$` for pre-populating form
+  data
+- [Security](./security.md) — CSRF protection and input sanitization
+- [Sessions](./sessions.md) — Flash messages after form submissions
+- [Error Handling](./error-handling.md) — Displaying validation errors

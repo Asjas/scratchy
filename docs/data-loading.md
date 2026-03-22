@@ -1,5 +1,9 @@
 # Data Loading
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/)** —
+> problem-oriented, shows how to load data on the server, stream deferred
+> content, cache, and revalidate.
+
 Scratchy provides a layered data-loading system that runs on the server during
 SSR, streams deferred data to the client, and revalidates automatically on
 navigation. Every loader is fully type-safe end-to-end — from the database query
@@ -1248,3 +1252,15 @@ return cached(redis, `dashboard:${userId}`, () => fetchDashboard(userId), {
 - [Drizzle ORM Queries](https://orm.drizzle.team/docs/rqb)
 - [Drizzle Prepared Statements](https://orm.drizzle.team/docs/perf-queries)
 - [HTTP Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control)
+
+## Related Documentation
+
+- [API Design](./api-design.md) — tRPC router structure and REST endpoints
+- [Data Layer](./data-layer.md) — Drizzle schemas, queries, and prepared
+  statements
+- [Forms & Actions](./forms-and-actions.md) — `routeAction$` for write
+  operations
+- [Streaming](./streaming.md) — Progressive rendering with `defer()` and
+  `<Await>`
+- [Error Handling](./error-handling.md) — Error handling in loaders
+- [Middleware](./middleware.md) — `onRequest` guards that run before loaders

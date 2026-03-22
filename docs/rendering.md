@@ -1,5 +1,22 @@
 # Rendering Pipeline
 
+> **Diátaxis type: [How-to Guide](https://diataxis.fr/how-to-guides/) +
+> [Explanation](https://diataxis.fr/explanation/)** — shows how to configure the
+> SSR/SSG worker pipeline, and explains why rendering is offloaded to Worker
+> Threads.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Rendering Modes](#rendering-modes)
+- [Architecture](#architecture)
+- [Data Flow for SSR](#data-flow-for-ssr)
+- [Qwik Resumability](#qwik-resumability)
+- [Performance Considerations](#performance-considerations)
+- [Related Documentation](#related-documentation)
+
+---
+
 ## Overview
 
 Scratchy uses a **Worker Thread-based rendering pipeline** for both Server-Side
@@ -340,10 +357,11 @@ Track these metrics for the rendering pipeline:
 
 ## Related Documentation
 
-- [streaming.md](streaming.md) — Streaming SSR, progressive rendering,
+- [Streaming](./streaming.md) — Streaming SSR, progressive rendering,
   defer/Await
-- [data-loading.md](data-loading.md) — routeLoader$, caching, revalidation
-- [error-handling.md](error-handling.md) — Error handling in workers and
+- [Data Loading](./data-loading.md) — routeLoader$, caching, revalidation
+- [Error Handling](./error-handling.md) — Error handling in workers and
   rendering
-- [worker-communication.md](worker-communication.md) — SharedArrayBuffer and
+- [Worker Communication](./worker-communication.md) — SharedArrayBuffer and
   Redis patterns
+- [Architecture](./architecture.md) — Why Worker Threads for rendering
