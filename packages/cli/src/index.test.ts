@@ -521,6 +521,84 @@ describe("renderTemplate (plugin.ts.hbs)", () => {
 // File path conventions (kebab-case)
 // ---------------------------------------------------------------------------
 
+describe("renderTemplate (migration.sql.hbs)", () => {
+  beforeEach(() => {
+    clearTemplateCache();
+  });
+
+  it("renders a migration with name and timestamp header", () => {
+    const content = renderTemplate("migration.sql.hbs", {
+      name: "add_role_to_users",
+      timestamp: "20260101120000",
+    });
+
+    expect(content).toContain("Migration: add_role_to_users");
+    expect(content).toContain("Generated: 20260101120000");
+    expect(content).toContain("drizzle-kit generate");
+  });
+});
+
+describe("renderTemplate (seed.ts.hbs)", () => {
+  beforeEach(() => {
+    clearTemplateCache();
+  });
+
+  it("renders a generic seed file without a model", () => {
+    const content = renderTemplate("seed.ts.hbs", {
+      pascalName: "InitialData",
+      camelName: "initialData",
+      kebabName: "initial-data",
+      model: "",
+      modelPascalName: "",
+      modelCamelName: "",
+      modelKebabName: "",
+    });
+
+    expect(content).toContain("seedInitialData");
+    expect(content).toContain("~/db/index.js");
+    expect(content).toContain("process.exit(0)");
+    expect(content).toContain("pathToFileURL");
+    expect(content).toContain("import.meta.url");
+  });
+
+  it("renders a seed file with a model import", () => {
+    const content = renderTemplate("seed.ts.hbs", {
+      pascalName: "Users",
+      camelName: "users",
+      kebabName: "users",
+      model: "User",
+      modelPascalName: "User",
+      modelCamelName: "user",
+      modelKebabName: "user",
+    });
+
+    expect(content).toContain("seedUsers");
+    expect(content).toContain('import { user } from "~/db/schema/user.js"');
+    expect(content).toContain("ulid");
+    expect(content).toContain("db.insert(user)");
+  });
+});
+
+describe("renderTemplate (test.ts.hbs)", () => {
+  beforeEach(() => {
+    clearTemplateCache();
+  });
+
+  it("renders a Vitest test scaffold", () => {
+    const content = renderTemplate("test.ts.hbs", {
+      name: "queries",
+    });
+
+    expect(content).toContain('from "vitest"');
+    expect(content).toContain('describe("queries"');
+    expect(content).toContain("expect(true).toBe(true)");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// File path conventions (kebab-case)
+// ---------------------------------------------------------------------------
+
 describe("file path conventions", () => {
   it("model names use kebab-case for file paths", () => {
     const kebabName = toKebabCase("BlogPost");
@@ -548,5 +626,23 @@ describe("file path conventions", () => {
     expect(`src/client/components/qwik/${kebabName}.tsx`).toBe(
       "src/client/components/qwik/user-card.tsx",
     );
+  });
+
+  it("migration files use timestamp prefix and snake_case name", () => {
+    const kebabName = toKebabCase("AddRoleToUsers").replace(/-/g, "_");
+    const timestamp = "20260101120000";
+    expect(`src/db/migrations/${timestamp}_${kebabName}.sql`).toBe(
+      "src/db/migrations/20260101120000_add_role_to_users.sql",
+    );
+  });
+
+  it("seed files use kebab-case", () => {
+    const kebabName = toKebabCase("Users");
+    expect(`src/db/seeds/${kebabName}.ts`).toBe("src/db/seeds/users.ts");
+  });
+
+  it("test files use kebab-case and .test.ts extension", () => {
+    const path = "routers/posts/queries";
+    expect(`src/${path}.test.ts`).toBe("src/routers/posts/queries.test.ts");
   });
 });
