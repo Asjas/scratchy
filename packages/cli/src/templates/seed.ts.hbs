@@ -1,0 +1,29 @@
+import { db } from "~/db/index.js";
+{{#if model}}
+import { {{camelName}} } from "~/db/schema/{{kebabName}}.js";
+import { ulid } from "ulid";
+{{/if}}
+
+/**
+ * Seed the database with {{pascalName}} records.
+ * Run directly: node --env-file=.env src/db/seeds/{{kebabName}}.ts
+ */
+export async function seed{{pascalName}}() {
+{{#if model}}
+  await db.insert({{camelName}}).values([
+    {
+      id: ulid(),
+      // TODO: fill in seed data
+    },
+  ]);
+{{else}}
+  // TODO: add seed logic here
+{{/if}}
+  console.log("✓ {{pascalName}} seeded");
+}
+
+// Allow running this file directly
+if (process.argv[1] === new URL(import.meta.url).pathname) {
+  await seed{{pascalName}}();
+  process.exit(0);
+}

@@ -788,9 +788,9 @@ These apply to every phase and should be addressed continuously:
 These are explicitly **out of scope** for the initial implementation but should
 be planned for:
 
-- [ ] Authentication plugin (Better Auth integration)
-- [ ] `make:migration`, `make:seed`, `make:test` CLI commands
-- [ ] `db:seed`, `db:fresh`, `routes:list`, `cache:clear` CLI commands
+- [x] Authentication plugin (Better Auth integration)
+- [x] `make:migration`, `make:seed`, `make:test` CLI commands
+- [x] `db:seed`, `db:fresh`, `routes:list`, `cache:clear` CLI commands
 - [ ] OpenAPI/Swagger documentation generation for REST endpoints
 - [ ] SSG build-time pre-rendering pipeline
 - [ ] Streaming SSR (send HTML chunks as they render)
