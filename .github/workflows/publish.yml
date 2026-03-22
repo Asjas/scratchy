@@ -16,6 +16,12 @@ permissions:
   # on npmjs.com (https://docs.npmjs.com/trusted-publishers).
   id-token: write
 
+# Only allow one publish run at a time. A second push while a run is in
+# progress will wait (not cancel) so no release is silently dropped.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -66,12 +72,19 @@ jobs:
             echo "  ${name} → ${CALVER_VERSION}"
           done
 
-      - name: 🏷️ Commit version bump
+      - name: 🏷️ Commit version bump & push to main
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add packages/*/package.json
           git commit -m "chore: release v${{ steps.calver.outputs.version }} [skip ci]"
+          # Pull --rebase first so that a concurrent workflow run on the same push
+          # doesn't cause a non-fast-forward rejection. The tag is created after the
+          # rebase so it points to the correct (post-rebase) commit.
+          git pull --rebase origin main
+          git tag "v${{ steps.calver.outputs.version }}" \
+            -m "Release v${{ steps.calver.outputs.version }} (CalVer)"
+          git push origin HEAD:main --follow-tags
 
       - name: 🚀 Publish all packages to npm
         # npm exchanges the GitHub OIDC token for a short-lived publish token
@@ -92,13 +105,3 @@ jobs:
             echo "→ Publishing ${name}..."
             (cd "${pkg_dir}" && npm publish --provenance --tag latest)
           done
-
-      - name: ⬆️ Push version commit + tag to main
-        # Pull --rebase first so that a concurrent workflow run on the same push
-        # doesn't cause a non-fast-forward rejection. The tag is created after the
-        # rebase so it points to the correct (post-rebase) commit.
-        run: |
-          git pull --rebase origin main
-          git tag "v${{ steps.calver.outputs.version }}" \
-            -m "Release v${{ steps.calver.outputs.version }} (CalVer)"
-          git push origin HEAD:main --follow-tags
