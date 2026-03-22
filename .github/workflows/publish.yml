@@ -120,15 +120,34 @@ jobs:
             --prepend CHANGELOG.md
 
       - name: 🏷️ Fold CHANGELOG.md into release commit, tag & push
+        env:
+          CALVER_VERSION: ${{ steps.calver.outputs.version }}
         run: |
+          set -x
+          trap 'status=$?; echo "Fold step failed with exit code ${status} at command: ${BASH_COMMAND}"; git status --short; git rev-parse HEAD; git log --oneline --decorate -n 10; git tag --list "v${CALVER_VERSION}"; git ls-remote --heads origin main; git ls-remote --tags origin "refs/tags/v${CALVER_VERSION}" || true; exit ${status}' ERR
+
+          # Print local and remote git state before mutating history so push/tag
+          # failures can be diagnosed from the workflow log.
+          git status --short
+          git rev-parse HEAD
+          git log --oneline --decorate -n 5
+          git tag --list "v${CALVER_VERSION}"
+          git ls-remote --heads origin main
+          git ls-remote --tags origin "refs/tags/v${CALVER_VERSION}" || true
+
           # Amend the release commit to include CHANGELOG.md so the tag
           # points to a single atomic commit containing both the version
           # bump and the updated changelog.
           git add CHANGELOG.md
           git commit --amend --no-edit
-          git tag "v${{ steps.calver.outputs.version }}" \
-            -m "Release v${{ steps.calver.outputs.version }} (CalVer)"
-          git push origin HEAD:main --follow-tags
+          git rev-parse HEAD
+          git log --oneline --decorate -n 5
+
+          git tag "v${CALVER_VERSION}" \
+            -m "Release v${CALVER_VERSION} (CalVer)"
+          git show-ref --tags "v${CALVER_VERSION}"
+
+          git push --verbose origin HEAD:main --follow-tags
 
       - name: 🚀 Publish all packages to npm
         # npm exchanges the GitHub OIDC token for a short-lived publish token
