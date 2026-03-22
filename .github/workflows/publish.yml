@@ -1,0 +1,106 @@
+name: Publish @scratchyjs/* packages
+
+# Runs on every merge to main.
+# Use workflow_dispatch for a manual one-off release.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  # Push the CalVer version-bump commit and annotated git tag back to main.
+  contents: write
+  # Required for both npm OIDC trusted publishing and SLSA provenance attestation.
+  # No NPM_TOKEN secret is needed — npm exchanges this OIDC token for a short-lived
+  # publish token automatically when the package is configured as a trusted publisher
+  # on npmjs.com (https://docs.npmjs.com/trusted-publishers).
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # full history so the tag push doesn't fail
+
+      - name: 📦 Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: ⎔ Set up Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+          scope: "@scratchyjs"
+          cache: pnpm
+
+      - name: 🔧 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Test & build
+        run: |
+          pnpm test
+          pnpm build
+
+      - name: 🔖 Generate CalVer version (YY.MM.DD-millis)
+        id: calver
+        run: |
+          YY=$(date -u +%y)
+          MM=$(date -u +%m)
+          DD=$(date -u +%d)
+          MILLIS=$(date -u +%s%3N) # GNU date only — fine on ubuntu-latest
+          VERSION="${YY}.${MM}.${DD}-${MILLIS}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "CalVer: ${VERSION}"
+
+      - name: ✏️ Bump version in all package manifests
+        env:
+          CALVER_VERSION: ${{ steps.calver.outputs.version }}
+        run: |
+          for pkg_json in packages/*/package.json; do
+            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${CALVER_VERSION}\"/" "${pkg_json}"
+            name=$(node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('${pkg_json}','utf8')).name)")
+            echo "  ${name} → ${CALVER_VERSION}"
+          done
+
+      - name: 🏷️ Commit version bump
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/*/package.json
+          git commit -m "chore: release v${{ steps.calver.outputs.version }} [skip ci]"
+
+      - name: 🚀 Publish all packages to npm
+        # npm exchanges the GitHub OIDC token for a short-lived publish token
+        # automatically when --provenance is set and the package is configured as a
+        # trusted publisher on npmjs.com. No NODE_AUTH_TOKEN secret is required.
+        # One-time setup per package on npmjs.com:
+        #   Package settings → Publishing → Trusted publishers → Add publisher
+        #   Provider: GitHub Actions
+        #   Repository: Asjas/scratchyjs
+        #   Workflow: publish.yml
+        run: |
+          for pkg_dir in packages/*/; do
+            pkg_json="${pkg_dir}package.json"
+            [ -f "${pkg_json}" ] || continue
+            is_private=$(node -e "process.stdout.write(String(!!JSON.parse(require('fs').readFileSync('${pkg_json}','utf8')).private))")
+            [ "${is_private}" = "true" ] && continue
+            name=$(node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('${pkg_json}','utf8')).name)")
+            echo "→ Publishing ${name}..."
+            (cd "${pkg_dir}" && npm publish --provenance --tag latest)
+          done
+
+      - name: ⬆️ Push version commit + tag to main
+        # Pull --rebase first so that a concurrent workflow run on the same push
+        # doesn't cause a non-fast-forward rejection. The tag is created after the
+        # rebase so it points to the correct (post-rebase) commit.
+        run: |
+          git pull --rebase origin main
+          git tag "v${{ steps.calver.outputs.version }}" \
+            -m "Release v${{ steps.calver.outputs.version }} (CalVer)"
+          git push origin HEAD:main --follow-tags
