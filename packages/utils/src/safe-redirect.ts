@@ -5,6 +5,11 @@ const DEFAULT_REDIRECT = "/";
  * when it is a pathname within the same application – i.e. it starts with
  * `/` but not `//` or `/\`, and does not contain `..`.
  *
+ * The candidate path is URL-decoded before all safety checks so that
+ * percent-encoded bypass attempts (e.g. `%2e%2e`, `%2F%2F`) are caught.
+ * If decoding fails (malformed percent-encoding), the default redirect is
+ * returned immediately.
+ *
  * Use this whenever the redirect destination comes from user-supplied input
  * (e.g. a `redirectTo` query-string parameter) to prevent open-redirect
  * vulnerabilities.
@@ -24,7 +29,16 @@ export function safeRedirect(
 ): string {
   if (!to || typeof to !== "string") return defaultRedirect;
 
-  const trimmed = to.trim();
+  // Decode percent-encoded characters before validation so that bypass
+  // attempts like "%2e%2e" or "%2F%2F" are caught by the checks below.
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(to);
+  } catch {
+    return defaultRedirect;
+  }
+
+  const trimmed = decoded.trim();
 
   if (
     !trimmed.startsWith("/") ||

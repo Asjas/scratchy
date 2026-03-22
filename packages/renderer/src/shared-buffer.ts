@@ -148,7 +148,17 @@ export function readFromBuffer<T = unknown>(
   }
   const decoder = new TextDecoder();
   const json = decoder.decode(shared.data.subarray(0, length));
-  const payload = JSON.parse(json) as T;
+
+  let payload: T;
+  try {
+    payload = JSON.parse(json) as T;
+  } catch (err) {
+    Atomics.store(shared.status, 0, BufferStatus.ERROR);
+    Atomics.notify(shared.status, 0);
+    throw new SyntaxError(
+      `Failed to parse JSON payload from shared buffer: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
 
   Atomics.store(shared.status, 0, BufferStatus.CONSUMED);
   Atomics.notify(shared.status, 0);
