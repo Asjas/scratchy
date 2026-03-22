@@ -90,8 +90,9 @@ jobs:
       # git-cliff runs AFTER the rebase so the generated release notes and
       # CHANGELOG.md entry cover exactly the commits that will be tagged —
       # including any that landed on main during this workflow run.
-      # orhun/git-cliff-action also installs git-cliff into PATH, which is used
-      # by the CHANGELOG update step below.
+      # orhun/git-cliff-action installs git-cliff under $RUNNER_TEMP for the
+      # current job. Later shell steps should invoke that binary explicitly
+      # rather than assuming it is available on PATH.
       - name: 📋 Generate release notes
         id: git-cliff
         uses: orhun/git-cliff-action@v4
@@ -110,7 +111,9 @@ jobs:
         env:
           CALVER_VERSION: ${{ steps.calver.outputs.version }}
         run: |
-          git-cliff \
+          GIT_CLIFF_BIN="${RUNNER_TEMP}/git-cliff/bin/git-cliff"
+          test -x "${GIT_CLIFF_BIN}"
+          "${GIT_CLIFF_BIN}" \
             --config cliff.toml \
             --unreleased \
             --tag "v${CALVER_VERSION}" \
