@@ -20,6 +20,8 @@
   },
   "exclude": [
     "**/node_modules",
+    "cypress/**",
+    "cypress.config.ts",
     "examples/*/src/client",
     "examples/*/vite.config.ts",
     "examples/*/drizzle.config.ts"
