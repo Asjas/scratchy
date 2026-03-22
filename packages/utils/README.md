@@ -72,9 +72,10 @@ for await (const _ of interval(1000, { signal: controller.signal })) {
 }
 ```
 
-### `redirectBack(request, fallback?): string`
+### `redirectBack(request, options?): string`
 
-Returns the `Referer` header value, or `fallback` (`"/"`) when absent.
+Returns a safe path based on the `Referer` header, normalizing absolute http(s)
+URLs to a relative path, or `options.fallback` (`"/"` by default) when absent.
 
 ### `getClientIPAddress(request): string | null`
 
