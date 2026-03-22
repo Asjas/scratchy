@@ -296,12 +296,13 @@ docs/
 
 Deployment uses Cloudflare Workers Static Assets (`wrangler.toml` at repo root).
 
-**Preview URL discovery:** This repository does not configure `preview-{pr}.scratchyjs.com`
-routes or DNS records. When a PR touches `docs/**` or `CHANGELOG.md`, CI deploys a
-named Worker for that PR. Cloudflare exposes it on a `workers.dev` subdomain derived
-from the Worker name and account (for example, `https://<worker-name>.<account>.workers.dev`).
-The exact preview URL is shown in the GitHub Actions "Deploy docs preview" job summary
-and in the Cloudflare Workers dashboard for the corresponding Worker.
+**Preview URL discovery:** This repository does not configure
+`preview-{pr}.scratchyjs.com` routes or DNS records. When a PR touches `docs/**`
+or `CHANGELOG.md`, CI deploys a named Worker for that PR. Cloudflare exposes it
+on a `workers.dev` subdomain derived from the Worker name and account (for
+example, `https://<worker-name>.<account>.workers.dev`). The exact preview URL
+is shown in the GitHub Actions "Deploy docs preview" job summary and in the
+Cloudflare Workers dashboard for the corresponding Worker.
 
 ### Required GitHub Secrets
 
