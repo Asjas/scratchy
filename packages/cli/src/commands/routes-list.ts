@@ -77,12 +77,12 @@ function extractMethods(source: string): HttpMethod[] {
  */
 function extractTrpcProcedures(source: string): string[] {
   const found: string[] = [];
-  // Match exported const keys at the top level of an object
+  // Match exported procedure keys in an object, tolerant of indentation and quoted keys
   const pattern =
-    /^\s{2}(\w+):\s+(?:publicProcedure|protectedProcedure|t\.procedure)/gm;
+    /^\s*(?:(["'`])([^"'`]+)\1|(\w+))\s*:\s+(?:publicProcedure|protectedProcedure|t\.procedure)/gm;
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(source)) !== null) {
-    const proc = match[1];
+    const proc = match[2] ?? match[3];
     if (proc !== undefined) {
       found.push(proc);
     }
