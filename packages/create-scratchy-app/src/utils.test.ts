@@ -10,11 +10,20 @@ import {
   replaceInFile,
   resolveProjectDir,
 } from "./utils.js";
+import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("node:child_process", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:child_process")>();
+  return {
+    ...actual,
+    execSync: vi.fn(actual.execSync),
+  };
+});
 
 // ---------------------------------------------------------------------------
 // detectPackageManager
@@ -373,6 +382,7 @@ describe("initGit", () => {
 
 describe("installDeps", () => {
   let testDir: string;
+  const execSyncMock = vi.mocked(execSync);
 
   beforeEach(async () => {
     testDir = join(
@@ -380,6 +390,7 @@ describe("installDeps", () => {
       `scratchy-deps-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     );
     await mkdir(testDir, { recursive: true });
+    execSyncMock.mockReset();
   });
 
   afterEach(async () => {
@@ -387,33 +398,40 @@ describe("installDeps", () => {
   });
 
   it("returns false for a non-existent directory", () => {
+    execSyncMock.mockImplementation(() => {
+      throw new Error("ENOENT");
+    });
+
     const result = installDeps(join(testDir, "does-not-exist"), "pnpm");
     expect(result).toBe(false);
   });
 
   it("returns a boolean without throwing", () => {
-    // Without a valid package.json, the install will fail, but it should
-    // still return false rather than throwing.
+    execSyncMock.mockImplementation(() => {
+      throw new Error("No package.json");
+    });
+
     const result = installDeps(testDir, "pnpm");
     expect(typeof result).toBe("boolean");
   });
 
   it("returns false when install fails (no package.json)", () => {
-    // A directory with no package.json should cause install to fail
+    execSyncMock.mockImplementation(() => {
+      throw new Error("No package.json");
+    });
+
     const result = installDeps(testDir, "npm");
     expect(result).toBe(false);
   });
 
-  it("uses the correct package manager command", async () => {
-    // Create a minimal valid package.json
-    await writeFile(
-      join(testDir, "package.json"),
-      JSON.stringify({ name: "test", version: "1.0.0" }),
-    );
+  it("uses the correct package manager command", () => {
+    execSyncMock.mockReturnValue(Buffer.from(""));
 
-    // npm install should work even with an empty package.json
     const result = installDeps(testDir, "npm");
-    // npm install with a valid package.json should succeed
-    expect(typeof result).toBe("boolean");
+    expect(result).toBe(true);
+    expect(execSyncMock).toHaveBeenCalledWith("npm install", {
+      cwd: testDir,
+      stdio: "inherit",
+    });
   });
 });
