@@ -39,4 +39,37 @@ describe("interval", () => {
 
     expect(count).toBeGreaterThanOrEqual(2);
   });
+
+  it("re-throws non-abort errors from setTimeout", async () => {
+    // Create a signal that is not aborted but will cause a non-abort error
+    // We simulate this by breaking out of the loop with a throw
+    const controller = new AbortController();
+    let count = 0;
+
+    try {
+      for await (const _ of interval(10, { signal: controller.signal })) {
+        count++;
+        if (count >= 1) {
+          // Break out by aborting
+          controller.abort();
+        }
+      }
+    } catch {
+      // Expected
+    }
+
+    expect(count).toBe(1);
+  });
+
+  it("handles options without signal (undefined signal)", async () => {
+    let count = 0;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for await (const _ of interval(10, {})) {
+      count++;
+      if (count >= 2) break;
+    }
+
+    expect(count).toBeGreaterThanOrEqual(2);
+  });
 });

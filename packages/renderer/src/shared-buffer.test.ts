@@ -138,3 +138,97 @@ describe("BufferStatus", () => {
     expect(BufferStatus.ERROR).toBe(3);
   });
 });
+
+describe("readFromBuffer edge cases", () => {
+  it("should throw RangeError for invalid data length (negative)", () => {
+    const shared = createSharedBuffer(1024);
+
+    // Write valid data first to get to DATA_READY state
+    writeToBuffer(shared, { test: true });
+
+    // Corrupt the data length to be negative
+    Atomics.store(shared.dataLength, 0, -1);
+
+    expect(() => readFromBuffer(shared)).toThrow(RangeError);
+    expect(() => readFromBuffer(shared)).not.toThrow(SyntaxError);
+
+    // After the error, the buffer should be in ERROR state
+    expect(Atomics.load(shared.status, 0)).toBe(BufferStatus.ERROR);
+  });
+
+  it("should throw RangeError for data length exceeding buffer capacity", () => {
+    const shared = createSharedBuffer(100);
+
+    // Set up DATA_READY with oversized length
+    Atomics.store(shared.status, 0, BufferStatus.DATA_READY);
+    Atomics.store(shared.dataLength, 0, 200); // exceeds 100 byte capacity
+
+    expect(() => readFromBuffer(shared)).toThrow(RangeError);
+    expect(Atomics.load(shared.status, 0)).toBe(BufferStatus.ERROR);
+  });
+
+  it("should throw on timeout when no data is written", () => {
+    const shared = createSharedBuffer(1024);
+
+    // Buffer is in IDLE state, set a very short timeout
+    expect(() => readFromBuffer(shared, 1)).toThrow(/Timed out/);
+  });
+
+  it("should allow writing after error state is manually reset to IDLE", () => {
+    const shared = createSharedBuffer(4096);
+
+    // Put buffer in error state
+    Atomics.store(shared.status, 0, BufferStatus.ERROR);
+
+    // Manually reset to IDLE (simulating error recovery)
+    Atomics.store(shared.status, 0, BufferStatus.IDLE);
+
+    // Should be able to write again
+    writeToBuffer(shared, { recovered: true });
+    const result = readFromBuffer(shared);
+    expect(result).toEqual({ recovered: true });
+  });
+
+  it("should handle writing to a CONSUMED buffer (normal flow)", () => {
+    const shared = createSharedBuffer(4096);
+
+    // First write + read cycle
+    writeToBuffer(shared, { cycle: 1 });
+    const first = readFromBuffer(shared);
+    expect(first).toEqual({ cycle: 1 });
+    expect(Atomics.load(shared.status, 0)).toBe(BufferStatus.CONSUMED);
+
+    // Second write + read cycle (writing to CONSUMED buffer is allowed)
+    writeToBuffer(shared, { cycle: 2 });
+    const second = readFromBuffer(shared);
+    expect(second).toEqual({ cycle: 2 });
+  });
+
+  it("should handle empty object payload", () => {
+    const shared = createSharedBuffer(1024);
+    writeToBuffer(shared, {});
+    const result = readFromBuffer(shared);
+    expect(result).toEqual({});
+  });
+
+  it("should handle null payload", () => {
+    const shared = createSharedBuffer(1024);
+    writeToBuffer(shared, null);
+    const result = readFromBuffer(shared);
+    expect(result).toBeNull();
+  });
+
+  it("should handle boolean payload", () => {
+    const shared = createSharedBuffer(1024);
+    writeToBuffer(shared, true);
+    const result = readFromBuffer<boolean>(shared);
+    expect(result).toBe(true);
+  });
+
+  it("should handle number payload", () => {
+    const shared = createSharedBuffer(1024);
+    writeToBuffer(shared, 42);
+    const result = readFromBuffer<number>(shared);
+    expect(result).toBe(42);
+  });
+});

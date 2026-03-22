@@ -55,4 +55,43 @@ describe("getClientLocales", () => {
     expect(locales?.length).toBeGreaterThanOrEqual(2);
     expect(locales?.[0]).toBe("en-US");
   });
+
+  it("handles array-type accept-language header", () => {
+    const locales = getClientLocales(
+      req({ "accept-language": ["en-US", "fr-FR;q=0.8"] }),
+    );
+    expect(locales).toBeDefined();
+    expect(locales).toContain("en-US");
+  });
+
+  it("filters out entries with quality <= 0", () => {
+    const locales = getClientLocales(
+      req({ "accept-language": "en-US;q=0, fr-FR" }),
+    );
+    expect(locales).toBeDefined();
+    expect(locales).not.toContain("en-US");
+    expect(locales).toContain("fr-FR");
+  });
+
+  it("filters out entries with quality > 1", () => {
+    const locales = getClientLocales(
+      req({ "accept-language": "en-US;q=1.5, fr-FR" }),
+    );
+    expect(locales).toBeDefined();
+    expect(locales).not.toContain("en-US");
+    expect(locales).toContain("fr-FR");
+  });
+
+  it("filters out entries with non-numeric quality", () => {
+    const locales = getClientLocales(
+      req({ "accept-language": "en-US;q=abc, fr-FR" }),
+    );
+    expect(locales).toBeDefined();
+    expect(locales).not.toContain("en-US");
+    expect(locales).toContain("fr-FR");
+  });
+
+  it("returns undefined for empty accept-language header", () => {
+    expect(getClientLocales(req({ "accept-language": "" }))).toBeUndefined();
+  });
 });
