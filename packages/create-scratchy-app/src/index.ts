@@ -355,9 +355,8 @@ async function stripDatabaseFiles(dir: string): Promise<void> {
   ]);
 
   // Remove db-related blocks from server.ts using sentinel comments
-  await removeFeatureBlock(join(dir, "src", "server.ts"), "db");
-  // Auth blocks also depend on db, strip them too
-  await removeFeatureBlock(join(dir, "src", "server.ts"), "auth");
+  // Also strip auth blocks since auth depends on db
+  await removeFeatureBlocks(join(dir, "src", "server.ts"), ["db", "auth"]);
 }
 
 async function stripAuthFiles(dir: string): Promise<void> {
@@ -390,7 +389,7 @@ async function stripAuthFiles(dir: string): Promise<void> {
   }
 
   // Remove auth blocks from server.ts using sentinel comments
-  await removeFeatureBlock(join(dir, "src", "server.ts"), "auth");
+  await removeFeatureBlocks(join(dir, "src", "server.ts"), ["auth"]);
 }
 
 async function stripRendererFiles(dir: string): Promise<void> {
@@ -403,7 +402,7 @@ async function stripRendererFiles(dir: string): Promise<void> {
   }
 
   // Remove renderer blocks from server.ts using sentinel comments
-  await removeFeatureBlock(join(dir, "src", "server.ts"), "renderer");
+  await removeFeatureBlocks(join(dir, "src", "server.ts"), ["renderer"]);
 }
 
 async function stripEnvSection(envFile: string, keys: string[]): Promise<void> {
@@ -421,35 +420,74 @@ async function stripEnvSection(envFile: string, keys: string[]): Promise<void> {
 
 /**
  * Removes lines between `// @scratchy-feature <name>-start` and
- * `// @scratchy-feature <name>-end` sentinel comments (inclusive).
- * This approach removes well-delimited blocks instead of fragile
- * line-by-line substring matching, keeping the generated TypeScript valid.
+ * `// @scratchy-feature <name>-end` sentinel comments (inclusive), as well as
+ * import lines for feature-specific packages.
+ *
+ * Block sentinels handle multi-line code sections. Import lines are matched
+ * by package name patterns since prettier's import sorting may reorder them
+ * across sentinel blocks.
+ *
+ * Performs a single file read/write pass for all features.
  */
-async function removeFeatureBlock(
+async function removeFeatureBlocks(
   filePath: string,
-  feature: string,
+  features: string[],
 ): Promise<void> {
   if (!existsSync(filePath)) return;
 
   const content = await readFile(filePath, "utf8");
-  const startTag = `// @scratchy-feature ${feature}-start`;
-  const endTag = `// @scratchy-feature ${feature}-end`;
+
+  // Build sets for block sentinel tags
+  const startTags = new Set<string>();
+  const endTags = new Set<string>();
+  for (const feature of features) {
+    startTags.add(`// @scratchy-feature ${feature}-start`);
+    endTags.add(`// @scratchy-feature ${feature}-end`);
+  }
+
+  // Import patterns to strip per feature (unique package/module names)
+  const importPatterns: string[] = [];
+  for (const feature of features) {
+    if (feature === "db") {
+      importPatterns.push("@scratchyjs/drizzle");
+      importPatterns.push("~/db/schema/index.js");
+    } else if (feature === "auth") {
+      importPatterns.push("@scratchyjs/auth");
+      importPatterns.push("~/auth.js");
+    } else if (feature === "renderer") {
+      importPatterns.push("@scratchyjs/renderer");
+    }
+  }
+
   const lines = content.split("\n");
   const result: string[] = [];
   let skipping = false;
 
   for (const line of lines) {
-    if (line.trim() === startTag) {
+    const trimmed = line.trim();
+
+    // Handle block sentinel start
+    if (startTags.has(trimmed)) {
       skipping = true;
       continue;
     }
-    if (line.trim() === endTag) {
+    // Handle block sentinel end
+    if (endTags.has(trimmed)) {
       skipping = false;
       continue;
     }
-    if (!skipping) {
-      result.push(line);
+    // Skip lines inside a block sentinel
+    if (skipping) continue;
+
+    // Remove import lines matching feature-specific packages
+    if (
+      trimmed.startsWith("import ") &&
+      importPatterns.some((pattern) => line.includes(pattern))
+    ) {
+      continue;
     }
+
+    result.push(line);
   }
 
   await writeFile(filePath, result.join("\n"), "utf8");

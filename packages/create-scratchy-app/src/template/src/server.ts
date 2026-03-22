@@ -1,18 +1,11 @@
 import { createServer } from "@scratchyjs/core";
-// @scratchy-feature renderer-start
 import { createSSRHandler } from "@scratchyjs/renderer";
-// @scratchy-feature renderer-end
 import type { AnyRouter } from "@trpc/server";
-// @scratchy-feature renderer-start
 import { resolve } from "node:path";
 import type { AppConfig } from "~/config.js";
 import { loadAppConfig } from "~/config.js";
-// @scratchy-feature db-start
 import * as dbSchemas from "~/db/schema/index.js";
-// @scratchy-feature db-end
 import { appRouter } from "~/routers/index.js";
-
-// @scratchy-feature renderer-end
 
 export interface ServerOpts {
   /** Pre-loaded application config. Falls back to `loadAppConfig()` if omitted. */
@@ -76,7 +69,7 @@ export async function buildServer(opts: ServerOpts = {}) {
   if (!shouldRegisterDb && effectiveRouter === appRouter) {
     throw new Error(
       "Default appRouter requires a database, but DATABASE_URL is unset or skipDb is true. " +
-        "Either configure DATABASE_URL / disable skipDb, or pass a custom router via ServerOpts.router.",
+        "Either set DATABASE_URL and ensure skipDb is false, or pass a custom router via ServerOpts.router.",
     );
   }
   // @scratchy-feature db-end
