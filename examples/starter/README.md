@@ -82,7 +82,7 @@ The server starts on `http://localhost:3000`.
 | POST   | `/api/auth/sign-up/email` | Register a new user (Better Auth)         |
 | POST   | `/api/auth/sign-in/email` | Sign in with email and password           |
 | POST   | `/api/auth/sign-out`      | Sign out the current user                 |
-| GET    | `/api/auth/session`       | Get the current session                   |
+| GET    | `/api/auth/get-session`   | Get the current session                   |
 | GET    | `/trpc/posts.list`        | List posts (tRPC query)                   |
 | POST   | `/trpc/posts.create`      | Create a post (tRPC mutation)             |
 | GET    | `/trpc/posts.getById`     | Get a post by ID (tRPC query)             |
