@@ -79,7 +79,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add packages/*/package.json
-          git commit -m "chore: release v${{ steps.calver.outputs.version }} [skip ci]"
+          HUSKY=0 git commit -m "chore: release v${{ steps.calver.outputs.version }} [skip ci]"
           # Rebase onto main so the final tagged commit includes any concurrent
           # merges. Use -X theirs so that if an earlier publish run already landed
           # a version bump on main, conflicts in package.json are resolved by
@@ -139,7 +139,7 @@ jobs:
           # points to a single atomic commit containing both the version
           # bump and the updated changelog.
           git add CHANGELOG.md
-          git commit --amend --no-edit
+          HUSKY=0 git commit --amend --no-edit
           git rev-parse HEAD
           git log --oneline --decorate -n 5
 
