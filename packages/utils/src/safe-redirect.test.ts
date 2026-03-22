@@ -59,4 +59,27 @@ describe("safeRedirect", () => {
     const file = new File(["content"], "test.txt");
     expect(safeRedirect(file)).toBe("/");
   });
+
+  it("returns the default redirect for a percent-encoded '..' traversal (%2e%2e)", () => {
+    expect(safeRedirect("/%2e%2e/etc/passwd")).toBe("/");
+  });
+
+  it("returns the default redirect for a mixed-case percent-encoded '..' (%2E%2E)", () => {
+    expect(safeRedirect("/%2E%2E/etc/passwd")).toBe("/");
+  });
+
+  it("returns the default redirect for a percent-encoded protocol-relative URL (%2F%2F)", () => {
+    expect(safeRedirect("%2F%2Fevil.com")).toBe("/");
+  });
+
+  it("returns the default redirect for malformed percent-encoding", () => {
+    expect(safeRedirect("/%GG/path")).toBe("/");
+  });
+
+  it("returns the default redirect for percent-encoded CR/LF characters in the path", () => {
+    expect(safeRedirect("/%0d%0aevil.com")).toBe("/");
+  });
+  it("accepts a safe path that contains percent-encoded characters (e.g. spaces)", () => {
+    expect(safeRedirect("/my%20dashboard")).toBe("/my dashboard");
+  });
 });

@@ -148,7 +148,28 @@ export function readFromBuffer<T = unknown>(
   }
   const decoder = new TextDecoder();
   const json = decoder.decode(shared.data.subarray(0, length));
-  const payload = JSON.parse(json) as T;
+
+  let payload: T;
+  try {
+    payload = JSON.parse(json) as T;
+  } catch (err) {
+    Atomics.store(shared.status, 0, BufferStatus.ERROR);
+    Atomics.notify(shared.status, 0);
+
+    if (err instanceof SyntaxError) {
+      // Preserve original SyntaxError including stack and metadata
+      throw err;
+    }
+
+    const message = `Failed to parse JSON payload from shared buffer: ${
+      err instanceof Error ? err.message : String(err)
+    }`;
+
+    // Wrap non-SyntaxError failures with a SyntaxError that keeps the original as the cause
+    throw new SyntaxError(message, {
+      cause: err instanceof Error ? err : new Error(String(err)),
+    });
+  }
 
   Atomics.store(shared.status, 0, BufferStatus.CONSUMED);
   Atomics.notify(shared.status, 0);

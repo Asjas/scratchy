@@ -103,6 +103,31 @@ describe("writeToBuffer / readFromBuffer round-trip", () => {
 
     expect(() => readFromBuffer(shared)).toThrow(/error state/);
   });
+
+  it("should throw SyntaxError and set status to ERROR when buffer contains malformed JSON", () => {
+    const encoder = new TextEncoder();
+    const invalid = encoder.encode("{not valid json}");
+
+    // First call — should throw the original SyntaxError from JSON.parse
+    const shared1 = createSharedBuffer(1024);
+    shared1.data.set(invalid);
+    Atomics.store(shared1.dataLength, 0, invalid.byteLength);
+    Atomics.store(shared1.status, 0, BufferStatus.DATA_READY);
+
+    expect(() => readFromBuffer(shared1)).toThrow(SyntaxError);
+
+    // After the parse failure, status must be ERROR so the buffer is not silently reused
+    expect(Atomics.load(shared1.status, 0)).toBe(BufferStatus.ERROR);
+
+    // Second buffer — the thrown SyntaxError contains the native JSON.parse message
+    const shared2 = createSharedBuffer(1024);
+    shared2.data.set(invalid);
+    Atomics.store(shared2.dataLength, 0, invalid.byteLength);
+    Atomics.store(shared2.status, 0, BufferStatus.DATA_READY);
+
+    // The native JSON.parse SyntaxError is rethrown directly to preserve stack/context.
+    expect(() => readFromBuffer(shared2)).toThrow(SyntaxError);
+  });
 });
 
 describe("BufferStatus", () => {

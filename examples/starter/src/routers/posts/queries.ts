@@ -11,7 +11,7 @@ const paginationInput = z.object({
 
 export const postQueries = {
   /** List posts ordered by newest first with optional pagination. */
-  list: publicProcedure.input(paginationInput).query(async ({ ctx, input }) => {
+  list: publicProcedure.input(paginationInput).query(({ ctx, input }) => {
     const { db } = ctx.request.server;
 
     return db
