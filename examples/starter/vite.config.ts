@@ -1,7 +1,12 @@
 import { createScratchyConfig } from "@scratchyjs/vite-plugin";
 import { defineConfig } from "vite";
 
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
+  if (mode === "test" || process.env.VITEST) {
+    // Keep Vitest startup lightweight and avoid Qwik City route validation.
+    return {};
+  }
+
   return createScratchyConfig({
     // Enable Tailwind CSS (requires @tailwindcss/vite to be installed)
     tailwind: true,
