@@ -61,9 +61,13 @@ describe("makeTestCommand", () => {
 
   it("should reject paths that escape src/ directory", async () => {
     const { makeTestCommand } = await import("./make-test.js");
+    const { consola } = await import("consola");
     const run = makeTestCommand.run;
     if (!run) throw new Error("run is undefined");
 
+    const errorSpy = vi
+      .spyOn(consola, "error")
+      .mockImplementation(() => undefined);
     const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit called");
     });
@@ -76,7 +80,12 @@ describe("makeTestCommand", () => {
       }),
     ).rejects.toThrow("process.exit called");
 
+    expect(errorSpy).toHaveBeenCalledOnce();
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Invalid path: "../../etc/passwd". Path must not escape the src/ directory.',
+    );
     expect(exitSpy).toHaveBeenCalledWith(1);
+    errorSpy.mockRestore();
     exitSpy.mockRestore();
   });
 
