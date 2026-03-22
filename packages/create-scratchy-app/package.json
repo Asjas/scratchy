@@ -1,6 +1,6 @@
 {
   "name": "@scratchyjs/create-scratchy-app",
-  "version": "26.3.22-1774210082544",
+  "version": "26.3.22-1774223623833",
   "description": "Create a new Scratchy application",
   "publishConfig": {
     "access": "public"
