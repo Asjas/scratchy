@@ -354,6 +354,74 @@ export default fp(async function security(fastify) {
 });
 ```
 
+### Strip internal-routing and framework headers
+
+The `@scratchyjs/core` package auto-loads a `strip-internal-headers` plugin
+that removes generic internal-routing request headers and the Fastify `server`
+response header.
+
+**Request headers stripped:** `x-internal-request`, `x-internal-token`
+**Response headers stripped:** `server` (hides `"Fastify"` from clients)
+
+```typescript
+// ✅ Already handled by @scratchyjs/core — do NOT remove the plugin
+// If you need to add more headers to strip in your application:
+import fp from "fastify-plugin";
+
+export default fp(function stripAppInternalHeaders(fastify, _opts, done) {
+  fastify.addHook("onRequest", (request, _reply, hookDone) => {
+    delete request.headers["x-my-app-internal"];
+    hookDone();
+  });
+  done();
+});
+
+// ❌ NEVER trust internal headers for auth decisions
+// if (request.headers["x-internal-request"] === "true") { /* skip auth */ }
+```
+
+### CORS production hardening
+
+Set `ALLOWED_ORIGINS` to restrict cross-origin access in production. The
+`@scratchyjs/core` CORS plugin reads `process.env.NODE_ENV` at startup and
+automatically switches to a deny-all policy when `NODE_ENV=production` and
+`ALLOWED_ORIGINS` is not set:
+
+```bash
+# .env.production — required for cross-origin browser clients
+ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
+```
+
+```typescript
+// ❌ NEVER set origin: true with credentials: true in production
+// This allows any website to make authenticated cross-origin requests
+// and read the response — a credential exfiltration vector.
+
+// ✅ @scratchyjs/core cors.ts handles this automatically:
+//   NODE_ENV=production + no ALLOWED_ORIGINS → origin: false (deny all)
+//   NODE_ENV=production + ALLOWED_ORIGINS set → explicit allowlist
+//   NODE_ENV=development                      → origin: true
+```
+
+### Cache-Control for SSR and authenticated responses
+
+Prevent cache-poisoning attacks (Remix CVE-2025-43864 pattern) by ensuring
+authenticated and personalised responses are never stored by CDN/proxy caches:
+
+```typescript
+// ✅ Add to a plugin or hook in your application
+fastify.addHook("onSend", (request, reply, _payload, done) => {
+  if (request.user) {
+    reply.header("Cache-Control", "private, no-store");
+    reply.header("Vary", "Cookie, Authorization");
+  }
+  done();
+});
+```
+
+tRPC responses already include `cache-control: no-store, no-cache,
+must-revalidate, private` via the `responseMeta()` in `@scratchyjs/trpc`.
+
 ## Logging
 
 ### Structured Logging with Pino

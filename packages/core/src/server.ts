@@ -16,6 +16,28 @@ const FIFTEEN_SECONDS = 15_000;
 const TEN_MB = 10 * 1024 * 1024;
 
 /**
+ * Emit a startup warning when the server is configured in a way that is
+ * safe for development but dangerous in production.
+ *
+ * Currently checks:
+ *  - No `ALLOWED_ORIGINS` set in production → CORS will deny all
+ *    cross-origin requests. Set `ALLOWED_ORIGINS` to an explicit allowlist
+ *    (e.g. "https://app.example.com") to allow cross-origin traffic.
+ */
+function warnInsecureConfig(
+  server: ReturnType<typeof Fastify>,
+  config: Config,
+): void {
+  if (config.NODE_ENV === "production" && config.ALLOWED_ORIGINS.length === 0) {
+    server.log.warn(
+      "SECURITY: ALLOWED_ORIGINS is not set. " +
+        "All cross-origin requests will be denied in production (same-origin requests still work). " +
+        "Set ALLOWED_ORIGINS=https://your-app.example.com to allow cross-origin traffic.",
+    );
+  }
+}
+
+/**
  * Creates and configures the Fastify server instance.
  * @param config - Server configuration object.
  * @returns Configured Fastify instance ready to listen.
@@ -44,6 +66,8 @@ async function createServer(config: Config) {
   server.decorate("config", config);
   server.setValidatorCompiler(validatorCompiler);
   server.setSerializerCompiler(serializerCompiler);
+
+  warnInsecureConfig(server, config);
 
   await server.register(fastifyAutoload, {
     dir: join(import.meta.dirname, "plugins", "external"),
