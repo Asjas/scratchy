@@ -11,5 +11,10 @@
       "outputs": []
     }
   },
-  "globalDependencies": ["package.json", "tsconfig.json", "turbo.json"]
+  "globalDependencies": ["package.json", "tsconfig.json", "turbo.json"],
+  "remoteCache": {
+    "teamSlug": "codewizard",
+    "enabled": true,
+    "apiUrl": "https://turborepo.codewizard.training"
+  }
 }

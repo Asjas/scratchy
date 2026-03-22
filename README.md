@@ -37,6 +37,22 @@ guide.
 - Node.js >= 24
 - pnpm >= 10
 
+## Turborepo Remote Cache
+
+This repository is configured to use a self-hosted Turbo remote cache:
+
+- `teamSlug`: `codewizard`
+- `apiUrl`: `https://turborepo.codewizard.training`
+
+To authenticate cache reads/writes, set `TURBO_TOKEN`:
+
+```bash
+export TURBO_TOKEN=your_token_here
+```
+
+In GitHub Actions, add `TURBO_TOKEN` as a repository secret so CI jobs can use
+the remote cache.
+
 ## Documentation
 
 Full documentation is available at **[scratchyjs.com](https://scratchyjs.com)**.
