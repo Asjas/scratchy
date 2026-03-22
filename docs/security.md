@@ -902,30 +902,27 @@ fastify.addHook("onSend", async (_request, reply) => {
 });
 ```
 
-### Strip Internal-Routing Headers (CVE-2025-29927 pattern)
+### Strip Internal-Routing and Framework Headers
 
 `@scratchyjs/core` automatically loads a `strip-internal-headers` plugin that
-removes known internal-routing headers from every inbound request **before** any
-auth hook runs. This prevents attackers from bypassing authentication middleware
-by sending spoofed internal headers — a pattern demonstrated in CVE-2025-29927
-(Next.js `x-middleware-subrequest` bypass) and applicable to any framework that
-might trust such headers from external clients.
+removes generic internal-routing request headers and the Fastify `server`
+response header.
 
-**Headers stripped by default:**
+**Request headers stripped:**
 
-| Header                    | Origin  | Risk                         |
-| ------------------------- | ------- | ---------------------------- |
-| `x-middleware-subrequest` | Next.js | Auth bypass (CVE-2025-29927) |
-| `x-middleware-prefetch`   | Next.js | Request flow manipulation    |
-| `x-middleware-rewrite`    | Next.js | Routing bypass               |
-| `x-internal-request`      | Generic | Auth bypass if trusted       |
-| `x-internal-token`        | Generic | Credential injection         |
-| `x-vercel-internal`       | Vercel  | Platform internal routing    |
-| `x-now-route-matches`     | Vercel  | Route matching manipulation  |
-| `x-remix-response`        | Remix   | Response handling bypass     |
+| Header               | Risk                                                               |
+| -------------------- | ------------------------------------------------------------------ |
+| `x-internal-request` | Auth bypass if any code trusts this to identify an internal caller |
+| `x-internal-token`   | Credential injection via forged token value                        |
 
-To add application-specific internal headers to the strip list, create a
-separate hook plugin in your `plugins/app/` directory:
+**Response headers stripped:**
+
+| Header   | Why                                                                                                                                            |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `server` | Fastify sets this to `"Fastify"` by default — removing it reduces the attack surface by hiding implementation details from potential attackers |
+
+To add application-specific headers to the strip list, create a separate hook
+plugin in your `plugins/app/` directory:
 
 ```typescript
 // plugins/app/strip-app-headers.ts

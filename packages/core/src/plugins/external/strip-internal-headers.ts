@@ -1,44 +1,42 @@
 import fastifyPlugin from "fastify-plugin";
 
 /**
- * Headers that must never be accepted from external clients.
+ * Strips security-sensitive headers on every request and response.
  *
- * Internal-routing headers are set by reverse proxies / edge layers to
- * communicate between internal services. If an attacker can send these
- * headers directly to the origin server they may be able to:
- *   - Bypass authentication middleware (CVE-2025-29927 pattern — Next.js
- *     `x-middleware-subrequest` bypass, directly applicable to any
- *     SSR / API framework that trusts internal headers from external clients).
- *   - Spoof trusted callers or skip rate-limiting.
+ * **Inbound (request) headers stripped:**
+ * Generic internal-routing markers that should never arrive from an external
+ * client. If any application code ever trusts these headers to make auth or
+ * routing decisions, an attacker could forge them to gain elevated access.
  *
- * Mitigation: strip all known internal-routing headers on every inbound
- * request **before** any other hook runs so they can never reach route
- * handlers or auth middleware.
+ * **Outbound (response) headers stripped:**
+ * - `server` — Fastify sets this to `"Fastify"` by default, advertising the
+ *   framework version. Removing it reduces the server's attack surface by
+ *   hiding implementation details from potential attackers.
  */
-const INTERNAL_HEADERS = [
-  // Next.js middleware bypass header (CVE-2025-29927)
-  "x-middleware-subrequest",
-  "x-middleware-prefetch",
-  "x-middleware-rewrite",
-  // Generic internal-routing markers used by various frameworks / proxies
+const INTERNAL_REQUEST_HEADERS = [
+  // Generic internal-routing markers used by various proxies / service meshes.
+  // Stripping these prevents spoofing attacks where an attacker sends a forged
+  // header to bypass auth or rate-limiting logic that trusts the header value.
   "x-internal-request",
   "x-internal-token",
-  // Vercel/edge platform internal headers
-  "x-vercel-internal",
-  "x-now-route-matches",
-  // Remix internal header (CVE-2025-31137 pattern)
-  "x-remix-response",
 ] as const;
 
 export default fastifyPlugin(
   function stripInternalHeadersPlugin(fastify, _opts, done) {
     fastify.addHook("onRequest", (request, _reply, hookDone) => {
-      for (const header of INTERNAL_HEADERS) {
+      for (const header of INTERNAL_REQUEST_HEADERS) {
         // Mutating the headers object removes the header from all downstream
         // processing (auth hooks, route handlers, etc.).
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete request.headers[header];
       }
+      hookDone();
+    });
+
+    // Strip the `server` response header that Fastify adds automatically.
+    // This prevents leaking framework/version information to clients.
+    fastify.addHook("onSend", (_request, reply, _payload, hookDone) => {
+      reply.removeHeader("server");
       hookDone();
     });
 

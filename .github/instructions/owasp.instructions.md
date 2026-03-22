@@ -414,29 +414,27 @@ export const autoConfig: FastifyCorsOptions = {
 //    NODE_ENV=development                        → origin: true (dev convenience)
 ```
 
-### Strip internal-routing headers (CVE-2025-29927 / Auth Bypass pattern)
+### Strip internal-routing and framework headers
 
 The `strip-internal-headers` plugin (auto-loaded from
 `packages/core/src/plugins/external/strip-internal-headers.ts`) removes
-known internal-routing headers from every inbound request **before** any
-auth hook runs.
+generic internal-routing **request** headers and the Fastify `server`
+**response** header.
 
-**Why this matters:** Frameworks and reverse proxies use special headers to
-communicate between internal services (e.g. `x-middleware-subrequest` in
-Next.js). In CVE-2025-29927 an attacker sent this header directly to bypass
-Next.js middleware auth entirely. The same pattern applies to any framework
-that trusts internal headers from external clients.
+**Why this matters:** If any application code trusts `x-internal-request`
+or `x-internal-token` to identify an internal caller (e.g. to skip auth),
+an attacker can forge those headers. Stripping them before any hook runs
+ensures they can never be trusted. The `server` response header is stripped
+to hide implementation details from potential attackers.
 
 ```typescript
 // ✅ Already handled by @scratchyjs/core — do NOT remove the plugin
-// The plugin strips these headers in an onRequest hook:
-//   x-middleware-subrequest   (CVE-2025-29927 bypass vector)
-//   x-middleware-prefetch
-//   x-middleware-rewrite
-//   x-internal-request
-//   x-internal-token
-//   x-vercel-internal
-//   x-remix-response
+// Request headers stripped in onRequest hook:
+//   x-internal-request   (generic internal-caller marker)
+//   x-internal-token     (forged token injection vector)
+//
+// Response headers stripped in onSend hook:
+//   server               (hides "Fastify" from clients)
 
 // ❌ NEVER trust these headers for auth decisions
 fastify.addHook("onRequest", async (request) => {
@@ -482,7 +480,7 @@ The following CVEs have been researched and mitigated within Scratchy:
 | --- | --------- | ----------- | ---------- |
 | CVE-2025-32442 | Fastify ≤ 5.3.1 | Content-Type validation bypass → injection | Keep Fastify ≥ 5.3.2; use single Zod schema per route (not per-content-type) |
 | CVE-2025-43855 | `@trpc/server` 11.0–11.1.0 | WebSocket `connectionParams` uncaught exception → DoS | `createContext()` wrapped in try/catch; keep `@trpc/server` ≥ 11.1.1 |
-| CVE-2025-29927 | Next.js (pattern) | Internal header bypass of auth middleware | `strip-internal-headers` plugin removes `x-middleware-subrequest` and related headers |
+| CVE-2025-29927 | Next.js (pattern) | Internal header bypass of auth middleware | `strip-internal-headers` plugin removes `x-internal-request` and `x-internal-token`; Fastify `server` response header suppressed |
 | CVE-2024-8024 | `@fastify/cors` (pattern) | `origin: true` + `credentials: true` → credential exfiltration | CORS plugin auto-uses `origin: false` in production unless `ALLOWED_ORIGINS` is set |
 | CVE-2024-22207 | `@fastify/swagger-ui` < 2.1.0 | Serves all module directory files → info disclosure | Keep `@fastify/swagger-ui` ≥ 5.x (already in use) |
 
@@ -810,7 +808,7 @@ function safeFetch(url: string, options?: RequestInit): Promise<Response> {
 - [ ] Session cookies are `httpOnly`, `secure` (prod), `sameSite: "lax"`
 - [ ] `@fastify/helmet` is registered before the new plugin
 - [ ] Rate limiting is applied where appropriate
-- [ ] Does not trust `x-middleware-*`, `x-internal-*`, or other internal-routing headers
+- [ ] Does not trust `x-internal-request`, `x-internal-token`, or other internal-routing headers
 
 ### Every redirect
 

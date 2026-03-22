@@ -354,16 +354,14 @@ export default fp(async function security(fastify) {
 });
 ```
 
-### Strip internal-routing headers (CVE-2025-29927 pattern)
+### Strip internal-routing and framework headers
 
 The `@scratchyjs/core` package auto-loads a `strip-internal-headers` plugin
-that removes known internal-routing headers from every inbound request before
-any auth hook runs. This prevents attackers from bypassing auth middleware by
-sending spoofed internal headers.
+that removes generic internal-routing request headers and the Fastify `server`
+response header.
 
-**Headers stripped:** `x-middleware-subrequest`, `x-middleware-prefetch`,
-`x-middleware-rewrite`, `x-internal-request`, `x-internal-token`,
-`x-vercel-internal`, `x-now-route-matches`, `x-remix-response`.
+**Request headers stripped:** `x-internal-request`, `x-internal-token`
+**Response headers stripped:** `server` (hides `"Fastify"` from clients)
 
 ```typescript
 // ✅ Already handled by @scratchyjs/core — do NOT remove the plugin

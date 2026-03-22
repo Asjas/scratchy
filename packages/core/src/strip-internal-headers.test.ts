@@ -21,20 +21,6 @@ describe("strip-internal-headers plugin", () => {
     await server.close();
   });
 
-  it("strips x-middleware-subrequest header (CVE-2025-29927 bypass pattern)", async () => {
-    const response = await server.inject({
-      method: "GET",
-      url: "/test-headers",
-      headers: {
-        "x-middleware-subrequest": "pages/api/admin",
-      },
-    });
-
-    expect(response.statusCode).toBe(200);
-    const body = response.json();
-    expect(body).not.toHaveProperty("x-middleware-subrequest");
-  });
-
   it("strips x-internal-request header", async () => {
     const response = await server.inject({
       method: "GET",
@@ -47,34 +33,6 @@ describe("strip-internal-headers plugin", () => {
     expect(response.statusCode).toBe(200);
     const body = response.json();
     expect(body).not.toHaveProperty("x-internal-request");
-  });
-
-  it("strips x-middleware-prefetch header", async () => {
-    const response = await server.inject({
-      method: "GET",
-      url: "/test-headers",
-      headers: {
-        "x-middleware-prefetch": "1",
-      },
-    });
-
-    expect(response.statusCode).toBe(200);
-    const body = response.json();
-    expect(body).not.toHaveProperty("x-middleware-prefetch");
-  });
-
-  it("strips x-middleware-rewrite header", async () => {
-    const response = await server.inject({
-      method: "GET",
-      url: "/test-headers",
-      headers: {
-        "x-middleware-rewrite": "/admin",
-      },
-    });
-
-    expect(response.statusCode).toBe(200);
-    const body = response.json();
-    expect(body).not.toHaveProperty("x-middleware-rewrite");
   });
 
   it("strips x-internal-token header", async () => {
@@ -91,18 +49,23 @@ describe("strip-internal-headers plugin", () => {
     expect(body).not.toHaveProperty("x-internal-token");
   });
 
-  it("strips x-remix-response header", async () => {
+  it("strips both internal headers in a single request", async () => {
     const response = await server.inject({
       method: "GET",
       url: "/test-headers",
       headers: {
-        "x-remix-response": "bypass",
+        "x-internal-request": "true",
+        "x-internal-token": "secret",
+        "content-type": "application/json",
       },
     });
 
     expect(response.statusCode).toBe(200);
     const body = response.json();
-    expect(body).not.toHaveProperty("x-remix-response");
+    expect(body).not.toHaveProperty("x-internal-request");
+    expect(body).not.toHaveProperty("x-internal-token");
+    // Legitimate header preserved
+    expect(body).toHaveProperty("content-type", "application/json");
   });
 
   it("does not strip legitimate user-supplied headers", async () => {
@@ -123,26 +86,13 @@ describe("strip-internal-headers plugin", () => {
     expect(body).toHaveProperty("authorization", "Bearer token");
   });
 
-  it("strips multiple internal headers in a single request", async () => {
+  it("strips the server response header added by Fastify", async () => {
     const response = await server.inject({
       method: "GET",
-      url: "/test-headers",
-      headers: {
-        "x-middleware-subrequest": "bypass",
-        "x-internal-request": "true",
-        "x-middleware-prefetch": "1",
-        "x-remix-response": "yes",
-        "content-type": "application/json",
-      },
+      url: "/health",
     });
 
     expect(response.statusCode).toBe(200);
-    const body = response.json();
-    expect(body).not.toHaveProperty("x-middleware-subrequest");
-    expect(body).not.toHaveProperty("x-internal-request");
-    expect(body).not.toHaveProperty("x-middleware-prefetch");
-    expect(body).not.toHaveProperty("x-remix-response");
-    // Legitimate header preserved
-    expect(body).toHaveProperty("content-type", "application/json");
+    expect(response.headers).not.toHaveProperty("server");
   });
 });
