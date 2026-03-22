@@ -130,7 +130,10 @@ jobs:
 
       - name: 🚀 Publish all packages to npm
         # TEMPORARY: use an automation token until each package has npm trusted
-        # publisher configuration. Set repository/environment secret NPM_TOKEN.
+        # publisher configuration. Set repository/environment secret NPM_TOKEN
+        # to an npm Automation token with publish rights for @scratchyjs.
+        # If this secret is a classic/granular token tied to 2FA writes,
+        # npm will fail with EOTP during publish.
         # After OIDC is configured for all packages, remove NODE_AUTH_TOKEN and
         # switch npm publish back to --provenance.
         env:
@@ -140,6 +143,14 @@ jobs:
             echo "NPM_TOKEN is not configured. Add it as a secret before publishing." >&2
             exit 1
           fi
+
+          if ! npm whoami >/dev/null 2>&1; then
+            echo "NPM_TOKEN is invalid or lacks npm auth scope (npm whoami failed)." >&2
+            exit 1
+          fi
+
+          echo "npm auth OK (npm whoami succeeded)."
+          echo "If publish fails with EOTP, replace NPM_TOKEN with an npm Automation token."
 
           for pkg_dir in packages/*/; do
             pkg_json="${pkg_dir}package.json"
