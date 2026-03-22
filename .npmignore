@@ -1,0 +1,31 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Tests
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+__tests__/
+coverage/
+
+# Config & tooling
+.eslintrc*
+eslint.config.*
+vitest.config.*
+tsconfig.json
+.prettierrc*
+.editorconfig
+
+# CI/CD & repo
+.github/
+.gitignore
+docker-compose*.yml
+tmp/
+
+# Build artifacts
+node_modules/
+dist/
+*.tsbuildinfo
