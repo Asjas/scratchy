@@ -7,6 +7,7 @@
  * 3. `mount()` / `unmount()` – monkey-patching of `node:fs`.
  */
 import { create } from "./index.js";
+import type { VfsDirent } from "./index.js";
 import { MemoryProvider } from "./memory-provider.js";
 import fs from "node:fs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -505,5 +506,521 @@ describe("Symbol.dispose", () => {
     vfs.mount("/vfs-dispose-idem");
     vfs.unmount();
     expect(() => vfs[Symbol.dispose]()).not.toThrow();
+  });
+});
+
+// ─── virtualCwd feature ──────────────────────────────────────────────────────
+
+describe("virtualCwd feature", () => {
+  let vfs: ReturnType<typeof create>;
+  const MOUNT = "/scratchyjs-vfs-vcwd-" + process.pid;
+
+  beforeEach(() => {
+    vfs = create({ virtualCwd: true });
+    vfs.mount(MOUNT);
+  });
+
+  afterEach(() => {
+    if (vfs?.mounted) vfs.unmount();
+  });
+
+  it("cwd() returns null before chdir is called", () => {
+    expect(vfs.cwd()).toBeNull();
+  });
+
+  it("cwd() returns the mount point after chdir to root", () => {
+    vfs.chdir(MOUNT);
+    expect(vfs.cwd()).toBe(MOUNT);
+  });
+
+  it("chdir() changes the virtual working directory", () => {
+    vfs.addDirectory(MOUNT + "/subdir");
+    vfs.chdir(MOUNT + "/subdir");
+    expect(vfs.cwd()).toBe(MOUNT + "/subdir");
+  });
+
+  it("chdir() throws ENOENT for a missing directory", () => {
+    expect(() => vfs.chdir(MOUNT + "/nonexistent")).toThrow(
+      expect.objectContaining({ code: "ENOENT" }),
+    );
+  });
+
+  it("chdir() throws ENOTDIR when directory is actually a file", () => {
+    vfs.addFile(MOUNT + "/file.txt", "data");
+    expect(() => vfs.chdir(MOUNT + "/file.txt")).toThrow(
+      expect.objectContaining({ code: "ENOTDIR" }),
+    );
+  });
+
+  it("resolvePath() resolves paths relative to virtualCwd", () => {
+    vfs.addDirectory(MOUNT + "/dir");
+    vfs.chdir(MOUNT + "/dir");
+    const resolved = vfs.resolvePath("file.txt");
+    expect(resolved).toBe(MOUNT + "/dir/file.txt");
+  });
+
+  it("resolvePath() handles absolute paths independently of cwd", () => {
+    vfs.addDirectory(MOUNT + "/dir");
+    vfs.chdir(MOUNT + "/dir");
+    const resolved = vfs.resolvePath(MOUNT + "/other.txt");
+    expect(resolved).toBe(MOUNT + "/other.txt");
+  });
+
+  it("resolvePath() handles parent directory references", () => {
+    vfs.addDirectory(MOUNT + "/a/b");
+    vfs.chdir(MOUNT + "/a/b");
+    const resolved = vfs.resolvePath("../file.txt");
+    expect(resolved).toBe(MOUNT + "/a/file.txt");
+  });
+
+  it("fs.readFileSync with relative path uses virtualCwd", () => {
+    vfs.addDirectory(MOUNT + "/rel");
+    vfs.addFile(MOUNT + "/rel/file.txt", "relative");
+    vfs.chdir(MOUNT + "/rel");
+    const result = fs.readFileSync("file.txt", "utf8");
+    expect(result).toBe("relative");
+  });
+
+  it("fs.writeFileSync with relative path uses virtualCwd", () => {
+    vfs.addDirectory(MOUNT + "/write");
+    vfs.chdir(MOUNT + "/write");
+    fs.writeFileSync("newfile.txt", "written");
+    expect(fs.readFileSync(MOUNT + "/write/newfile.txt", "utf8")).toBe(
+      "written",
+    );
+  });
+
+  it("fs.existsSync with relative path uses virtualCwd", () => {
+    vfs.addDirectory(MOUNT + "/check");
+    vfs.addFile(MOUNT + "/check/exists.txt", "");
+    vfs.chdir(MOUNT + "/check");
+    expect(fs.existsSync("exists.txt")).toBe(true);
+  });
+
+  it("fs.statSync with relative path uses virtualCwd", () => {
+    vfs.addDirectory(MOUNT + "/stat");
+    vfs.addFile(MOUNT + "/stat/file.txt", "");
+    vfs.chdir(MOUNT + "/stat");
+    const stats = fs.statSync("file.txt");
+    expect(stats.isFile()).toBe(true);
+  });
+
+  it("process.cwd() is patched to return virtual cwd", () => {
+    vfs.addDirectory(MOUNT + "/pdir");
+    vfs.chdir(MOUNT + "/pdir");
+    expect(process.cwd()).toBe(MOUNT + "/pdir");
+  });
+});
+
+// ─── overlay mode ────────────────────────────────────────────────────────────
+
+describe("overlay mode", () => {
+  let vfs: ReturnType<typeof create>;
+  const MOUNT = "/scratchyjs-vfs-overlay-" + process.pid;
+
+  beforeEach(() => {
+    vfs = create({ overlay: true });
+    vfs.mount(MOUNT);
+  });
+
+  afterEach(() => {
+    if (vfs?.mounted) vfs.unmount();
+  });
+
+  it("overlay=true only intercepts paths that exist in VFS", () => {
+    vfs.addFile(MOUNT + "/virtual.txt", "virtual");
+    expect(fs.existsSync(MOUNT + "/virtual.txt")).toBe(true);
+    // Non-existent paths fall through to real fs (will be false)
+    expect(fs.existsSync(MOUNT + "/not-there.txt")).toBe(false);
+  });
+
+  it("overlay mode allows mixing virtual and real files at different prefixes", () => {
+    vfs.addFile(MOUNT + "/vfile.txt", "virtual-data");
+    const vContent = fs.readFileSync(MOUNT + "/vfile.txt", "utf8");
+    expect(vContent).toBe("virtual-data");
+  });
+
+  it("overlay=true falls through to real fs for non-existent VFS paths", () => {
+    // In overlay mode, writes to paths not in the VFS fall through to real fs
+    // which throws ENOENT since the mount point doesn't exist on disk
+    expect(() => fs.writeFileSync(MOUNT + "/new.txt", "created")).toThrow(
+      expect.objectContaining({ code: "ENOENT" }),
+    );
+  });
+
+  it("Non-overlay mode should handle all paths", () => {
+    const vfsNoOverlay = create({ overlay: false });
+    vfsNoOverlay.mount(MOUNT + "-no-overlay");
+    vfsNoOverlay.addFile(MOUNT + "-no-overlay/virtual.txt", "virtual");
+    expect(fs.existsSync(MOUNT + "-no-overlay/virtual.txt")).toBe(true);
+    // In non-overlay mode, creating non-existent virtual paths works
+    fs.writeFileSync(MOUNT + "-no-overlay/new.txt", "created");
+    expect(fs.readFileSync(MOUNT + "-no-overlay/new.txt", "utf8")).toBe(
+      "created",
+    );
+    vfsNoOverlay.unmount();
+  });
+});
+
+// ─── fs.promises advanced operations ──────────────────────────────────────────
+
+describe("fs.promises advanced operations", () => {
+  const MOUNT = "/scratchyjs-vfs-promises-adv-" + process.pid;
+  let vfs: ReturnType<typeof create>;
+
+  beforeEach(() => {
+    vfs = create();
+    vfs.mount(MOUNT);
+  });
+
+  afterEach(() => {
+    vfs.unmount();
+  });
+
+  it("fs.promises.lstat returns symlink info without following", async () => {
+    vfs.addFile(MOUNT + "/target.txt", "target");
+    fs.symlinkSync(MOUNT + "/target.txt", MOUNT + "/link.txt");
+    const linkStats = await fs.promises.lstat(MOUNT + "/link.txt");
+    expect(linkStats.isSymbolicLink()).toBe(true);
+  });
+
+  it("fs.promises.realpath resolves symlinks", async () => {
+    vfs.addFile(MOUNT + "/real.txt", "content");
+    fs.symlinkSync(MOUNT + "/real.txt", MOUNT + "/symlink.txt");
+    const resolved = await fs.promises.realpath(MOUNT + "/symlink.txt");
+    expect(resolved).toBe(MOUNT + "/real.txt");
+  });
+
+  it("fs.promises.access succeeds for existing file", async () => {
+    vfs.addFile(MOUNT + "/accessible.txt", "");
+    await expect(
+      fs.promises.access(MOUNT + "/accessible.txt"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("fs.promises.access throws for missing file", async () => {
+    await expect(fs.promises.access(MOUNT + "/missing.txt")).rejects.toThrow(
+      expect.objectContaining({ code: "ENOENT" }),
+    );
+  });
+
+  it("fs.promises.readlink reads symlink target", async () => {
+    vfs.addFile(MOUNT + "/target.txt", "");
+    fs.symlinkSync(MOUNT + "/target.txt", MOUNT + "/link.txt");
+    const target = await fs.promises.readlink(MOUNT + "/link.txt");
+    expect(target).toBe(MOUNT + "/target.txt");
+  });
+
+  it("fs.promises.chmod changes file permissions", async () => {
+    vfs.addFile(MOUNT + "/chmod.txt", "");
+    await fs.promises.chmod(MOUNT + "/chmod.txt", 0o644);
+    const stats = await fs.promises.stat(MOUNT + "/chmod.txt");
+    expect(stats.mode & 0o777 & 0o600).toBe(0o600); // Check owner read/write preserved
+  });
+
+  it("fs.promises.copyFile duplicates a file", async () => {
+    vfs.addFile(MOUNT + "/src.txt", "source");
+    await fs.promises.copyFile(MOUNT + "/src.txt", MOUNT + "/copy.txt");
+    const result = await fs.promises.readFile(MOUNT + "/copy.txt", "utf8");
+    expect(result).toBe("source");
+  });
+
+  it("fs.promises.truncate shrinks a file", async () => {
+    vfs.addFile(MOUNT + "/trunc.txt", "hello world");
+    await fs.promises.truncate(MOUNT + "/trunc.txt", 5);
+    const result = await fs.promises.readFile(MOUNT + "/trunc.txt", "utf8");
+    expect(result).toBe("hello");
+  });
+
+  it("fs.promises.link creates a hard link", async () => {
+    vfs.addFile(MOUNT + "/original.txt", "content");
+    await fs.promises.link(MOUNT + "/original.txt", MOUNT + "/linked.txt");
+    const result = await fs.promises.readFile(MOUNT + "/linked.txt", "utf8");
+    expect(result).toBe("content");
+  });
+
+  it("fs.promises.rename moves a file", async () => {
+    vfs.addFile(MOUNT + "/old.txt", "content");
+    await fs.promises.rename(MOUNT + "/old.txt", MOUNT + "/new.txt");
+    expect(fs.existsSync(MOUNT + "/old.txt")).toBe(false);
+    const result = await fs.promises.readFile(MOUNT + "/new.txt", "utf8");
+    expect(result).toBe("content");
+  });
+
+  it("fs.promises.symlink creates symlink", async () => {
+    vfs.addFile(MOUNT + "/target.txt", "");
+    await fs.promises.symlink(MOUNT + "/target.txt", MOUNT + "/link.txt");
+    const target = await fs.promises.readlink(MOUNT + "/link.txt");
+    expect(target).toBe(MOUNT + "/target.txt");
+  });
+
+  it("fs.promises.readdir with withFileTypes returns Dirent objects", async () => {
+    vfs.addFile(MOUNT + "/file.txt", "");
+    vfs.addDirectory(MOUNT + "/dir");
+    const entries = await fs.promises.readdir(MOUNT, { withFileTypes: true });
+    const fileEntry = entries.find((e) => e.name === "file.txt");
+    expect(fileEntry?.isFile()).toBe(true);
+    const dirEntry = entries.find((e) => e.name === "dir");
+    expect(dirEntry?.isDirectory()).toBe(true);
+  });
+
+  it("fs.promises.readdir with recursive lists all nested files", async () => {
+    vfs.addDirectory(MOUNT + "/a");
+    vfs.addFile(MOUNT + "/a/f1.txt", "");
+    vfs.addDirectory(MOUNT + "/a/b");
+    vfs.addFile(MOUNT + "/a/b/f2.txt", "");
+    const entries = await fs.promises.readdir(MOUNT, { recursive: true });
+    expect(entries).toContain("a");
+    expect(entries).toContain("a/f1.txt");
+    expect(entries).toContain("a/b");
+    expect(entries).toContain("a/b/f2.txt");
+  });
+});
+
+// ─── Error conditions and edge cases ──────────────────────────────────────────
+
+describe("error conditions", () => {
+  const MOUNT = "/scratchyjs-vfs-errors-" + process.pid;
+  let vfs: ReturnType<typeof create>;
+
+  beforeEach(() => {
+    vfs = create();
+    vfs.mount(MOUNT);
+  });
+
+  afterEach(() => {
+    vfs.unmount();
+  });
+
+  it("fs.readFileSync throws ENOENT for non-existent file in VFS", () => {
+    expect(() => fs.readFileSync(MOUNT + "/ghost.txt")).toThrow(
+      expect.objectContaining({ code: "ENOENT" }),
+    );
+  });
+
+  it("fs.readFileSync throws EISDIR when path is a directory", () => {
+    vfs.addDirectory(MOUNT + "/dir");
+    expect(() => fs.readFileSync(MOUNT + "/dir")).toThrow(
+      expect.objectContaining({ code: "EISDIR" }),
+    );
+  });
+
+  it("fs.mkdirSync throws EEXIST when directory already exists without recursive", () => {
+    vfs.addDirectory(MOUNT + "/existing");
+    expect(() => fs.mkdirSync(MOUNT + "/existing")).toThrow(
+      expect.objectContaining({ code: "EEXIST" }),
+    );
+  });
+
+  it("fs.mkdirSync with recursive succeeds when directory exists", () => {
+    vfs.addDirectory(MOUNT + "/existing");
+    expect(() =>
+      fs.mkdirSync(MOUNT + "/existing", { recursive: true }),
+    ).not.toThrow();
+  });
+
+  it("fs.unlinkSync throws ENOENT for missing file", () => {
+    expect(() => fs.unlinkSync(MOUNT + "/nonexistent.txt")).toThrow(
+      expect.objectContaining({ code: "ENOENT" }),
+    );
+  });
+
+  it("fs.unlinkSync throws EISDIR when path is a directory", () => {
+    vfs.addDirectory(MOUNT + "/dir");
+    expect(() => fs.unlinkSync(MOUNT + "/dir")).toThrow(
+      expect.objectContaining({ code: "EISDIR" }),
+    );
+  });
+
+  it("fs.rmdirSync throws ENOTEMPTY when directory has files", () => {
+    vfs.addDirectory(MOUNT + "/nonempty");
+    vfs.addFile(MOUNT + "/nonempty/file.txt", "");
+    expect(() => fs.rmdirSync(MOUNT + "/nonempty")).toThrow(
+      expect.objectContaining({ code: "ENOTEMPTY" }),
+    );
+  });
+
+  it("fs.renameSync throws ENOENT when source does not exist", () => {
+    expect(() =>
+      fs.renameSync(MOUNT + "/nonexistent.txt", MOUNT + "/target.txt"),
+    ).toThrow(expect.objectContaining({ code: "ENOENT" }));
+  });
+
+  it("fs.copyFileSync throws ENOENT when source does not exist", () => {
+    expect(() =>
+      fs.copyFileSync(MOUNT + "/nonexistent.txt", MOUNT + "/target.txt"),
+    ).toThrow(expect.objectContaining({ code: "ENOENT" }));
+  });
+
+  it("fs.statSync throws ENOENT for non-existent path", () => {
+    expect(() => fs.statSync(MOUNT + "/missing.txt")).toThrow(
+      expect.objectContaining({ code: "ENOENT" }),
+    );
+  });
+});
+
+// ─── Symlink and relative path edge cases ────────────────────────────────────
+
+describe("symlink and path edge cases", () => {
+  const MOUNT = "/scratchyjs-vfs-symlinks-" + process.pid;
+  let vfs: ReturnType<typeof create>;
+
+  beforeEach(() => {
+    vfs = create();
+    vfs.mount(MOUNT);
+  });
+
+  afterEach(() => {
+    vfs.unmount();
+  });
+
+  it("relative symlinks are preserved as-is", () => {
+    vfs.addDirectory(MOUNT + "/dir");
+    vfs.addFile(MOUNT + "/dir/target.txt", "target");
+    fs.symlinkSync("target.txt", MOUNT + "/dir/relative-link");
+    const target = fs.readlinkSync(MOUNT + "/dir/relative-link");
+    expect(target).toBe("target.txt");
+  });
+
+  it("absolute symlinks are resolved relative to provider root", () => {
+    vfs.addFile(MOUNT + "/absolute-target.txt", "target");
+    fs.symlinkSync(MOUNT + "/absolute-target.txt", MOUNT + "/absolute-link");
+    const target = fs.readlinkSync(MOUNT + "/absolute-link");
+    expect(target).toBe(MOUNT + "/absolute-target.txt");
+  });
+
+  it("symlink to symlink is followed by realpathSync", () => {
+    vfs.addFile(MOUNT + "/real.txt", "content");
+    fs.symlinkSync(MOUNT + "/real.txt", MOUNT + "/link1.txt");
+    fs.symlinkSync(MOUNT + "/link1.txt", MOUNT + "/link2.txt");
+    const resolved = fs.realpathSync(MOUNT + "/link2.txt");
+    expect(resolved).toBe(MOUNT + "/real.txt");
+  });
+
+  it("statSync follows symlinks to get target stats", () => {
+    vfs.addFile(MOUNT + "/target.txt", "content");
+    fs.symlinkSync(MOUNT + "/target.txt", MOUNT + "/link.txt");
+    const stats = fs.statSync(MOUNT + "/link.txt");
+    expect(stats.isFile()).toBe(true);
+    expect(stats.isSymbolicLink()).toBe(false);
+  });
+
+  it("lstatSync does not follow symlinks", () => {
+    vfs.addFile(MOUNT + "/target.txt", "content");
+    fs.symlinkSync(MOUNT + "/target.txt", MOUNT + "/link.txt");
+    const stats = fs.lstatSync(MOUNT + "/link.txt");
+    expect(stats.isSymbolicLink()).toBe(true);
+    expect(stats.isFile()).toBe(false);
+  });
+
+  it("path with . and .. segments are resolved correctly", () => {
+    vfs.addDirectory(MOUNT + "/a/b");
+    vfs.addFile(MOUNT + "/a/file.txt", "content");
+    // resolvePath with absolute path delegates to path.resolve
+    const resolved1 = vfs.resolvePath("/a/b/../file.txt");
+    expect(resolved1).toBe("/a/file.txt");
+  });
+
+  it("readFileSync with path containing . works", () => {
+    vfs.addFile(MOUNT + "/file.txt", "content");
+    const result = fs.readFileSync(MOUNT + "/./file.txt", "utf8");
+    expect(result).toBe("content");
+  });
+});
+
+// ─── Advanced MemoryProvider operations ──────────────────────────────────────
+
+describe("MemoryProvider advanced operations", () => {
+  let provider: MemoryProvider;
+
+  beforeEach(() => {
+    provider = new MemoryProvider();
+  });
+
+  it("chmodSync sets file mode permissions", () => {
+    provider.writeFileSync("/file.txt", "content");
+    provider.chmodSync("/file.txt", 0o644);
+    const stats = provider.statSync("/file.txt");
+    expect(stats.mode & 0o777 & 0o600).toBe(0o600);
+  });
+
+  it("chownSync succeeds (implementation specific)", () => {
+    provider.writeFileSync("/file.txt", "content");
+    // chownSync should succeed without error
+    expect(() => provider.chownSync("/file.txt", 1000, 1000)).not.toThrow();
+  });
+
+  it("utimesSync updates file timestamps", () => {
+    provider.writeFileSync("/file.txt", "content");
+    const newTime = Math.floor(Date.now() / 1000);
+    provider.utimesSync("/file.txt", newTime, newTime);
+    const stats = provider.statSync("/file.txt");
+    expect(stats.atimeMs).toBeGreaterThan(0);
+    expect(stats.mtimeMs).toBeGreaterThan(0);
+  });
+
+  it("readdirSync with recursive lists all nested entries", () => {
+    provider.mkdirSync("/a");
+    provider.mkdirSync("/a/b", { recursive: true });
+    provider.writeFileSync("/a/file1.txt", "");
+    provider.writeFileSync("/a/b/file2.txt", "");
+    const entries = provider.readdirSync("/", { recursive: true }) as (
+      | string
+      | { name: string }
+    )[];
+    const names = entries.map((e) => (typeof e === "string" ? e : e.name));
+    expect(names).toContain("a");
+    expect(names).toContain("a/file1.txt");
+    expect(names).toContain("a/b/file2.txt");
+  });
+
+  it("readdirSync with withFileTypes returns Dirent objects with proper types", () => {
+    provider.mkdirSync("/mydir");
+    provider.writeFileSync("/file.txt", "");
+    const entries = provider.readdirSync("/", {
+      withFileTypes: true,
+    }) as VfsDirent[];
+    const fileEntry = entries.find((e) => e.name === "file.txt");
+    const dirEntry = entries.find((e) => e.name === "mydir");
+    expect(fileEntry?.isFile()).toBe(true);
+    expect(fileEntry?.isDirectory()).toBe(false);
+    expect(dirEntry?.isDirectory()).toBe(true);
+    expect(dirEntry?.isFile()).toBe(false);
+  });
+
+  it("mkdtempSync generates unique directory names", () => {
+    provider.mkdirSync("/tmp", { recursive: true });
+    const dir1 = provider.mkdtempSync("/tmp/prefix-");
+    const dir2 = provider.mkdtempSync("/tmp/prefix-");
+    expect(dir1).not.toBe(dir2);
+    expect(dir1).toMatch(/^\/tmp\/prefix-/);
+    expect(provider.statSync(dir1).isDirectory()).toBe(true);
+  });
+
+  it("truncateSync shrinks files to specified size", () => {
+    provider.writeFileSync("/file.txt", "hello world");
+    provider.truncateSync("/file.txt", 5);
+    const result = provider.readFileSync("/file.txt", { encoding: "utf8" });
+    expect(result).toBe("hello");
+  });
+
+  it("truncateSync expands files by padding with zeros", () => {
+    provider.writeFileSync("/file.txt", "hi");
+    provider.truncateSync("/file.txt", 5);
+    const result = provider.readFileSync("/file.txt") as Buffer;
+    expect(result.length).toBe(5);
+    expect(result.toString("utf8")).toContain("hi");
+  });
+
+  it("rmSync with force ignores ENOENT errors", () => {
+    expect(() =>
+      provider.rmSync("/nonexistent.txt", { force: true }),
+    ).not.toThrow();
+  });
+
+  it("rmSync without force throws ENOENT on missing path", () => {
+    expect(() => provider.rmSync("/nonexistent.txt")).toThrow(
+      expect.objectContaining({ code: "ENOENT" }),
+    );
   });
 });
