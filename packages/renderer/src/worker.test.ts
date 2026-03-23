@@ -142,7 +142,7 @@ describe("worker handler", () => {
     expect(lastChunk).toContain("</html>");
   });
 
-  it("should include props in ssr-stream output", () => {
+  it("should include props in ssr-stream output adjacent to the app div", () => {
     const result = handler({
       type: "ssr-stream",
       route: "/profile",
@@ -157,6 +157,13 @@ describe("worker handler", () => {
     );
     expect(combined).toContain("&quot;userId&quot;:&quot;u1&quot;");
     expect(combined).toContain("&quot;name&quot;:&quot;Alice&quot;");
+    // Props script must appear after the closing </div>, not inside #app,
+    // so the mount element stays clean for client-side resumability.
+    const appDivEnd = combined.indexOf("</div>");
+    const propsScriptStart = combined.indexOf(
+      '<script type="application/json"',
+    );
+    expect(propsScriptStart).toBeGreaterThan(appDivEnd);
   });
 
   it("should HTML-escape route values in ssr-stream to prevent XSS", () => {

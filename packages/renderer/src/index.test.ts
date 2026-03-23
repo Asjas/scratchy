@@ -24,6 +24,10 @@ describe("renderer/src/index re-exports", () => {
     expect(typeof indexExports.createSSRHandler).toBe("function");
   });
 
+  it("re-exports createStreamingSSRHandler", () => {
+    expect(typeof indexExports.createStreamingSSRHandler).toBe("function");
+  });
+
   it("re-exports runSsgPipeline", () => {
     expect(typeof indexExports.runSsgPipeline).toBe("function");
   });

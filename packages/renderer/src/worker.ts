@@ -201,7 +201,7 @@ ${head}
 `;
 
   // Chunk 2: Above-the-fold app content.
-  const contentChunk = `<div id="app" data-route="${escapedRoute}" data-streaming="true">${propsScript}</div>
+  const contentChunk = `<div id="app" data-route="${escapedRoute}" data-streaming="true"></div>${propsScript}
 `;
 
   // Chunk 3: Closing tags.
