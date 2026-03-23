@@ -1011,8 +1011,12 @@ export class VirtualFileSystem {
 
     promMut.symlink = async (target: unknown, p: unknown) => {
       if (typeof p === "string" && this.#shouldHandle(p)) {
+        const internalTarget =
+          typeof target === "string" && this.#shouldHandle(target)
+            ? this.#toProviderPath(target)
+            : (target as string);
         return this.#provider.symlink(
-          target as string,
+          internalTarget,
           this.#toProviderPath(p),
         );
       }
