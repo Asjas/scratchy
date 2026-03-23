@@ -1,33 +1,33 @@
 import { interval } from "./timers.js";
+import { setTimeout as nodeTimersSetTimeout } from "node:timers/promises";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // node:timers/promises.setTimeout uses Node.js internal timers that
-// vi.useFakeTimers() cannot intercept directly. This shim routes through
-// globalThis.setTimeout (which IS replaceable by vi.useFakeTimers()) so that
-// vi.advanceTimersByTimeAsync() can drive the interval generator in tests.
+// vi.useFakeTimers() cannot intercept directly. This shim wraps the
+// implementation in vi.fn() and routes through globalThis.setTimeout (which IS
+// replaceable by vi.useFakeTimers()) so that vi.advanceTimersByTimeAsync() can
+// drive the interval generator in tests.
 //
 // vi.mock() is hoisted by Vitest, so the import inside timers.ts loads the
 // mocked version from the very first test.
 vi.mock("node:timers/promises", () => ({
-  setTimeout: (
-    ms: number,
-    value: unknown,
-    options?: { signal?: AbortSignal },
-  ) =>
-    new Promise<unknown>((resolve, reject) => {
-      const id = globalThis.setTimeout(() => resolve(value), ms);
-      options?.signal?.addEventListener(
-        "abort",
-        () => {
-          globalThis.clearTimeout(id);
-          reject(
-            options.signal?.reason ??
-              new DOMException("This operation was aborted", "AbortError"),
-          );
-        },
-        { once: true },
-      );
-    }),
+  setTimeout: vi.fn(
+    (ms: number, value: unknown, options?: { signal?: AbortSignal }) =>
+      new Promise<unknown>((resolve, reject) => {
+        const id = globalThis.setTimeout(() => resolve(value), ms);
+        options?.signal?.addEventListener(
+          "abort",
+          () => {
+            globalThis.clearTimeout(id);
+            reject(
+              options.signal?.reason ??
+                new DOMException("This operation was aborted", "AbortError"),
+            );
+          },
+          { once: true },
+        );
+      }),
+  ),
 }));
 
 describe("interval", () => {
@@ -143,30 +143,18 @@ describe("interval", () => {
     expect(result.done).toBe(true);
   });
 
-  it("catches and returns when an AbortError is thrown but signal is not yet marked aborted", async () => {
+  it("catches and returns when the error has name 'AbortError' but signal is not yet marked aborted", async () => {
+    // Inject an AbortError-like rejection directly on the mock while the real
+    // signal is NOT aborted. This exercises the second catch branch
+    // (error.name === "AbortError") without needing an impossible fake-signal
+    // object.
+    vi.mocked(nodeTimersSetTimeout).mockRejectedValueOnce(
+      Object.assign(new Error("AbortError"), { name: "AbortError" }),
+    );
+
     const controller = new AbortController();
-
-    // A fake signal that always reports aborted=false so the second catch
-    // branch (error.name === "AbortError") is exercised instead of the first.
-    const fakeSignal = {
-      aborted: false,
-      addEventListener: controller.signal.addEventListener.bind(
-        controller.signal,
-      ),
-      removeEventListener: controller.signal.removeEventListener.bind(
-        controller.signal,
-      ),
-    } as unknown as AbortSignal;
-
-    const gen = interval(1000, { signal: fakeSignal });
-    const tickPromise = gen.next();
-
-    // Aborting fires the listener registered by the shim, rejecting with
-    // AbortError. Since fakeSignal.aborted stays false, the second catch
-    // branch handles it.
-    controller.abort();
-
-    const result = await tickPromise;
+    const gen = interval(1000, { signal: controller.signal });
+    const result = await gen.next();
     expect(result.done).toBe(true);
   });
 });

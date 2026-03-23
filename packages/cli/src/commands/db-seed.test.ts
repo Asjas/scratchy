@@ -171,13 +171,11 @@ describe("dbSeedCommand", () => {
     const errorSpy = vi
       .spyOn(consola, "error")
       .mockImplementation(() => undefined);
-    const exitSpy = vi
-      .spyOn(process, "exit")
-      .mockImplementation(
-        ((code?: string | number | null) => {
-          throw new Error(`process.exit called with code ${code}`);
-        }) as (code?: string | number | null) => never,
-      );
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((
+      code?: string | number | null,
+    ) => {
+      throw new Error(`process.exit called with code ${code}`);
+    }) as (code?: string | number | null) => never);
 
     const { dbSeedCommand } = await import("./db-seed.js");
     const run = dbSeedCommand.run;
@@ -208,31 +206,34 @@ describe("dbSeedCommand", () => {
     vi.mocked(spawnSync).mockReturnValueOnce({ status: null } as ReturnType<
       typeof spawnSync
     >);
-    const exitSpy = vi
-      .spyOn(process, "exit")
-      .mockImplementation(
-        (() => undefined) as unknown as (
-          code?: string | number | null,
-        ) => never,
-      );
-    vi.spyOn(consola, "error").mockImplementation(() => undefined);
+    const errorSpy = vi
+      .spyOn(consola, "error")
+      .mockImplementation(() => undefined);
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((
+      code?: string | number | null,
+    ) => {
+      throw new Error(`process.exit: ${code}`);
+    }) as unknown as (code?: string | number | null) => never);
 
     const { dbSeedCommand } = await import("./db-seed.js");
     const run = dbSeedCommand.run;
     if (!run) throw new Error("run is undefined");
 
-    await run({
-      args: {
-        _: [],
-        file: "users",
-        env: ".env",
-        cwd: "/tmp/test-project",
-      },
-      rawArgs: [],
-      cmd: dbSeedCommand,
-    });
+    await expect(
+      run({
+        args: {
+          _: [],
+          file: "users",
+          env: ".env",
+          cwd: "/tmp/test-project",
+        },
+        rawArgs: [],
+        cmd: dbSeedCommand,
+      }),
+    ).rejects.toThrowError("process.exit: 1");
 
     expect(exitSpy).toHaveBeenCalledWith(1);
+    errorSpy.mockRestore();
     exitSpy.mockRestore();
   });
 
