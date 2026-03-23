@@ -779,11 +779,22 @@ export class VirtualFileSystem {
     };
 
     fsMut.copyFileSync = (src: unknown, dest: unknown, mode?: unknown) => {
-      if (typeof src === "string" && this.#shouldHandle(src)) {
-        return this.#provider.copyFileSync(
-          this.#toProviderPath(src),
-          this.#toProviderPath(dest as string),
-        );
+      if (typeof src === "string" && typeof dest === "string") {
+        const srcHandled = this.#shouldHandle(src);
+        const destHandled = this.#shouldHandle(dest);
+
+        if (srcHandled && destHandled) {
+          return this.#provider.copyFileSync(
+            this.#toProviderPath(src),
+            this.#toProviderPath(dest),
+          );
+        }
+
+        if (srcHandled !== destHandled) {
+          const err = new Error("Cross-device link not permitted") as NodeJS.ErrnoException;
+          err.code = "EXDEV";
+          throw err;
+        }
       }
       return (saved.copyFileSync as AnyFn)(src, dest, mode);
     };
