@@ -214,17 +214,21 @@ describe("isEmptyDir", () => {
   });
 
   it("rethrows non-ENOENT errors (e.g., permission denied)", async () => {
-    const { chmodSync } = await import("node:fs");
+    const fsPromises = await import("node:fs/promises");
 
-    // Make the directory unreadable
-    chmodSync(testDir, 0o000);
+    const eaccesError = Object.assign(
+      new Error("EACCES: permission denied"),
+      { code: "EACCES" as const },
+    );
 
-    try {
-      await expect(isEmptyDir(testDir)).rejects.toThrow();
-    } finally {
-      // Restore permissions for cleanup
-      chmodSync(testDir, 0o755);
-    }
+    const readdirSpy = vi
+      .spyOn(fsPromises, "readdir")
+      .mockRejectedValueOnce(eaccesError);
+
+    await expect(isEmptyDir(testDir)).rejects.toBe(eaccesError);
+    expect(readdirSpy).toHaveBeenCalled();
+
+    readdirSpy.mockRestore();
   });
 });
 
