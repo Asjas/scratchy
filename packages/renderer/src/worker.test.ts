@@ -11,7 +11,7 @@ describe("worker handler", () => {
     expect(result.statusCode).toBe(200);
     expect(result.html).toContain("<!DOCTYPE html>");
     expect(result.html).toContain('data-route="/about"');
-    expect(result.head).toBe("<title>SSR</title>");
+    expect(result.head).toContain("<title>");
   });
 
   it("should render an SSG task and return valid HTML", () => {

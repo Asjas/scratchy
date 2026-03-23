@@ -123,12 +123,40 @@ function renderSSR(
   route: string,
   props?: Record<string, unknown>,
 ): RenderResult {
-  const head = "<title>SSR</title>";
+  const head = `<title>Scratchy — ${escapeHtml(route)}</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;color:#111827;background:#fff}
+@media(prefers-color-scheme:dark){body{color:#f3f4f6;background:#030712}}
+.shell{display:flex;flex-direction:column;min-height:100vh}
+header{border-bottom:1px solid #e5e7eb;padding:1rem 2rem}
+@media(prefers-color-scheme:dark){header{border-color:#1f2937}}
+header a{font-size:1.25rem;font-weight:700;text-decoration:none;color:#4f46e5}
+main{flex:1;max-width:72rem;margin:0 auto;padding:2rem}
+footer{border-top:1px solid #e5e7eb;padding:1.5rem;text-align:center;font-size:.875rem;color:#6b7280}
+@media(prefers-color-scheme:dark){footer{border-color:#1f2937}}
+h1{font-size:1.875rem;font-weight:700;margin-bottom:1.5rem}
+.card{border:1px solid #e5e7eb;border-radius:.5rem;padding:1rem;margin-bottom:1rem}
+@media(prefers-color-scheme:dark){.card{border-color:#374151}}
+.card h2{font-size:1.125rem;font-weight:600}
+.card p{margin-top:.25rem;font-size:.875rem;color:#6b7280}
+</style>`;
+
   const escapedRoute = escapeHtml(route);
   const propsScript = props
     ? `<script type="application/json" id="__PROPS__">${escapeHtml(JSON.stringify(props))}</script>`
     : "";
-  const body = `<div id="app" data-route="${escapedRoute}"></div>${propsScript}`;
+
+  const body = `<div id="app" data-route="${escapedRoute}" class="shell">
+<header><a href="/">Scratchy</a></header>
+<main>
+<h1>Welcome to Scratchy</h1>
+<p style="margin-bottom:1.5rem">You are viewing <code>${escapedRoute}</code> &mdash; rendered server-side by the Scratchy SSR worker.</p>
+<div class="card"><h2>Get started</h2><p>Edit <code>src/client/routes/index.tsx</code> to change this page.</p></div>
+<div class="card"><h2>Placeholder renderer</h2><p>This is the built-in placeholder. Connect Qwik SSR to render your actual components.</p></div>
+</main>
+<footer>Built with Scratchy</footer>
+</div>${propsScript}`;
 
   return {
     html: shell(body, head),
