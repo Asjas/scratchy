@@ -153,6 +153,10 @@ export async function removeFeatureBlocks(
     } else if (feature === "posts") {
       importPatterns.push("~/routers/posts/queries.js");
       importPatterns.push("~/routers/posts/mutations.js");
+    } else if (feature === "argon2") {
+      importPatterns.push('"argon2"');
+    } else if (feature === "scrypt") {
+      importPatterns.push("better-auth/crypto");
     }
   }
 
@@ -204,4 +208,50 @@ export async function cleanSentinelComments(dir: string): Promise<void> {
     .filter((line) => !line.trim().startsWith("// @scratchy-feature "))
     .join("\n");
   await writeFile(serverFile, cleaned, "utf8");
+
+  // Also clean auth.ts sentinel comments
+  const authFile = join(dir, "src", "auth.ts");
+  if (!existsSync(authFile)) return;
+
+  const authContent = await readFile(authFile, "utf8");
+  const authCleaned = authContent
+    .split("\n")
+    .filter((line) => !line.trim().startsWith("// @scratchy-feature "))
+    .join("\n");
+  await writeFile(authFile, authCleaned, "utf8");
+}
+
+/**
+ * Configures the password hashing algorithm in the scaffolded project.
+ *
+ * When "argon2id" is selected (default), strips the scrypt sentinel blocks
+ * and the `better-auth/crypto` import from `auth.ts`.
+ *
+ * When "scrypt" is selected, strips the argon2 sentinel blocks, the `argon2`
+ * import, and removes the `argon2` dependency from `package.json`.
+ */
+export async function stripHashAlgorithm(
+  dir: string,
+  algorithm: "argon2id" | "scrypt",
+): Promise<void> {
+  const authFile = join(dir, "src", "auth.ts");
+
+  if (algorithm === "argon2id") {
+    // Keep argon2, strip scrypt blocks and import
+    await removeFeatureBlocks(authFile, ["scrypt"]);
+  } else {
+    // Keep scrypt, strip argon2 blocks and import
+    await removeFeatureBlocks(authFile, ["argon2"]);
+
+    // Remove the argon2 dependency from package.json
+    const pkgFile = join(dir, "package.json");
+    if (existsSync(pkgFile)) {
+      const content = await readFile(pkgFile, "utf8");
+      const updated = content
+        .split("\n")
+        .filter((line) => !line.includes('"argon2"'))
+        .join("\n");
+      await writeFile(pkgFile, updated, "utf8");
+    }
+  }
 }

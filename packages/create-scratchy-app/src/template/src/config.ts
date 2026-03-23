@@ -23,6 +23,13 @@ export const appConfigSchema = configSchema.extend({
    * Example: "http://localhost:3000" or "https://my-app.example.com".
    */
   ORIGIN: z.string().url().optional(),
+  /**
+   * Optional pepper secret prepended to passwords before hashing.
+   * Adds a server-side secret that is never stored in the database,
+   * so leaked password hashes alone cannot be brute-forced.
+   * Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   */
+  PEPPER_SECRET: z.string().min(32).optional(),
 });
 
 export type AppConfig = z.infer<typeof appConfigSchema>;

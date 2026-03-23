@@ -1,6 +1,7 @@
 import type { AppConfig } from "./config.js";
 import { account, session, user, verification } from "./db/schema/index.js";
 import { createAuth } from "@scratchyjs/auth";
+import argon2 from "argon2";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { ulid } from "ulid";
@@ -40,6 +41,20 @@ export function createAppAuth(config: AppConfig, db: NodePgDatabase<any>) {
     trustedOrigins: config.ORIGIN ? [config.ORIGIN] : [],
     emailAndPassword: {
       enabled: true,
+      password: {
+        async hash(password: string) {
+          const input = config.PEPPER_SECRET
+            ? config.PEPPER_SECRET + password
+            : password;
+          return argon2.hash(input);
+        },
+        async verify(data: { hash: string; password: string }) {
+          const input = config.PEPPER_SECRET
+            ? config.PEPPER_SECRET + data.password
+            : data.password;
+          return argon2.verify(data.hash, input);
+        },
+      },
     },
     database: drizzleAdapter(db, {
       provider: "pg",

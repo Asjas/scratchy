@@ -1,5 +1,7 @@
 import { createAuth } from "@scratchyjs/auth";
+import argon2 from "argon2";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { hashPassword, verifyPassword } from "better-auth/crypto";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { ulid } from "ulid";
 import type { AppConfig } from "~/config.js";
@@ -40,6 +42,36 @@ export function createAppAuth(config: AppConfig, db: NodePgDatabase<any>) {
     trustedOrigins: config.ORIGIN ? [config.ORIGIN] : [],
     emailAndPassword: {
       enabled: true,
+      password: {
+        // @scratchy-feature argon2-start
+        async hash(password: string) {
+          const input = config.PEPPER_SECRET
+            ? config.PEPPER_SECRET + password
+            : password;
+          return argon2.hash(input);
+        },
+        async verify(data: { hash: string; password: string }) {
+          const input = config.PEPPER_SECRET
+            ? config.PEPPER_SECRET + data.password
+            : data.password;
+          return argon2.verify(data.hash, input);
+        },
+        // @scratchy-feature argon2-end
+        // @scratchy-feature scrypt-start
+        async hash(password: string) {
+          const input = config.PEPPER_SECRET
+            ? config.PEPPER_SECRET + password
+            : password;
+          return hashPassword(input);
+        },
+        async verify(data: { hash: string; password: string }) {
+          const input = config.PEPPER_SECRET
+            ? config.PEPPER_SECRET + data.password
+            : data.password;
+          return verifyPassword({ hash: data.hash, password: input });
+        },
+        // @scratchy-feature scrypt-end
+      },
     },
     database: drizzleAdapter(db, {
       provider: "pg",

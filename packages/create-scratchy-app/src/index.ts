@@ -9,6 +9,7 @@ import {
   cleanSentinelComments,
   stripAuthFiles,
   stripDatabaseFiles,
+  stripHashAlgorithm,
   stripRendererFiles,
 } from "./strip.js";
 import {
@@ -132,6 +133,7 @@ async function main(): Promise<void> {
   let includeDb = true;
   let includeAuth = true;
   let includeRenderer = true;
+  let hashAlgorithm: "argon2id" | "scrypt" = "argon2id";
   let gitInit = true;
   let installDepsChoice = true;
   let packageManager: PackageManager = detectPackageManager();
@@ -149,6 +151,25 @@ async function main(): Promise<void> {
             message: "Include Better Auth (email & password authentication)?",
             initialValue: true,
           }),
+        hashAlgorithm: ({ results }) =>
+          results.includeAuth
+            ? select<"argon2id" | "scrypt">({
+                message: "Password hashing algorithm:",
+                options: [
+                  {
+                    value: "argon2id",
+                    label: "Argon2id",
+                    hint: "recommended — winner of the Password Hashing Competition",
+                  },
+                  {
+                    value: "scrypt",
+                    label: "scrypt",
+                    hint: "no native dependency — uses Better Auth built-in",
+                  },
+                ],
+                initialValue: "argon2id" as "argon2id" | "scrypt",
+              })
+            : undefined,
         includeRenderer: () =>
           confirm({
             message: "Include Piscina SSR worker pool (Qwik rendering)?",
@@ -184,6 +205,9 @@ async function main(): Promise<void> {
     includeDb = options.includeDb as boolean;
     includeAuth = options.includeAuth as boolean;
     includeRenderer = options.includeRenderer as boolean;
+    hashAlgorithm =
+      (options.hashAlgorithm as "argon2id" | "scrypt" | undefined) ??
+      "argon2id";
     gitInit = options.gitInit as boolean;
     packageManager = options.packageManager as PackageManager;
     installDepsChoice = options.installDepsChoice as boolean;
@@ -220,6 +244,11 @@ async function main(): Promise<void> {
 
   if (!includeAuth) {
     await stripAuthFiles(projectDir);
+  }
+
+  // Configure hash algorithm (only relevant when auth is included).
+  if (includeAuth) {
+    await stripHashAlgorithm(projectDir, hashAlgorithm);
   }
 
   if (!includeRenderer) {
