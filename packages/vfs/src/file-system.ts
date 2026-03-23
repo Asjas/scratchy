@@ -420,11 +420,17 @@ export class VirtualFileSystem {
   }
 
   symlinkSync(target: string, path: string): void {
-    this.#provider.symlinkSync(target, this.#toProviderPath(path));
+    const providerTarget = pathPosix.isAbsolute(target)
+      ? this.#toProviderPath(target)
+      : target;
+    this.#provider.symlinkSync(providerTarget, this.#toProviderPath(path));
   }
 
   readlinkSync(path: string): string {
-    return this.#provider.readlinkSync(this.#toProviderPath(path));
+    const result = this.#provider.readlinkSync(this.#toProviderPath(path));
+    return pathPosix.isAbsolute(result)
+      ? this.#toMountedPath(result)
+      : result;
   }
 
   realpathSync(path: string): string {
