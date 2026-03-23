@@ -811,8 +811,16 @@ export class VirtualFileSystem {
 
     fsMut.symlinkSync = (target: unknown, p: unknown) => {
       if (typeof p === "string" && this.#shouldHandle(p)) {
+        let internalTarget = target;
+        if (
+          typeof target === "string" &&
+          pathPosix.isAbsolute(target) &&
+          this.#shouldHandle(target)
+        ) {
+          internalTarget = this.#toProviderPath(target);
+        }
         return this.#provider.symlinkSync(
-          target as string,
+          internalTarget as string,
           this.#toProviderPath(p),
         );
       }
