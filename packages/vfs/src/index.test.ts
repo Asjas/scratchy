@@ -1883,7 +1883,7 @@ describe("fs sync hooks: new operations via VFS path", () => {
   it("fs.chmodSync changes a virtual file's permissions", () => {
     vfs.addFile(MOUNT + "/chmod.txt", "");
     fs.chmodSync(MOUNT + "/chmod.txt", 0o600);
-    expect(fs.statSync(MOUNT + "/chmod.txt").mode & 0o777 & 0o600).toBe(0o600);
+    expect(fs.statSync(MOUNT + "/chmod.txt").mode & 0o777).toBe(0o600);
   });
 
   it("fs.chownSync succeeds for a virtual file", () => {
