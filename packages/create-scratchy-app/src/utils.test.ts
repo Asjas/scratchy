@@ -216,10 +216,9 @@ describe("isEmptyDir", () => {
   it("rethrows non-ENOENT errors (e.g., permission denied)", async () => {
     const fsPromises = await import("node:fs/promises");
 
-    const eaccesError = Object.assign(
-      new Error("EACCES: permission denied"),
-      { code: "EACCES" as const },
-    );
+    const eaccesError = Object.assign(new Error("EACCES: permission denied"), {
+      code: "EACCES" as const,
+    });
 
     const readdirSpy = vi
       .spyOn(fsPromises, "readdir")

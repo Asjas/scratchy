@@ -1,3 +1,4 @@
+import type { Config } from "./config.js";
 import { createServer, loadConfig } from "./index.js";
 import stripPlugin from "./plugins/external/a-strip-internal-headers.js";
 // Import plugin functions directly to register them in standalone tests.
@@ -7,7 +8,6 @@ import "./plugins/external/helmet.js";
 import "./plugins/external/rate-limit.js";
 import "./plugins/external/sensible.js";
 import healthRoute from "./routes/health/index.js";
-import type { Config } from "./config.js";
 import type { FastifyInstance } from "fastify";
 import Fastify from "fastify";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
