@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./worker": "./src/worker.ts",
     "./plugin": "./src/plugin.ts",
-    "./shared-buffer": "./src/shared-buffer.ts"
+    "./shared-buffer": "./src/shared-buffer.ts",
+    "./ring-buffer": "./src/ring-buffer.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

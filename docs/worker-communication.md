@@ -199,83 +199,69 @@ export default async function handler(task: {
 
 ### Advanced: Lock-Free Ring Buffer
 
-For high-throughput scenarios (e.g., streaming rendered chunks), use a ring
-buffer with atomic read/write pointers:
+For high-throughput scenarios (e.g., streaming rendered chunks), use
+`SharedRingBuffer` from `@scratchyjs/renderer`. It implements a Single-Producer
+/ Single-Consumer (SPSC) lock-free ring buffer backed by a `SharedArrayBuffer`.
 
 ```typescript
-// lib/ring-buffer.ts
-export class SharedRingBuffer {
-  private buffer: SharedArrayBuffer;
-  private writePos: Int32Array; // Atomic write pointer
-  private readPos: Int32Array; // Atomic read pointer
-  private data: Uint8Array;
-  private capacity: number;
+import { SharedRingBuffer } from "@scratchyjs/renderer";
 
-  constructor(capacity: number) {
-    // 8 bytes for pointers + capacity for data
-    this.capacity = capacity;
-    this.buffer = new SharedArrayBuffer(8 + capacity);
-    this.writePos = new Int32Array(this.buffer, 0, 1);
-    this.readPos = new Int32Array(this.buffer, 4, 1);
-    this.data = new Uint8Array(this.buffer, 8, capacity);
-  }
+// Producer (main thread) — create the ring buffer and pass it to the worker
+const ring = new SharedRingBuffer(64 * 1024); // 64 KB ring
 
-  write(chunk: Uint8Array): boolean {
-    const wp = Atomics.load(this.writePos, 0);
-    const rp = Atomics.load(this.readPos, 0);
-    const available = this.capacity - (wp - rp);
+ring.write(encoder.encode("<html>...first chunk...</html>"));
 
-    if (chunk.byteLength > available) return false; // Buffer full
+const result = await fastify.runTask({
+  type: "streaming-ssr",
+  sharedBuffer: ring.getSharedBuffer(), // transfer to worker
+});
+```
 
-    const offset = wp % this.capacity;
-    const spaceToEnd = this.capacity - offset;
+```typescript
+import { SharedRingBuffer } from "@scratchyjs/renderer";
 
-    if (chunk.byteLength <= spaceToEnd) {
-      // Chunk fits without wrapping
-      this.data.set(chunk, offset);
-    } else {
-      // Split write across the buffer boundary
-      this.data.set(chunk.subarray(0, spaceToEnd), offset);
-      this.data.set(chunk.subarray(spaceToEnd), 0);
-    }
+// Consumer (worker thread) — reconstruct from the transferred SharedArrayBuffer
+export default async function handler(task: {
+  sharedBuffer: SharedArrayBuffer;
+}) {
+  const ring = SharedRingBuffer.fromSharedBuffer(task.sharedBuffer);
 
-    Atomics.store(this.writePos, 0, wp + chunk.byteLength);
-    Atomics.notify(this.readPos, 0); // Wake reader
-    return true;
-  }
-
-  read(maxBytes: number): Uint8Array | null {
-    const wp = Atomics.load(this.writePos, 0);
-    const rp = Atomics.load(this.readPos, 0);
-
-    if (wp === rp) return null; // Buffer empty
-
-    const available = wp - rp;
-    const readSize = Math.min(maxBytes, available);
-    const offset = rp % this.capacity;
-    const spaceToEnd = this.capacity - offset;
-
-    let chunk: Uint8Array;
-
-    if (readSize <= spaceToEnd) {
-      // Read fits without wrapping
-      chunk = this.data.slice(offset, offset + readSize);
-    } else {
-      // Split read across the buffer boundary
-      chunk = new Uint8Array(readSize);
-      chunk.set(this.data.subarray(offset, offset + spaceToEnd), 0);
-      chunk.set(this.data.subarray(0, readSize - spaceToEnd), spaceToEnd);
-    }
-
-    Atomics.store(this.readPos, 0, rp + readSize);
-    return chunk;
-  }
-
-  getSharedBuffer(): SharedArrayBuffer {
-    return this.buffer;
+  const chunk = ring.read(4096); // returns Uint8Array | null
+  if (chunk) {
+    const html = new TextDecoder().decode(chunk);
+    // … process chunk
   }
 }
 ```
+
+#### API
+
+| Member                                   | Description                                                                   |
+| ---------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `new SharedRingBuffer(capacity)`         | Allocates a new ring backed by a `SharedArrayBuffer` of `8 + capacity` bytes. |
+| `SharedRingBuffer.fromSharedBuffer(sab)` | Reconstructs a ring from an existing `SharedArrayBuffer` (worker side).       |
+| `write(chunk: Uint8Array): boolean`      | Writes `chunk` atomically. Returns `false` if the ring is full.               |
+| `read(maxBytes: number): Uint8Array      | null`                                                                         | Reads up to `maxBytes` bytes. Returns `null` if the ring is empty. |
+| `availableToRead`                        | Bytes currently ready to read (snapshot).                                     |
+| `availableToWrite`                       | Bytes available for writing (snapshot).                                       |
+| `isEmpty`                                | `true` when there is no data to read.                                         |
+| `isFull`                                 | `true` when there is no space to write.                                       |
+| `capacity`                               | Data region size in bytes.                                                    |
+| `byteLength`                             | Total `SharedArrayBuffer` size (`8 + capacity`).                              |
+| `getSharedBuffer()`                      | Returns the underlying `SharedArrayBuffer` for transfer to a worker.          |
+
+#### Design notes
+
+- **SPSC lock-free** — `writePos` is advanced only by the producer and `readPos`
+  only by the consumer, making concurrent access safe without locks.
+- **Monotonic pointers** — both pointers grow indefinitely; the actual buffer
+  position is `pointer % capacity`, which keeps arithmetic race-free.
+- **Ring wrapping** — writes and reads that span the end of the buffer are split
+  automatically and reassembled transparently.
+- **Notifications** — `write()` calls `Atomics.notify(writePos, 0)` after each
+  successful write; `read()` calls `Atomics.notify(readPos, 0)` after each read.
+  These wake any agent that is blocking via `Atomics.wait`, enabling future
+  blocking-consumer or blocking-producer extensions without API changes.
 
 ## Pattern 2: Redis (DragonflyDB)
 
