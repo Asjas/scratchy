@@ -1,7 +1,7 @@
 import type { RenderResult, RenderTask } from "./worker.js";
 import Fastify from "fastify";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("renderer plugin", () => {
   it("should decorate fastify with piscina and runTask", async () => {
@@ -112,5 +112,59 @@ describe("renderer plugin", () => {
     expect(typeof server.runTask).toBe("function");
 
     await server.close();
+  });
+
+  it("should throw RangeError for invalid minThreads", async () => {
+    const plugin = (await import("./plugin.js")).default;
+
+    const mockFastify = {
+      decorate: vi.fn(),
+      addHook: vi.fn(),
+      log: { info: vi.fn() },
+    };
+
+    expect(() => {
+      plugin(mockFastify as unknown as import("fastify").FastifyInstance, {
+        worker: "worker.ts",
+        minThreads: 0,
+        maxThreads: 2,
+      });
+    }).toThrow(RangeError);
+  });
+
+  it("should throw RangeError for invalid maxThreads", async () => {
+    const plugin = (await import("./plugin.js")).default;
+
+    const mockFastify = {
+      decorate: vi.fn(),
+      addHook: vi.fn(),
+      log: { info: vi.fn() },
+    };
+
+    expect(() => {
+      plugin(mockFastify as unknown as import("fastify").FastifyInstance, {
+        worker: "worker.ts",
+        minThreads: 1,
+        maxThreads: 0,
+      });
+    }).toThrow(RangeError);
+  });
+
+  it("should throw RangeError when minThreads > maxThreads", async () => {
+    const plugin = (await import("./plugin.js")).default;
+
+    const mockFastify = {
+      decorate: vi.fn(),
+      addHook: vi.fn(),
+      log: { info: vi.fn() },
+    };
+
+    expect(() => {
+      plugin(mockFastify as unknown as import("fastify").FastifyInstance, {
+        worker: "worker.ts",
+        minThreads: 4,
+        maxThreads: 2,
+      });
+    }).toThrow(RangeError);
   });
 });

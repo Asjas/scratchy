@@ -117,4 +117,57 @@ describe("createSSRHandler", () => {
 
     await server.close();
   });
+
+  it("should not override content-type when result includes a content-type header", async () => {
+    // Create a fresh server without the renderer plugin — manually decorate runTask
+    const server = Fastify({ logger: false });
+
+    server.decorate("runTask", async () => ({
+      html: "<html><body>custom</body></html>",
+      head: "",
+      statusCode: 200,
+      headers: { "content-type": "text/html; charset=utf-8; custom=true" },
+    }));
+
+    server.get("/with-headers", createSSRHandler());
+    await server.ready();
+
+    const response = await server.inject({
+      method: "GET",
+      url: "/with-headers",
+    });
+
+    expect(response.statusCode).toBe(200);
+    // The custom content-type from headers should be present
+    expect(response.headers["content-type"]).toContain("custom=true");
+
+    await server.close();
+  });
+
+  it("should apply extra headers from the render result", async () => {
+    // Create a fresh server without the renderer plugin — manually decorate runTask
+    const server = Fastify({ logger: false });
+
+    server.decorate("runTask", async () => ({
+      html: "<html><body>page</body></html>",
+      head: "",
+      statusCode: 200,
+      headers: { "x-custom-header": "my-value" },
+    }));
+
+    server.get("/extra-headers", createSSRHandler());
+    await server.ready();
+
+    const response = await server.inject({
+      method: "GET",
+      url: "/extra-headers",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["x-custom-header"]).toBe("my-value");
+    // content-type should default since it's not in headers
+    expect(response.headers["content-type"]).toContain("text/html");
+
+    await server.close();
+  });
 });
