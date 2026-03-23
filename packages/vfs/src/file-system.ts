@@ -779,12 +779,31 @@ export class VirtualFileSystem {
     };
 
     fsMut.renameSync = (oldP: unknown, newP: unknown) => {
-      if (typeof oldP === "string" && this.#shouldHandle(oldP)) {
-        return this.#provider.renameSync(
-          this.#toProviderPath(oldP),
-          this.#toProviderPath(newP as string),
-        );
+      if (typeof oldP === "string" && typeof newP === "string") {
+        const oldInVfs = this.#shouldHandle(oldP);
+        const newInVfs = this.#shouldHandle(newP);
+
+        // Both paths are under the virtual mount: handle entirely in the provider.
+        if (oldInVfs && newInVfs) {
+          return this.#provider.renameSync(
+            this.#toProviderPath(oldP),
+            this.#toProviderPath(newP),
+          );
+        }
+
+        // One path is virtual and the other is real: do not allow a cross-device
+        // rename between VFS and the real filesystem.
+        if (oldInVfs !== newInVfs) {
+          const err: NodeJS.ErrnoException = new Error(
+            "Cross-device link not permitted between virtual and real file systems",
+          );
+          err.code = "EXDEV";
+          throw err;
+        }
       }
+
+      // Fallback: both paths are outside the mount or non-string; delegate to the
+      // original fs.renameSync implementation.
       return (saved.renameSync as AnyFn)(oldP, newP);
     };
 
