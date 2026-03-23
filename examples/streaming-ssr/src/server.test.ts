@@ -1,8 +1,8 @@
+import { buildServer } from "./server.js";
 import { loadConfig } from "@scratchyjs/core";
 import type {} from "@scratchyjs/renderer/plugin";
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { buildServer } from "./server.js";
 
 // ── Server setup ─────────────────────────────────────────────────────────────
 let server: FastifyInstance;
