@@ -3,6 +3,16 @@ import type { CommandMeta } from "citty";
 import { consola } from "consola";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+/**
+ * `node:fs/promises` is resolved through vitest's CJS-based module runner, so
+ * VFS patches to `require("node:fs").promises` are visible after
+ * `vi.resetModules()`.  The happy-path test mounts a VFS and verifies that the
+ * command removes the virtual directories.
+ *
+ * Error-path tests cannot trigger failures at specific paths through VFS alone
+ * (VFS has no mechanism to make a path throw), so they use `vi.doMock` to
+ * supply a stub `rm` that rejects on the first call.
+ */
 const MOUNT = `/tmp/vfs-cache-clear-${process.pid}`;
 
 describe("cacheClearCommand", () => {
@@ -12,10 +22,6 @@ describe("cacheClearCommand", () => {
     vi.resetModules();
     vfs = create();
     vfs.mount(MOUNT);
-    vfs.addDirectory(`${MOUNT}/dist`);
-    vfs.addDirectory(`${MOUNT}/.qwik`);
-    vfs.addDirectory(`${MOUNT}/node_modules/.vite`);
-    vfs.addDirectory(`${MOUNT}/node_modules/.cache`);
   });
 
   afterEach(() => {
@@ -25,6 +31,12 @@ describe("cacheClearCommand", () => {
   });
 
   it("should remove all cache directories", async () => {
+    // Create the expected output dirs in VFS so the command can remove them.
+    vfs.addDirectory(`${MOUNT}/dist`);
+    vfs.addDirectory(`${MOUNT}/.qwik`);
+    vfs.addDirectory(`${MOUNT}/node_modules/.vite`);
+    vfs.addDirectory(`${MOUNT}/node_modules/.cache`);
+
     const { cacheClearCommand } = await import("./cache-clear.js");
     const run = cacheClearCommand.run;
     if (!run) throw new Error("run is undefined");
@@ -42,6 +54,7 @@ describe("cacheClearCommand", () => {
   });
 
   it("should handle errors gracefully and continue", async () => {
+    // VFS cannot simulate per-path failures, so stub rm directly.
     const rmMock = vi
       .fn()
       .mockRejectedValueOnce(new Error("ENOENT"))
@@ -66,6 +79,7 @@ describe("cacheClearCommand", () => {
   });
 
   it("should handle non-Error exceptions gracefully", async () => {
+    // VFS cannot simulate per-path failures, so stub rm directly.
     const rmMock = vi
       .fn()
       .mockRejectedValueOnce("string error")
