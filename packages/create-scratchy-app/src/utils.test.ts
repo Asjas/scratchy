@@ -12,7 +12,7 @@ import {
 } from "./utils.js";
 import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -23,6 +23,11 @@ vi.mock("node:child_process", async (importOriginal) => {
     ...actual,
     execSync: vi.fn(actual.execSync),
   };
+});
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, readdir: vi.fn(actual.readdir) };
 });
 
 // ---------------------------------------------------------------------------
@@ -214,20 +219,14 @@ describe("isEmptyDir", () => {
   });
 
   it("rethrows non-ENOENT errors (e.g., permission denied)", async () => {
-    const fsPromises = await import("node:fs/promises");
-
     const eaccesError = Object.assign(new Error("EACCES: permission denied"), {
       code: "EACCES" as const,
     });
 
-    const readdirSpy = vi
-      .spyOn(fsPromises, "readdir")
-      .mockRejectedValueOnce(eaccesError);
+    vi.mocked(readdir).mockRejectedValueOnce(eaccesError);
 
     await expect(isEmptyDir(testDir)).rejects.toBe(eaccesError);
-    expect(readdirSpy).toHaveBeenCalled();
-
-    readdirSpy.mockRestore();
+    expect(readdir).toHaveBeenCalled();
   });
 });
 
