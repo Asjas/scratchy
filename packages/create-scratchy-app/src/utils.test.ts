@@ -368,6 +368,22 @@ describe("initGit", () => {
     await rm(testDir, { recursive: true, force: true });
   });
 
+  it("returns true when git init, add, and commit all succeed", async () => {
+    // Ensure git has user config so the commit step succeeds in CI
+    try {
+      execSync("git config --global user.email", { stdio: "ignore" });
+    } catch {
+      execSync("git config --global user.email 'ci@test.com'", {
+        stdio: "ignore",
+      });
+      execSync("git config --global user.name 'CI'", { stdio: "ignore" });
+    }
+
+    const result = initGit(testDir);
+    expect(result).toBe(true);
+    expect(existsSync(join(testDir, ".git"))).toBe(true);
+  });
+
   it("returns a boolean without throwing", () => {
     // In CI, git may not have user.email configured, so the commit step may
     // fail. The important thing is that initGit returns a boolean without

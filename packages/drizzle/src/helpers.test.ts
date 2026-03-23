@@ -33,4 +33,12 @@ describe("timestamps", () => {
     expect(getConfig(timestamps.createdAt).withTimezone).toBe(true);
     expect(getConfig(timestamps.updatedAt).withTimezone).toBe(true);
   });
+
+  it("$onUpdateFn callback returns a Date", () => {
+    const config = getConfig(timestamps.updatedAt);
+    const fn = config.onUpdateFn as (() => Date) | undefined;
+    expect(fn).toBeDefined();
+    const result = fn!();
+    expect(result).toBeInstanceOf(Date);
+  });
 });
