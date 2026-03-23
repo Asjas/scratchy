@@ -599,7 +599,11 @@ export class VirtualFileSystem {
   /** Translates a provider-internal path to the mounted absolute path. */
   #toMountedPath(providerPath: string): string {
     if (this.#mounted && this.#mountPoint) {
-      return join(this.#mountPoint, providerPath);
+      // Ensure `providerPath` is treated as relative when joining so that
+      // `this.#mountPoint` is not discarded even if `providerPath` is
+      // absolute (starts with `/` or `\`).
+      const relativeProviderPath = providerPath.replace(/^[/\\]+/, "");
+      return join(this.#mountPoint, relativeProviderPath);
     }
     return providerPath;
   }
