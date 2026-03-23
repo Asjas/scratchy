@@ -1,0 +1,16 @@
+{
+  "name": "@scratchyjs/vfs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "22.16.0",
+    "typescript": "5.8.3"
+  }
+}
