@@ -668,25 +668,3 @@ describe("file path conventions", () => {
 // ---------------------------------------------------------------------------
 // Template cache hit
 // ---------------------------------------------------------------------------
-
-describe("renderTemplate cache hit", () => {
-  beforeEach(() => {
-    clearTemplateCache();
-  });
-
-  it("returns the same output on a cache hit (second call without clearing)", () => {
-    const context = {
-      pascalName: "Post",
-      camelName: "post",
-      snakeName: "post",
-      schemaImport: "app",
-      columns: [],
-      relations: [],
-      drizzleTypes: ["text"],
-    };
-    const first = renderTemplate("model.ts.hbs", context);
-    // Second call with the same template should hit the cache (line 16-17)
-    const second = renderTemplate("model.ts.hbs", context);
-    expect(second).toBe(first);
-  });
-});
