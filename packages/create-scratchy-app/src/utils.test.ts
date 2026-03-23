@@ -373,19 +373,24 @@ describe("initGit", () => {
   });
 
   it("returns true when git init, add, and commit all succeed", async () => {
-    // Ensure git has user config so the commit step succeeds in CI
-    try {
-      execSync("git config --global user.email", { stdio: "ignore" });
-    } catch {
-      execSync("git config --global user.email 'ci@test.com'", {
-        stdio: "ignore",
-      });
-      execSync("git config --global user.name 'CI'", { stdio: "ignore" });
-    }
+    // Ensure git has user identity so the commit step succeeds in CI without
+    // mutating the global git config. Git respects these environment
+    // variables for author/committer information.
+    const originalEnv = { ...process.env };
 
-    const result = initGit(testDir);
-    expect(result).toBe(true);
-    expect(existsSync(join(testDir, ".git"))).toBe(true);
+    process.env.GIT_AUTHOR_NAME = "CI";
+    process.env.GIT_AUTHOR_EMAIL = "ci@test.com";
+    process.env.GIT_COMMITTER_NAME = "CI";
+    process.env.GIT_COMMITTER_EMAIL = "ci@test.com";
+
+    try {
+      const result = initGit(testDir);
+      expect(result).toBe(true);
+      expect(existsSync(join(testDir, ".git"))).toBe(true);
+    } finally {
+      // Restore the previous environment to avoid leaking state to other tests
+      process.env = originalEnv;
+    }
   });
 
   it("returns a boolean without throwing", () => {
