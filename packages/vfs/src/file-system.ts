@@ -428,9 +428,7 @@ export class VirtualFileSystem {
 
   readlinkSync(path: string): string {
     const result = this.#provider.readlinkSync(this.#toProviderPath(path));
-    return pathPosix.isAbsolute(result)
-      ? this.#toMountedPath(result)
-      : result;
+    return pathPosix.isAbsolute(result) ? this.#toMountedPath(result) : result;
   }
 
   realpathSync(path: string): string {
@@ -820,7 +818,9 @@ export class VirtualFileSystem {
         }
 
         if (srcHandled !== destHandled) {
-          const err = new Error("Cross-device link not permitted") as NodeJS.ErrnoException;
+          const err = new Error(
+            "Cross-device link not permitted",
+          ) as NodeJS.ErrnoException;
           err.code = "EXDEV";
           throw err;
         }
@@ -1052,10 +1052,7 @@ export class VirtualFileSystem {
           typeof target === "string" && this.#shouldHandle(target)
             ? this.#toProviderPath(target)
             : (target as string);
-        return this.#provider.symlink(
-          internalTarget,
-          this.#toProviderPath(p),
-        );
+        return this.#provider.symlink(internalTarget, this.#toProviderPath(p));
       }
       return (saved.promises.symlink as AnyFn)(target, p);
     };
