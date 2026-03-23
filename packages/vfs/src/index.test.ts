@@ -1605,7 +1605,7 @@ describe("VirtualFileSystem direct method calls (mounted)", () => {
   it("vfs.chmodSync() changes mode directly", () => {
     vfs.addFile(MOUNT + "/chmod.txt", "");
     vfs.chmodSync(MOUNT + "/chmod.txt", 0o600);
-    expect(vfs.statSync(MOUNT + "/chmod.txt").mode & 0o777 & 0o600).toBe(0o600);
+    expect(vfs.statSync(MOUNT + "/chmod.txt").mode & 0o777).toBe(0o600);
   });
 
   it("vfs.chownSync() changes ownership directly", () => {
