@@ -70,20 +70,26 @@ describe("dbFreshCommand", () => {
     const exitSpy = vi
       .spyOn(process, "exit")
       .mockImplementation(
-        (() => undefined) as unknown as (
-          code?: string | number | null,
-        ) => never,
+        ((code?: string | number | null) => {
+          throw new Error(`process.exit: ${code}`);
+        }) as unknown as (code?: string | number | null) => never,
       );
 
     const { dbFreshCommand } = await import("./db-fresh.js");
     const run = dbFreshCommand.run;
     if (!run) throw new Error("run is undefined");
 
-    await run({
-      args: { _: [], config: "drizzle.config.ts", cwd: "/tmp/test-project" },
-      rawArgs: [],
-      cmd: dbFreshCommand,
-    });
+    await expect(
+      run({
+        args: {
+          _: [],
+          config: "drizzle.config.ts",
+          cwd: "/tmp/test-project",
+        },
+        rawArgs: [],
+        cmd: dbFreshCommand,
+      }),
+    ).rejects.toThrowError("process.exit: 1");
 
     expect(exitSpy).toHaveBeenCalledWith(1);
     expect(errorSpy).toHaveBeenCalled();
