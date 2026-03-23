@@ -10,6 +10,22 @@ A full-stack TypeScript framework for building APIs and websites on hosted
 servers (not serverless). Built on Fastify, tRPC, Qwik, Drizzle ORM, and Piscina
 worker threads.
 
+## Benchmarks
+
+Performance benchmarks for the framework's critical hot paths are in
+`benchmarks/`. Run them with:
+
+```bash
+pnpm bench        # interactive mode
+pnpm bench:ci     # single run, writes benchmarks/results.json
+```
+
+Benchmarked subsystems: `SharedRingBuffer` (streaming SSR throughput),
+`SharedBuffer` (worker-thread payload round-trips), `safeRedirect` (input
+validation), `promiseHash`/`timeout` (promise utilities), and
+`getClientIPAddress` (proxy-header IP extraction). See the
+[Benchmarks documentation](https://scratchyjs.com/benchmarks) for full details.
+
 ## Packages
 
 | Package                                                       | Description                                                                                    |

@@ -72,6 +72,7 @@ export default defineConfig({
         text: "Testing & Tooling",
         items: [
           { text: "Testing", link: "/testing" },
+          { text: "Benchmarks", link: "/benchmarks" },
           { text: "CLI", link: "/cli" },
           {
             text: "create-scratchy-app",
