@@ -1825,9 +1825,8 @@ describe("VirtualFileSystem promises getter (mounted)", () => {
   it("vfs.promises.chmod changes file permissions", async () => {
     vfs.addFile(MOUNT + "/pchmod.txt", "");
     await vfs.promises.chmod(MOUNT + "/pchmod.txt", 0o600);
-    expect(vfs.statSync(MOUNT + "/pchmod.txt").mode & 0o777 & 0o600).toBe(
-      0o600,
-    );
+    const mode = vfs.statSync(MOUNT + "/pchmod.txt").mode;
+    expect(mode & 0o777).toBe(0o600);
   });
 
   it("vfs.promises.chown succeeds", async () => {
