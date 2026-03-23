@@ -1,93 +1,112 @@
+import { type VirtualFileSystem, create } from "@scratchyjs/vfs";
 import type { CommandMeta } from "citty";
 import { consola } from "consola";
-import { rm } from "node:fs/promises";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("node:fs/promises", () => ({
-  rm: vi.fn().mockResolvedValue(undefined),
-}));
+/**
+ * `node:fs/promises` is resolved through vitest's CJS-based module runner, so
+ * VFS patches to `require("node:fs").promises` are visible after
+ * `vi.resetModules()`.  The happy-path test mounts a VFS and verifies that the
+ * command removes the virtual directories.
+ *
+ * Error-path tests cannot trigger failures at specific paths through VFS alone
+ * (VFS has no mechanism to make a path throw), so they use `vi.doMock` to
+ * supply a stub `rm` that rejects on the first call.
+ */
+const MOUNT = `/tmp/vfs-cache-clear-${process.pid}`;
 
 describe("cacheClearCommand", () => {
+  let vfs: VirtualFileSystem;
+
+  beforeEach(() => {
+    vi.resetModules();
+    vfs = create();
+    vfs.mount(MOUNT);
+  });
+
   afterEach(() => {
-    vi.clearAllMocks();
+    vfs.unmount();
+    vi.doUnmock("node:fs/promises");
+    vi.restoreAllMocks();
   });
 
   it("should remove all cache directories", async () => {
+    // Create the expected output dirs in VFS so the command can remove them.
+    vfs.addDirectory(`${MOUNT}/dist`);
+    vfs.addDirectory(`${MOUNT}/.qwik`);
+    vfs.addDirectory(`${MOUNT}/node_modules/.vite`);
+    vfs.addDirectory(`${MOUNT}/node_modules/.cache`);
+
     const { cacheClearCommand } = await import("./cache-clear.js");
     const run = cacheClearCommand.run;
     if (!run) throw new Error("run is undefined");
 
     await run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd: MOUNT },
       rawArgs: [],
       cmd: cacheClearCommand,
     });
 
-    expect(rm).toHaveBeenCalledTimes(4);
-    expect(rm).toHaveBeenCalledWith("/tmp/test-project/dist", {
-      recursive: true,
-      force: true,
-    });
-    expect(rm).toHaveBeenCalledWith("/tmp/test-project/.qwik", {
-      recursive: true,
-      force: true,
-    });
-    expect(rm).toHaveBeenCalledWith("/tmp/test-project/node_modules/.vite", {
-      recursive: true,
-      force: true,
-    });
-    expect(rm).toHaveBeenCalledWith("/tmp/test-project/node_modules/.cache", {
-      recursive: true,
-      force: true,
-    });
+    expect(vfs.existsSync(`${MOUNT}/dist`)).toBe(false);
+    expect(vfs.existsSync(`${MOUNT}/.qwik`)).toBe(false);
+    expect(vfs.existsSync(`${MOUNT}/node_modules/.vite`)).toBe(false);
+    expect(vfs.existsSync(`${MOUNT}/node_modules/.cache`)).toBe(false);
   });
 
   it("should handle errors gracefully and continue", async () => {
-    vi.mocked(rm).mockRejectedValueOnce(new Error("ENOENT"));
+    // VFS cannot simulate per-path failures, so stub rm directly.
+    const rmMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("ENOENT"))
+      .mockResolvedValue(undefined);
+    vi.doMock("node:fs/promises", () => ({ rm: rmMock }));
+
     const warnSpy = vi
       .spyOn(consola, "warn")
       .mockImplementation(() => undefined);
-
     const { cacheClearCommand } = await import("./cache-clear.js");
     const run = cacheClearCommand.run;
     if (!run) throw new Error("run is undefined");
 
-    // Should not throw
     await run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd: MOUNT },
       rawArgs: [],
       cmd: cacheClearCommand,
     });
 
-    // Should have tried all 4 directories despite the first failing
-    expect(rm).toHaveBeenCalledTimes(4);
+    expect(rmMock).toHaveBeenCalledTimes(4);
     expect(warnSpy).toHaveBeenCalledWith("Skipped dist: ENOENT");
-    warnSpy.mockRestore();
   });
 
   it("should handle non-Error exceptions gracefully", async () => {
-    vi.mocked(rm).mockRejectedValueOnce("string error");
+    // VFS cannot simulate per-path failures, so stub rm directly.
+    const rmMock = vi
+      .fn()
+      .mockRejectedValueOnce("string error")
+      .mockResolvedValue(undefined);
+    vi.doMock("node:fs/promises", () => ({ rm: rmMock }));
+
     const warnSpy = vi
       .spyOn(consola, "warn")
       .mockImplementation(() => undefined);
-
     const { cacheClearCommand } = await import("./cache-clear.js");
     const run = cacheClearCommand.run;
     if (!run) throw new Error("run is undefined");
 
-    // Should not throw
     await run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd: MOUNT },
       rawArgs: [],
       cmd: cacheClearCommand,
     });
 
-    expect(rm).toHaveBeenCalledTimes(4);
+    expect(rmMock).toHaveBeenCalledTimes(4);
     expect(warnSpy).toHaveBeenCalledWith("Skipped dist: string error");
-    warnSpy.mockRestore();
   });
 
   it("should use process.cwd() when cwd is empty", async () => {
+    const rmMock = vi.fn().mockResolvedValue(undefined);
+    vi.doMock("node:fs/promises", () => ({ rm: rmMock }));
+
     const { cacheClearCommand } = await import("./cache-clear.js");
     const run = cacheClearCommand.run;
     if (!run) throw new Error("run is undefined");
@@ -98,8 +117,11 @@ describe("cacheClearCommand", () => {
       cmd: cacheClearCommand,
     });
 
-    // Should use process.cwd() + /dist, etc.
-    expect(rm).toHaveBeenCalledTimes(4);
+    expect(rmMock).toHaveBeenCalledTimes(4);
+    expect(rmMock).toHaveBeenCalledWith(
+      expect.stringContaining(process.cwd()),
+      expect.objectContaining({ recursive: true }),
+    );
   });
 
   it("should have correct command metadata", async () => {

@@ -237,42 +237,43 @@ src/client/
 Detailed coding patterns are in `.github/instructions/`, each scoped to specific
 file paths or technology areas:
 
-| File                             | Scope                                    |
-| -------------------------------- | ---------------------------------------- |
-| `react.instructions.md`          | React components in Qwik React interop   |
-| `qwik.instructions.md`           | Qwik components, routing, and rendering  |
-| `drizzle.instructions.md`        | Drizzle ORM schemas, queries, migrations |
-| `trpc.instructions.md`           | tRPC routers, procedures, middleware     |
-| `fastify.instructions.md`        | Fastify server, plugins, routes          |
-| `typescript.instructions.md`     | TypeScript config and patterns           |
-| `worker-threads.instructions.md` | Worker Threads and Piscina patterns      |
-| `vite.instructions.md`           | Vite bundling configuration              |
-| `tailwindcss.instructions.md`    | Tailwind CSS styling patterns            |
+| File                             | Scope                                                    |
+| -------------------------------- | -------------------------------------------------------- |
+| `react.instructions.md`          | React components in Qwik React interop                   |
+| `qwik.instructions.md`           | Qwik components, routing, and rendering                  |
+| `drizzle.instructions.md`        | Drizzle ORM schemas, queries, migrations                 |
+| `trpc.instructions.md`           | tRPC routers, procedures, middleware                     |
+| `fastify.instructions.md`        | Fastify server, plugins, routes                          |
+| `typescript.instructions.md`     | TypeScript config and patterns                           |
+| `worker-threads.instructions.md` | Worker Threads and Piscina patterns                      |
+| `vite.instructions.md`           | Vite bundling configuration                              |
+| `tailwindcss.instructions.md`    | Tailwind CSS styling patterns                            |
+| `testing.instructions.md`        | Vitest unit/integration tests and VFS filesystem testing |
 
 ## Reference Documentation
 
 Comprehensive guides are maintained in the `/docs` directory:
 
-| Document                  | Content                                           |
-| ------------------------- | ------------------------------------------------- |
-| `architecture.md`         | Framework architecture and design decisions       |
-| `getting-started.md`      | Setup guide and prerequisites                     |
-| `project-structure.md`    | Directory layout and code organization            |
-| `api-design.md`           | tRPC and RESTful API patterns                     |
-| `data-loading.md`         | routeLoader$, server functions, caching           |
-| `forms-and-actions.md`    | routeAction$, Form component, file uploads        |
-| `middleware.md`           | Request middleware, onRequest, lifecycle hooks    |
-| `error-handling.md`       | Error boundaries, error pages, structured errors  |
-| `sessions.md`             | Cookie/session management, flash messages         |
-| `security.md`             | CSRF, CSP, auth, rate limiting, input validation  |
-| `rendering.md`            | SSR, SSG, and Worker Thread rendering pipeline    |
-| `streaming.md`            | Streaming SSR, progressive rendering, defer/Await |
-| `testing.md`              | Testing strategy, Vitest, Cypress, test utilities |
-| `data-layer.md`           | Drizzle ORM, database patterns, and data flow     |
-| `cli.md`                  | CLI scaffolding commands                          |
-| `worker-communication.md` | SharedArrayBuffer, Atomics, and Redis patterns    |
-| `references.md`           | Links to all external documentation               |
-| `nitro-inspiration.md`    | Nitro v3 concepts adapted for Scratchy            |
+| Document                  | Content                                                 |
+| ------------------------- | ------------------------------------------------------- |
+| `architecture.md`         | Framework architecture and design decisions             |
+| `getting-started.md`      | Setup guide and prerequisites                           |
+| `project-structure.md`    | Directory layout and code organization                  |
+| `api-design.md`           | tRPC and RESTful API patterns                           |
+| `data-loading.md`         | routeLoader$, server functions, caching                 |
+| `forms-and-actions.md`    | routeAction$, Form component, file uploads              |
+| `middleware.md`           | Request middleware, onRequest, lifecycle hooks          |
+| `error-handling.md`       | Error boundaries, error pages, structured errors        |
+| `sessions.md`             | Cookie/session management, flash messages               |
+| `security.md`             | CSRF, CSP, auth, rate limiting, input validation        |
+| `rendering.md`            | SSR, SSG, and Worker Thread rendering pipeline          |
+| `streaming.md`            | Streaming SSR, progressive rendering, defer/Await       |
+| `testing.md`              | Testing strategy, Vitest, Cypress, VFS filesystem tests |
+| `data-layer.md`           | Drizzle ORM, database patterns, and data flow           |
+| `cli.md`                  | CLI scaffolding commands                                |
+| `worker-communication.md` | SharedArrayBuffer, Atomics, and Redis patterns          |
+| `references.md`           | Links to all external documentation                     |
+| `nitro-inspiration.md`    | Nitro v3 concepts adapted for Scratchy                  |
 
 ## Documentation Website
 
