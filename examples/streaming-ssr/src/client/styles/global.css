@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/*
+ * Global styles for the Scratchy streaming-ssr example.
+ * Add custom CSS overrides or base layer styles below.
+ * Utility classes from Tailwind CSS handle most styling directly in components.
+ */
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+  }
+}
