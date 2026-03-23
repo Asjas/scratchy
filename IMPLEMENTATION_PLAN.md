@@ -796,7 +796,7 @@ be planned for:
 - [x] Streaming SSR (send HTML chunks as they render)
 - [x] Turborepo or Nx for optimized monorepo task execution
 - [x] `create-scratchy-app` initializer package
-- [ ] Lock-free ring buffer for high-throughput SharedArrayBuffer communication
+- [x] Lock-free ring buffer for high-throughput SharedArrayBuffer communication
 - [ ] Multi-server cache invalidation via Redis Pub/Sub
 - [ ] Plugin marketplace / community plugin conventions
 - [ ] Performance benchmarking suite

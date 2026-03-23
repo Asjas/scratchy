@@ -9,6 +9,8 @@ export {
 } from "./shared-buffer.js";
 export type { SharedBuffer } from "./shared-buffer.js";
 
+export { SharedRingBuffer } from "./ring-buffer.js";
+
 export {
   cleanupRenderContext,
   getRenderContext,

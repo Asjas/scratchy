@@ -13,6 +13,10 @@ describe("renderer/src/index re-exports", () => {
     expect(typeof indexExports.writeToBuffer).toBe("function");
   });
 
+  it("re-exports SharedRingBuffer", () => {
+    expect(typeof indexExports.SharedRingBuffer).toBe("function");
+  });
+
   it("re-exports redis-comm utilities", () => {
     expect(typeof indexExports.cleanupRenderContext).toBe("function");
     expect(typeof indexExports.getRenderContext).toBe("function");
