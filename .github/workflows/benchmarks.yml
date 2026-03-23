@@ -179,7 +179,7 @@ jobs:
 
             const footer = hasBase
               ? '> 🔬 Compared against the latest benchmark run on `main`. ⚠️ = >10% slower · 🚀 = >10% faster.'
-              : '> ℹ️ No base results from `main\` found — delta column omitted on first run.';
+              : '> ℹ️ No base results from `main` found — delta column omitted on first run.';
 
             const body = [
               MARKER,
