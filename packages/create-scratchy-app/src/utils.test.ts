@@ -212,6 +212,20 @@ describe("isEmptyDir", () => {
     await writeFile(join(testDir, ".env"), "SECRET=abc");
     expect(await isEmptyDir(testDir)).toBe(false);
   });
+
+  it("rethrows non-ENOENT errors (e.g., permission denied)", async () => {
+    const { chmodSync } = await import("node:fs");
+
+    // Make the directory unreadable
+    chmodSync(testDir, 0o000);
+
+    try {
+      await expect(isEmptyDir(testDir)).rejects.toThrow();
+    } finally {
+      // Restore permissions for cleanup
+      chmodSync(testDir, 0o755);
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

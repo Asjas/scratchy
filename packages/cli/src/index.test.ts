@@ -286,6 +286,24 @@ describe("renderTemplate (model.ts.hbs)", () => {
     expect(content).toContain("text");
     expect(content).toContain("drizzle-orm/pg-core");
   });
+
+  it("returns cached template on second call (cache hit path)", () => {
+    const context = {
+      pascalName: "Post",
+      camelName: "post",
+      kebabName: "post",
+      snakeName: "post",
+      columns: [],
+      uniqueColumnTypes: [],
+    };
+
+    // First call compiles the template
+    const first = renderTemplate("model.ts.hbs", context);
+    // Second call uses the cache
+    const second = renderTemplate("model.ts.hbs", context);
+
+    expect(first).toBe(second);
+  });
 });
 
 describe("renderTemplate (queries.ts.hbs)", () => {
@@ -644,5 +662,31 @@ describe("file path conventions", () => {
   it("test files use kebab-case and .test.ts extension", () => {
     const path = "routers/posts/queries";
     expect(`src/${path}.test.ts`).toBe("src/routers/posts/queries.test.ts");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Template cache hit
+// ---------------------------------------------------------------------------
+
+describe("renderTemplate cache hit", () => {
+  beforeEach(() => {
+    clearTemplateCache();
+  });
+
+  it("returns the same output on a cache hit (second call without clearing)", () => {
+    const context = {
+      pascalName: "Post",
+      camelName: "post",
+      snakeName: "post",
+      schemaImport: "app",
+      columns: [],
+      relations: [],
+      drizzleTypes: ["text"],
+    };
+    const first = renderTemplate("model.ts.hbs", context);
+    // Second call with the same template should hit the cache (line 16-17)
+    const second = renderTemplate("model.ts.hbs", context);
+    expect(second).toBe(first);
   });
 });

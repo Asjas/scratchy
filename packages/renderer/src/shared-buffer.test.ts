@@ -4,7 +4,7 @@ import {
   readFromBuffer,
   writeToBuffer,
 } from "./shared-buffer.js";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("createSharedBuffer", () => {
   it("should allocate a SharedArrayBuffer with header + data region", () => {
@@ -230,5 +230,86 @@ describe("readFromBuffer edge cases", () => {
     writeToBuffer(shared, 42);
     const result = readFromBuffer<number>(shared);
     expect(result).toBe(42);
+  });
+});
+
+describe("readFromBuffer post-wait status checks", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("should throw when status becomes ERROR after Atomics.wait wakes up", () => {
+    const shared = createSharedBuffer(1024);
+    // Set to CONSUMED so readFromBuffer enters the wait branch
+    Atomics.store(shared.status, 0, BufferStatus.CONSUMED);
+
+    // Mock Atomics.wait to return "ok" (simulating a notify) but leave
+    // status as ERROR so the post-wait check triggers
+    vi.spyOn(Atomics, "wait").mockImplementation(() => {
+      Atomics.store(shared.status, 0, BufferStatus.ERROR);
+      return "ok";
+    });
+
+    expect(() => readFromBuffer(shared)).toThrow(/error state/);
+  });
+
+  it("should throw when status is unexpected after Atomics.wait wakes up", () => {
+    const shared = createSharedBuffer(1024);
+    // Set to CONSUMED so readFromBuffer enters the wait branch
+    Atomics.store(shared.status, 0, BufferStatus.CONSUMED);
+
+    // Mock Atomics.wait to return "ok" but leave status as IDLE (unexpected)
+    vi.spyOn(Atomics, "wait").mockImplementation(() => {
+      Atomics.store(shared.status, 0, BufferStatus.IDLE);
+      return "ok";
+    });
+
+    expect(() => readFromBuffer(shared)).toThrow(/Unexpected buffer status/);
+  });
+});
+
+describe("readFromBuffer non-SyntaxError JSON parse failure", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("should wrap non-SyntaxError thrown by JSON.parse in a SyntaxError", () => {
+    const shared = createSharedBuffer(1024);
+    // Write valid-looking data so we reach the JSON.parse call
+    const encoder = new TextEncoder();
+    const data = encoder.encode('{"valid":true}');
+    shared.data.set(data);
+    Atomics.store(shared.dataLength, 0, data.byteLength);
+    Atomics.store(shared.status, 0, BufferStatus.DATA_READY);
+
+    // Make JSON.parse throw a non-SyntaxError
+    vi.spyOn(JSON, "parse").mockImplementation(() => {
+      throw new TypeError("unexpected type error");
+    });
+
+    expect(() => readFromBuffer(shared)).toThrow(SyntaxError);
+    expect(() => {
+      // Reset buffer for second assertion
+      Atomics.store(shared.status, 0, BufferStatus.DATA_READY);
+      Atomics.store(shared.dataLength, 0, data.byteLength);
+      readFromBuffer(shared);
+    }).toThrow(/Failed to parse JSON payload/);
+  });
+
+  it("should wrap non-Error thrown by JSON.parse in a SyntaxError", () => {
+    const shared = createSharedBuffer(1024);
+    const encoder = new TextEncoder();
+    const data = encoder.encode('{"valid":true}');
+    shared.data.set(data);
+    Atomics.store(shared.dataLength, 0, data.byteLength);
+    Atomics.store(shared.status, 0, BufferStatus.DATA_READY);
+
+    // Make JSON.parse throw a string (non-Error)
+    vi.spyOn(JSON, "parse").mockImplementation(() => {
+      throw "string error";
+    });
+
+    expect(() => readFromBuffer(shared)).toThrow(SyntaxError);
+    expect(Atomics.load(shared.status, 0)).toBe(BufferStatus.ERROR);
   });
 });
