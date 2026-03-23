@@ -174,25 +174,27 @@ describe("dbSeedCommand", () => {
     const exitSpy = vi
       .spyOn(process, "exit")
       .mockImplementation(
-        (() => undefined) as unknown as (
-          code?: string | number | null,
-        ) => never,
+        ((code?: string | number | null) => {
+          throw new Error(`process.exit called with code ${code}`);
+        }) as (code?: string | number | null) => never,
       );
 
     const { dbSeedCommand } = await import("./db-seed.js");
     const run = dbSeedCommand.run;
     if (!run) throw new Error("run is undefined");
 
-    await run({
-      args: {
-        _: [],
-        file: "users",
-        env: ".env",
-        cwd: "/tmp/test-project",
-      },
-      rawArgs: [],
-      cmd: dbSeedCommand,
-    });
+    await expect(
+      run({
+        args: {
+          _: [],
+          file: "users",
+          env: ".env",
+          cwd: "/tmp/test-project",
+        },
+        rawArgs: [],
+        cmd: dbSeedCommand,
+      }),
+    ).rejects.toThrow();
 
     expect(exitSpy).toHaveBeenCalledWith(1);
     expect(errorSpy).toHaveBeenCalled();
