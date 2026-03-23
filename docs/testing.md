@@ -47,15 +47,16 @@ Scratchy follows the **testing pyramid** strategy:
 
 ## Tools
 
-| Tool                    | Purpose                                           |
-| ----------------------- | ------------------------------------------------- |
-| **Vitest**              | Unit, integration, and component tests            |
-| **Node.js Test Runner** | Lightweight alternative for pure-logic unit tests |
-| **Cypress**             | End-to-end browser testing                        |
-| **Testing Library**     | DOM assertions for component tests                |
-| **@qwik/testing**       | `createDOM` for Qwik component rendering          |
-| **fastify.inject()**    | In-process HTTP testing without a live server     |
-| **superjson**           | tRPC transformer in test clients                  |
+| Tool                    | Purpose                                                         |
+| ----------------------- | --------------------------------------------------------------- |
+| **Vitest**              | Unit, integration, and component tests                          |
+| **Node.js Test Runner** | Lightweight alternative for pure-logic unit tests               |
+| **Cypress**             | End-to-end browser testing                                      |
+| **Testing Library**     | DOM assertions for component tests                              |
+| **@qwik/testing**       | `createDOM` for Qwik component rendering                        |
+| **fastify.inject()**    | In-process HTTP testing without a live server                   |
+| **superjson**           | tRPC transformer in test clients                                |
+| **@scratchyjs/vfs**     | In-memory virtual filesystem for CLI and filesystem-heavy tests |
 
 ---
 
@@ -1090,6 +1091,219 @@ describe("worker pool (integration)", () => {
 
 ---
 
+## Testing CLI Commands with `@scratchyjs/vfs`
+
+CLI commands that read from or write to the filesystem are tested using
+`@scratchyjs/vfs` — a private, in-memory virtual filesystem that monkey-patches
+`node:fs` so paths under a configured mount prefix are served from an in-memory
+store instead of real disk.
+
+This avoids the brittle `vi.mock("node:fs")` / `vi.mock("node:fs/promises")`
+module-hoisting approach and gives tests:
+
+- **Realistic state** — `addFile` and `addDirectory` pre-populate the VFS, and
+  the command's own `fs` calls modify it exactly as they would on a real
+  filesystem.
+- **Deterministic assertions** — `vfs.existsSync()` / `vfs.readFileSync()` query
+  the same in-memory store the command wrote to.
+- **Automatic cleanup** — `vfs.unmount()` in `afterEach` restores all original
+  `node:fs` methods and leaves no disk residue.
+
+Add `@scratchyjs/vfs` as a `devDependency` in `package.json`:
+
+```jsonc
+{
+  "devDependencies": {
+    "@scratchyjs/vfs": "workspace:*",
+  },
+}
+```
+
+### Pattern 1 — Async `node:fs/promises`
+
+Commands that use `fs.promises.*` (e.g. `rm`, `readFile`, `writeFile`) can rely
+on VFS directly. Mount VFS in `beforeEach`, use `vi.resetModules()` so the
+dynamic `import()` in the test picks up the VFS-patched CJS exports, and unmount
+in `afterEach`.
+
+For error paths that need a specific `fs.promises` call to reject, use
+`vi.doMock("node:fs/promises", ...)` — VFS has no built-in mechanism to make a
+path throw.
+
+```typescript
+// packages/cli/src/commands/cache-clear.test.ts
+import { type VirtualFileSystem, create } from "@scratchyjs/vfs";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const MOUNT = `/tmp/vfs-cache-clear-${process.pid}`;
+
+describe("cacheClearCommand", () => {
+  let vfs: VirtualFileSystem;
+
+  beforeEach(() => {
+    vi.resetModules();
+    vfs = create();
+    vfs.mount(MOUNT);
+  });
+
+  afterEach(() => {
+    vfs.unmount();
+    vi.doUnmock("node:fs/promises");
+    vi.restoreAllMocks();
+  });
+
+  it("removes all cache directories", async () => {
+    // Pre-populate VFS so the command finds the directories it should delete.
+    vfs.addDirectory(`${MOUNT}/dist`);
+    vfs.addDirectory(`${MOUNT}/.qwik`);
+
+    const { cacheClearCommand } = await import("./cache-clear.js");
+    const run = cacheClearCommand.run;
+    if (!run) throw new Error("run is undefined");
+
+    await run({
+      args: { _: [], cwd: MOUNT },
+      rawArgs: [],
+      cmd: cacheClearCommand,
+    });
+
+    // The command removed them — VFS reflects the deletion.
+    expect(vfs.existsSync(`${MOUNT}/dist`)).toBe(false);
+    expect(vfs.existsSync(`${MOUNT}/.qwik`)).toBe(false);
+  });
+
+  it("handles a failing rm gracefully (error path)", async () => {
+    // VFS cannot make a path throw, so stub rm directly for this case.
+    const rmMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("ENOENT"))
+      .mockResolvedValue(undefined);
+    vi.doMock("node:fs/promises", () => ({ rm: rmMock }));
+
+    const { cacheClearCommand } = await import("./cache-clear.js");
+    const run = cacheClearCommand.run;
+    if (!run) throw new Error("run is undefined");
+
+    await run({
+      args: { _: [], cwd: MOUNT },
+      rawArgs: [],
+      cmd: cacheClearCommand,
+    });
+
+    expect(rmMock).toHaveBeenCalled();
+  });
+});
+```
+
+### Pattern 2 — Sync `node:fs` with the `vi.doMock` bridge
+
+Vitest resolves `node:fs` imports via native ESM by default, which produces
+non-writable namespace bindings that VFS cannot patch. When the command under
+test imports `node:fs` synchronously (e.g. for `readdirSync` or `existsSync`)
+you need a one-line bridge that forces the re-import to receive the **CJS module
+object** — already patched by VFS.
+
+```typescript
+import { createRequire } from "node:module";
+
+const _require = createRequire(import.meta.url);
+
+// In beforeEach, after mounting VFS:
+vi.doMock("node:fs", () => _require("node:fs"));
+// ↑ Hands the Vitest module registry a fresh reference to the CJS object whose
+//   properties VFS has already replaced with its own interceptors.
+```
+
+Always call `vi.doMock` **after** `vfs.mount()` so the CJS object is already
+patched when the registry captures it, and `vi.resetModules()` **before**
+`vfs.mount()` so the command re-imports a clean module graph.
+
+```typescript
+// packages/cli/src/commands/db-seed.test.ts
+import { type VirtualFileSystem, create } from "@scratchyjs/vfs";
+import { createRequire } from "node:module";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// spawnSync must never actually run — hoist-mock it once at module scope.
+vi.mock("node:child_process", () => ({
+  spawnSync: vi.fn().mockReturnValue({ status: 0 }),
+}));
+
+const _require = createRequire(import.meta.url);
+const MOUNT = `/tmp/vfs-db-seed-${process.pid}`;
+
+describe("dbSeedCommand", () => {
+  let vfs: VirtualFileSystem;
+  let testIndex = 0;
+  let cwd = "";
+
+  beforeEach(() => {
+    testIndex += 1;
+    cwd = `${MOUNT}/t${testIndex}`;
+    vi.resetModules();
+    vfs = create();
+    vfs.mount(MOUNT);
+    // Bridge: re-expose the VFS-patched CJS fs object so the command's
+    // ESM import of "node:fs" sees the intercepted methods.
+    vi.doMock("node:fs", () => _require("node:fs"));
+  });
+
+  afterEach(() => {
+    vfs.unmount();
+    vi.doUnmock("node:fs");
+    vi.clearAllMocks();
+  });
+
+  it("runs all seed files found in the seeds directory", async () => {
+    vfs.addDirectory(`${cwd}/src/db/seeds`, (dir) => {
+      dir.addFile("users.ts", "");
+      dir.addFile("posts.ts", "");
+    });
+
+    const { spawnSync } = await import("node:child_process");
+    const { dbSeedCommand } = await import("./db-seed.js");
+    const run = dbSeedCommand.run;
+    if (!run) throw new Error("run is undefined");
+
+    await run({
+      args: { _: [], file: "", env: ".env", cwd },
+      rawArgs: [],
+      cmd: dbSeedCommand,
+    });
+
+    expect(spawnSync).toHaveBeenCalledTimes(2);
+  });
+});
+```
+
+### When to use each pattern
+
+| Scenario                                               | Pattern to use                   |
+| ------------------------------------------------------ | -------------------------------- |
+| Command uses `fs.promises.*`                           | Pattern 1 — VFS alone            |
+| Command uses sync `fs.*` (readdirSync, existsSync, …)  | Pattern 2 — VFS + `vi.doMock`    |
+| Need a specific path to throw (no VFS error injection) | `vi.doMock` the whole module     |
+| Third-party side effects (spawning processes, network) | Retain `vi.mock` for that module |
+
+### Key rules
+
+1. **Always `vi.resetModules()` in `beforeEach`** — ensures each test gets a
+   fresh import of the command with the current VFS mounted.
+2. **Mount before `vi.doMock`** — VFS patches the CJS object on mount; the
+   `vi.doMock` callback must return the already-patched reference.
+3. **Use per-test subdirectories** — use `${MOUNT}/t${testIndex}` as the `cwd`
+   so files added for one test never bleed into another.
+4. **Unmount in `afterEach`** — restores all original `node:fs` methods and
+   prevents state leakage between test files.
+5. **`@scratchyjs/vfs` is a `devDependency`** — never add it to `dependencies`.
+6. **VFS intercepts `fs.method()` calls, not destructured bindings** — if the
+   command does `const { readFileSync } = fs` before `mount()` is called, those
+   bindings are not intercepted. The `vi.doMock` bridge (Pattern 2) handles this
+   by giving the command a fresh import that accesses `fs.*` through the patched
+   object.
+
+---
+
 ## Component Tests
 
 ### Testing Qwik Components
@@ -1699,11 +1913,16 @@ jobs:
   fixtures so assertions are stable.
 - **Test error paths** — verify that invalid inputs, missing resources, and
   unauthorized access produce the correct errors.
+- **Use `@scratchyjs/vfs` for filesystem-heavy tests** — mount VFS in
+  `beforeEach` instead of `vi.mock("node:fs")`; unmount in `afterEach`.
 
 ### Don't
 
 - **❌ Don't mock what you don't own** — prefer `fastify.inject()` over mocking
   the HTTP layer. Prefer a test database over mocking Drizzle.
+- **❌ Don't use `vi.mock("node:fs")` for CLI command tests** — use
+  `@scratchyjs/vfs` with `addFile` / `addDirectory` instead; it produces
+  realistic filesystem state and cleans up automatically.
 - **❌ Don't test framework internals** — Fastify's routing, tRPC's
   serialization, and Drizzle's query builder are already tested by their
   maintainers.
@@ -1782,6 +2001,49 @@ await server.listen({ port: 3000 });
 await server.listen({ port: 0, host: "127.0.0.1" });
 ```
 
+#### ❌ Don't use `vi.mock("node:fs")` for filesystem assertions
+
+```typescript
+// BAD — Hoisted stub disconnects the test from real filesystem behaviour;
+// adding a new path requires updating the mock factory.
+vi.mock("node:fs/promises", () => ({
+  rm: vi.fn().mockResolvedValue(undefined),
+  mkdir: vi.fn().mockResolvedValue(undefined),
+}));
+
+it("removes cache directories", async () => {
+  await run({ args: { _: [], cwd: "/tmp/test" }, ... });
+  expect(vi.mocked(fs.promises.rm)).toHaveBeenCalledWith(
+    "/tmp/test/dist",
+    expect.anything(),
+  );
+});
+
+// GOOD — Mount VFS, pre-populate, run, then assert real state.
+import { create } from "@scratchyjs/vfs";
+
+const MOUNT = `/tmp/vfs-cache-${process.pid}`;
+let vfs: VirtualFileSystem;
+
+beforeEach(() => {
+  vi.resetModules();
+  vfs = create();
+  vfs.mount(MOUNT);
+});
+
+afterEach(() => {
+  vfs.unmount();
+});
+
+it("removes cache directories", async () => {
+  vfs.addDirectory(`${MOUNT}/dist`);
+
+  await run({ args: { _: [], cwd: MOUNT }, ... });
+
+  expect(vfs.existsSync(`${MOUNT}/dist`)).toBe(false);
+});
+```
+
 ---
 
 ## Reference Links
@@ -1794,6 +2056,7 @@ await server.listen({ port: 0, host: "127.0.0.1" });
 - [Testing Library](https://testing-library.com/)
 - [Drizzle ORM](https://orm.drizzle.team/)
 - [Piscina Worker Pool](https://github.com/piscinajs/piscina)
+- [`@scratchyjs/vfs` package](../packages/vfs)
 
 ## Related Documentation
 
