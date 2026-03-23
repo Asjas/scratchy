@@ -47,6 +47,9 @@
       "esbuild",
       "sharp",
       "workerd"
+    ],
+    "ignoredBuiltDependencies": [
+      "argon2"
     ]
   },
   "devDependencies": {
