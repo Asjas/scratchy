@@ -17,7 +17,7 @@ describe("getClientIPAddress – no IP headers", () => {
     headers: { "host": "example.com", "content-type": "text/html" },
   };
 
-  bench("empty headers → null", () => {
+  bench("no IP-related headers → null", () => {
     getClientIPAddress(req);
   });
 });
