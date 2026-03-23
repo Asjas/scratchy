@@ -2015,9 +2015,10 @@ describe("fs sync hooks: fallback to real fs for non-VFS paths", () => {
 
   it("fs.renameSync throws EXDEV when src is virtual and dest is real", () => {
     vfs.addFile(MOUNT + "/file.txt", "content");
-    expect(() =>
-      fs.renameSync(MOUNT + "/file.txt", "/tmp/vfs-exdev-rename-target.txt"),
-    ).toThrow(expect.objectContaining({ code: "EXDEV" }));
+    const dest = join(tmpdir(), "vfs-exdev-rename-target.txt");
+    expect(() => fs.renameSync(MOUNT + "/file.txt", dest)).toThrow(
+      expect.objectContaining({ code: "EXDEV" }),
+    );
   });
 
   it("fs.renameSync falls through to real fs when both paths are outside VFS", () => {
