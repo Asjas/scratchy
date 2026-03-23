@@ -20,7 +20,7 @@ import { getRelativePath, isUnderMountPoint } from "./router.js";
 import { createSymlinkStats } from "./stats.js";
 import fs from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 // ─── MemoryProvider ───────────────────────────────────────────────────────────
@@ -1167,9 +1167,10 @@ describe("router helpers (router.ts)", () => {
     expect(isUnderMountPoint("/other/path", "/foo")).toBe(false);
   });
 
-  it("isUnderMountPoint handles a mountPoint that already ends with the separator", () => {
-    // Simulate mountPoint ending with '/' (as on Windows 'C:\' or custom prefixes)
-    const mountWithSep = "/foo/";
+  it("isUnderMountPoint handles a mountPoint that already ends with the path separator", () => {
+    // Simulate a mount point that was built with a trailing path.sep character.
+    // Using `sep` keeps the test portable across operating systems.
+    const mountWithSep = "/foo" + sep;
     expect(isUnderMountPoint("/foo/bar", mountWithSep)).toBe(true);
     expect(isUnderMountPoint("/other", mountWithSep)).toBe(false);
   });
@@ -2039,12 +2040,10 @@ describe("fs sync hooks: fallback to real fs for non-VFS paths", () => {
 
   it("fs.copyFileSync throws EXDEV when src is virtual and dest is real", () => {
     vfs.addFile(MOUNT + "/copy-src.txt", "content");
-    expect(() =>
-      fs.copyFileSync(
-        MOUNT + "/copy-src.txt",
-        "/tmp/vfs-exdev-copy-target.txt",
-      ),
-    ).toThrow(expect.objectContaining({ code: "EXDEV" }));
+    const dest = join(tmpdir(), "vfs-exdev-copy-target.txt");
+    expect(() => fs.copyFileSync(MOUNT + "/copy-src.txt", dest)).toThrow(
+      expect.objectContaining({ code: "EXDEV" }),
+    );
   });
 
   it("fs.copyFileSync falls through to real fs when src is outside VFS", () => {
