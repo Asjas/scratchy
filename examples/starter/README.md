@@ -35,6 +35,9 @@ This starts:
 - **PostgreSQL 16** on `localhost:5432`
 - **DragonflyDB** (Redis-compatible) on `localhost:6379`
 
+If you are using the checked-in `.env`, make sure your Postgres instance has a
+database named `scratchy_example` with credentials matching `DATABASE_URL`.
+
 ### 2. Configure environment
 
 ```bash
@@ -48,8 +51,7 @@ Generate a `BETTER_AUTH_SECRET`:
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-> **Note:** `pnpm dev` uses Node's `--env-file=.env` flag to load environment
-> variables automatically. No additional dotenv loader is required.
+The example app loads environment variables from `examples/starter/.env`.
 
 ### 3. Install dependencies
 
@@ -62,7 +64,8 @@ pnpm install
 
 ```bash
 # From examples/starter/
-pnpm dlx drizzle-kit migrate --config drizzle.config.ts
+pnpm db:generate
+pnpm db:migrate
 ```
 
 ### 5. Start the server
@@ -190,4 +193,4 @@ connected database.
 3. Create `src/routers/things/queries.ts` and `mutations.ts`
 4. Add `things: router({ ...thingQueries, ...thingMutations })` to
    `src/routers/index.ts`
-5. Run `pnpm drizzle-kit generate` to create the migration
+5. Run `pnpm db:generate` to create the migration
