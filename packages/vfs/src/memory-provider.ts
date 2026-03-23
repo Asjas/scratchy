@@ -353,9 +353,12 @@ export class MemoryProvider {
    * population until the first access. The populate callback receives a
    * `ScopedVfs` that can add files, directories, and symlinks.
    *
-   * Currently reachable only from within `#ensurePopulated` itself (for
-   * nested lazy directories), so the top-level entry point is not wired
-   * through the public API. It remains here for future use.
+   * This method is invoked from internal helpers such as `#lookupEntry`,
+   * `#ensureParent`, and `readdirSync` to ensure directory contents are
+   * populated before access. However, the *populate callback* path
+   * (where `entry.populate` is set and invoked) is not currently
+   * constructible via the public API, so the lazy-populate behaviour
+   * remains infrastructure for future use and for nested lazy directories.
    */
   /* istanbul ignore next -- lazy-populate infrastructure for future use */
   #ensurePopulated(entry: MemoryEntry): void {
