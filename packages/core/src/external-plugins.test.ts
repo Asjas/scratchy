@@ -1,17 +1,29 @@
 import { createServer, loadConfig } from "./index.js";
-import type { FastifyInstance } from "fastify";
-import Fastify from "fastify";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
+import stripPlugin from "./plugins/external/a-strip-internal-headers.js";
+// Import plugin functions directly to register them in standalone tests.
+import corsPlugin from "./plugins/external/cors.js";
 // Explicit imports so Istanbul instruments these re-exported config files.
 import "./plugins/external/helmet.js";
 import "./plugins/external/rate-limit.js";
 import "./plugins/external/sensible.js";
-
-// Import plugin functions directly to register them in standalone tests.
-import corsPlugin from "./plugins/external/cors.js";
-import stripPlugin from "./plugins/external/a-strip-internal-headers.js";
 import healthRoute from "./routes/health/index.js";
+import type { Config } from "./config.js";
+import type { FastifyInstance } from "fastify";
+import Fastify from "fastify";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+function makeConfig(overrides: Partial<Config> = {}): Config {
+  return {
+    PORT: 3000,
+    HOST: "0.0.0.0",
+    NODE_ENV: "development",
+    LOG_LEVEL: "info",
+    TRUST_PROXY: true,
+    BODY_LIMIT: 10_485_760,
+    ALLOWED_ORIGINS: [],
+    ...overrides,
+  };
+}
 
 describe("CORS plugin", () => {
   let server: FastifyInstance;
@@ -257,10 +269,7 @@ describe("CORS plugin (direct registration)", () => {
   it("registers the cors plugin via the exported fp wrapper", async () => {
     const server = Fastify({ logger: false });
     // The CORS plugin reads fastify.config — decorate before registering
-    server.decorate("config", {
-      NODE_ENV: "development",
-      ALLOWED_ORIGINS: [] as string[],
-    });
+    server.decorate("config", makeConfig({ NODE_ENV: "development" }));
     await server.register(corsPlugin);
     server.get("/test", () => ({ ok: true }));
     await server.ready();
@@ -279,10 +288,7 @@ describe("CORS plugin (direct registration)", () => {
 
   it("rejects origins in production without allowlist", async () => {
     const server = Fastify({ logger: false });
-    server.decorate("config", {
-      NODE_ENV: "production",
-      ALLOWED_ORIGINS: [] as string[],
-    });
+    server.decorate("config", makeConfig({ NODE_ENV: "production" }));
     await server.register(corsPlugin);
     server.get("/test", () => ({ ok: true }));
     await server.ready();
@@ -300,10 +306,13 @@ describe("CORS plugin (direct registration)", () => {
 
   it("allows listed origins in production", async () => {
     const server = Fastify({ logger: false });
-    server.decorate("config", {
-      NODE_ENV: "production",
-      ALLOWED_ORIGINS: ["https://good.com"],
-    });
+    server.decorate(
+      "config",
+      makeConfig({
+        NODE_ENV: "production",
+        ALLOWED_ORIGINS: ["https://good.com"],
+      }),
+    );
     await server.register(corsPlugin);
     server.get("/test", () => ({ ok: true }));
     await server.ready();
@@ -329,10 +338,13 @@ describe("CORS plugin (direct registration)", () => {
 
   it("allows requests with no origin in production allowlist mode", async () => {
     const server = Fastify({ logger: false });
-    server.decorate("config", {
-      NODE_ENV: "production",
-      ALLOWED_ORIGINS: ["https://good.com"],
-    });
+    server.decorate(
+      "config",
+      makeConfig({
+        NODE_ENV: "production",
+        ALLOWED_ORIGINS: ["https://good.com"],
+      }),
+    );
     await server.register(corsPlugin);
     server.get("/test", () => ({ ok: true }));
     await server.ready();

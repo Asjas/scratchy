@@ -37,8 +37,8 @@ describe("timestamps", () => {
   it("$onUpdateFn callback returns a Date", () => {
     const config = getConfig(timestamps.updatedAt);
     const fn = config.onUpdateFn as (() => Date) | undefined;
-    expect(fn).toBeDefined();
-    const result = fn!();
+    if (!fn) throw new Error("onUpdateFn is undefined");
+    const result = fn();
     expect(result).toBeInstanceOf(Date);
   });
 });

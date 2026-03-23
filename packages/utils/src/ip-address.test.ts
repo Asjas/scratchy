@@ -146,9 +146,7 @@ describe("getClientIPAddress", () => {
 
   it("handles malformed IPv6 bracket without closing bracket", () => {
     // "[2001:db8::1" has no closing "]" — should still attempt to extract
-    const result = getClientIPAddress(
-      req({ forwarded: "for=[2001:db8::1" }),
-    );
+    const result = getClientIPAddress(req({ forwarded: "for=[2001:db8::1" }));
     // The entire "[2001:db8::1" is not a valid IP, so returns null
     expect(result).toBeNull();
   });
@@ -160,9 +158,7 @@ describe("getClientIPAddress", () => {
 
   it("handles bare IPv6 address without brackets in for=", () => {
     // Bare IPv6 has multiple colons so the port-stripping branch is skipped
-    const result = getClientIPAddress(
-      req({ forwarded: "for=2001:db8::1" }),
-    );
+    const result = getClientIPAddress(req({ forwarded: "for=2001:db8::1" }));
     expect(result).toBe("2001:db8::1");
   });
 });

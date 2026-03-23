@@ -2752,7 +2752,10 @@ describe("MemoryProvider: lazy directory populate with addSymlink", () => {
 
     // Create a directory with a lazy populate callback
     provider.mkdirSync("/lazy-root", { recursive: true });
-    provider.writeFileSync("/lazy-root/target.txt", Buffer.from("symlink target content"));
+    provider.writeFileSync(
+      "/lazy-root/target.txt",
+      Buffer.from("symlink target content"),
+    );
 
     // Now use the MemoryProvider's addDirectory to create a lazy directory
     // with a symlink via the ScopedVfs callback
@@ -2816,8 +2819,6 @@ describe("VirtualFileSystem: existsSync catch branch (file-system L584-585)", ()
 // ---------------------------------------------------------------------------
 
 describe("MemoryProvider — additional edge cases", () => {
-  const mount = `/tmp/vfs-edge-${process.pid}`;
-
   it("existsSync returns false when path causes internal error", () => {
     // Use MemoryProvider directly to create a symlink loop
     const provider = new MemoryProvider();
@@ -2835,9 +2836,7 @@ describe("MemoryProvider — additional edge cases", () => {
     provider.mkdirSync("/", { recursive: true });
     provider.writeFileSync("/file.txt", Buffer.from("data"));
 
-    expect(() => provider.readdirSync("/file.txt")).toThrow(
-      /not a directory/,
-    );
+    expect(() => provider.readdirSync("/file.txt")).toThrow(/not a directory/);
   });
 
   it("readlinkSync throws EINVAL for a non-symlink", () => {
@@ -2845,7 +2844,9 @@ describe("MemoryProvider — additional edge cases", () => {
     provider.mkdirSync("/", { recursive: true });
     provider.writeFileSync("/file.txt", Buffer.from("data"));
 
-    expect(() => provider.readlinkSync("/file.txt")).toThrow(/invalid argument/);
+    expect(() => provider.readlinkSync("/file.txt")).toThrow(
+      /invalid argument/,
+    );
   });
 
   it("realpathSync throws ENOENT for a missing path", () => {

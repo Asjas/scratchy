@@ -301,7 +301,9 @@ describe("runSsgPipeline", () => {
     expect(result.failed).toHaveLength(1);
     expect(result.failed[0]?.route).toBe("/non-error-throw");
     expect(result.failed[0]?.error).toBeInstanceOf(Error);
-    expect(result.failed[0]?.error.message).toContain("string error from worker");
+    expect(result.failed[0]?.error.message).toContain(
+      "string error from worker",
+    );
   });
 
   it("records a failure with timeout message when worker times out", async () => {
