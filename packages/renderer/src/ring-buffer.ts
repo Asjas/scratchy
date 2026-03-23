@@ -10,10 +10,13 @@
  * `pointer % capacity`.  This keeps the arithmetic race-free for SPSC access
  * without any CAS loop.
  *
- * Note: the Int32 pointers wrap at 2,147,483,647. For SSR/SSG workloads
- * (thousands of requests each transferring a few kilobytes), pointer overflow
- * would require transferring over 2 billion bytes cumulatively, which is not
- * a practical concern.
+ * Overflow safety: `Atomics.load` returns a signed Int32, so both pointers are
+ * treated as unsigned 32-bit integers by applying `>>> 0` after every load.
+ * This converts any negative (post-wrap) Int32 value back to the correct uint32
+ * representation.  All arithmetic (`wp - rp`, `wp % capacity`) is then
+ * performed on unsigned values, keeping the ring correct at pointer wrap-around.
+ * Pointer wrap-around occurs after transferring ~4 GB cumulatively, and the
+ * ring remains fully correct across that boundary.
  */
 const HEADER_SIZE = 8;
 
@@ -131,12 +134,15 @@ export class SharedRingBuffer {
   write(chunk: Uint8Array): boolean {
     if (chunk.byteLength === 0) return true;
 
-    const wp = Atomics.load(this.writePos, 0);
-    const rp = Atomics.load(this.readPos, 0);
-    const available = this.capacity - (wp - rp);
+    // >>> 0 converts the signed Int32 from Atomics.load to an unsigned uint32.
+    const wp = Atomics.load(this.writePos, 0) >>> 0;
+    const rp = Atomics.load(this.readPos, 0) >>> 0;
+    // (wp - rp) >>> 0 keeps the subtraction unsigned across pointer wrap-around.
+    const available = this.capacity - ((wp - rp) >>> 0);
 
     if (chunk.byteLength > available) return false;
 
+    // wp is now a uint32, so % capacity is always non-negative.
     const offset = wp % this.capacity;
     const spaceToEnd = this.capacity - offset;
 
@@ -180,13 +186,16 @@ export class SharedRingBuffer {
       throw new RangeError("maxBytes must be a positive integer");
     }
 
-    const wp = Atomics.load(this.writePos, 0);
-    const rp = Atomics.load(this.readPos, 0);
+    // >>> 0 converts the signed Int32 from Atomics.load to an unsigned uint32.
+    const wp = Atomics.load(this.writePos, 0) >>> 0;
+    const rp = Atomics.load(this.readPos, 0) >>> 0;
 
     if (wp === rp) return null; // Buffer is empty.
 
-    const available = wp - rp;
+    // (wp - rp) >>> 0 keeps the subtraction unsigned across pointer wrap-around.
+    const available = (wp - rp) >>> 0;
     const readSize = Math.min(maxBytes, available);
+    // rp is now a uint32, so % capacity is always non-negative.
     const offset = rp % this.capacity;
     const spaceToEnd = this.capacity - offset;
 
@@ -220,9 +229,9 @@ export class SharedRingBuffer {
    * immediately after it is read.
    */
   get availableToRead(): number {
-    const wp = Atomics.load(this.writePos, 0);
-    const rp = Atomics.load(this.readPos, 0);
-    return wp - rp;
+    const wp = Atomics.load(this.writePos, 0) >>> 0;
+    const rp = Atomics.load(this.readPos, 0) >>> 0;
+    return (wp - rp) >>> 0;
   }
 
   /**
@@ -232,9 +241,9 @@ export class SharedRingBuffer {
    * immediately after it is read.
    */
   get availableToWrite(): number {
-    const wp = Atomics.load(this.writePos, 0);
-    const rp = Atomics.load(this.readPos, 0);
-    return this.capacity - (wp - rp);
+    const wp = Atomics.load(this.writePos, 0) >>> 0;
+    const rp = Atomics.load(this.readPos, 0) >>> 0;
+    return this.capacity - ((wp - rp) >>> 0);
   }
 
   /**
@@ -253,9 +262,9 @@ export class SharedRingBuffer {
    * This is a snapshot value.
    */
   get isFull(): boolean {
-    const wp = Atomics.load(this.writePos, 0);
-    const rp = Atomics.load(this.readPos, 0);
-    return this.capacity - (wp - rp) === 0;
+    const wp = Atomics.load(this.writePos, 0) >>> 0;
+    const rp = Atomics.load(this.readPos, 0) >>> 0;
+    return this.capacity - ((wp - rp) >>> 0) === 0;
   }
 
   /**

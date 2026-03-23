@@ -236,19 +236,19 @@ export default async function handler(task: {
 
 #### API
 
-| Member                                             | Description                                                                   |
-| -------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `new SharedRingBuffer(capacity)`                   | Allocates a new ring backed by a `SharedArrayBuffer` of `8 + capacity` bytes. |
-| `SharedRingBuffer.fromSharedBuffer(sab)`           | Reconstructs a ring from an existing `SharedArrayBuffer` (worker side).       |
-| `write(chunk: Uint8Array): boolean`                | Writes `chunk` atomically. Returns `false` if the ring is full.               |
-| `read(maxBytes: number): Uint8Array \| null`       | Reads up to `maxBytes` bytes. Returns `null` if the ring is empty.            |
-| `availableToRead`                                  | Bytes currently ready to read (snapshot).                                     |
-| `availableToWrite`                                 | Bytes available for writing (snapshot).                                       |
-| `isEmpty`                                          | `true` when there is no data to read.                                         |
-| `isFull`                                           | `true` when there is no space to write.                                       |
-| `capacity`                                         | Data region size in bytes.                                                    |
-| `byteLength`                                       | Total `SharedArrayBuffer` size (`8 + capacity`).                              |
-| `getSharedBuffer()`                                | Returns the underlying `SharedArrayBuffer` for transfer to a worker.          |
+| Member                                       | Description                                                                   |
+| -------------------------------------------- | ----------------------------------------------------------------------------- |
+| `new SharedRingBuffer(capacity)`             | Allocates a new ring backed by a `SharedArrayBuffer` of `8 + capacity` bytes. |
+| `SharedRingBuffer.fromSharedBuffer(sab)`     | Reconstructs a ring from an existing `SharedArrayBuffer` (worker side).       |
+| `write(chunk: Uint8Array): boolean`          | Writes `chunk` atomically. Returns `false` if the ring is full.               |
+| `read(maxBytes: number): Uint8Array \| null` | Reads up to `maxBytes` bytes. Returns `null` if the ring is empty.            |
+| `availableToRead`                            | Bytes currently ready to read (snapshot).                                     |
+| `availableToWrite`                           | Bytes available for writing (snapshot).                                       |
+| `isEmpty`                                    | `true` when there is no data to read.                                         |
+| `isFull`                                     | `true` when there is no space to write.                                       |
+| `capacity`                                   | Data region size in bytes.                                                    |
+| `byteLength`                                 | Total `SharedArrayBuffer` size (`8 + capacity`).                              |
+| `getSharedBuffer()`                          | Returns the underlying `SharedArrayBuffer` for transfer to a worker.          |
 
 #### Design notes
 

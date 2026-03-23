@@ -394,6 +394,46 @@ describe("SharedRingBuffer ring-wrap behaviour", () => {
     const result = assertNotNull(ring.read(4), "result");
     expect(Array.from(result)).toEqual([0xc, 0xd, 0xe, 0xf]);
   });
+
+  it("remains correct when pointers overflow Int32 and wrap to negative", () => {
+    // Place both pointers at 2147483644 (= 2^31 - 4, 4 bytes before Int32 max).
+    // A write of 8 bytes advances writePos to 2147483652, which is stored in
+    // Int32Array as -2147483644 (Int32 wrap-around).  The ring must still work
+    // correctly: the >>> 0 guard restores the uint32 representation on load.
+    //
+    // capacity=64; 2147483644 % 64 = 60, so the 8-byte write also exercises
+    // the ring data-region wrap (4 bytes at [60..63], 4 bytes at [0..3]).
+    const ring = new SharedRingBuffer(64);
+    const sab = ring.getSharedBuffer();
+    const writePosArr = new Int32Array(sab, 0, 1);
+    const readPosArr = new Int32Array(sab, 4, 1);
+
+    const nearMax = 2147483644; // 2^31 - 4
+    Atomics.store(writePosArr, 0, nearMax);
+    Atomics.store(readPosArr, 0, nearMax);
+
+    // The ring appears empty with the new pointers.
+    expect(ring.isEmpty).toBe(true);
+    expect(ring.availableToRead).toBe(0);
+    expect(ring.availableToWrite).toBe(64);
+
+    // Write 8 bytes — writePos crosses Int32 max into negative territory.
+    const payload = new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80]);
+    expect(ring.write(payload)).toBe(true);
+
+    // Ring now has 8 bytes unread.
+    expect(ring.isEmpty).toBe(false);
+    expect(ring.availableToRead).toBe(8);
+    expect(ring.availableToWrite).toBe(56);
+
+    // Read the bytes back — must get the original data in the correct order.
+    const result = assertNotNull(ring.read(8), "result");
+    expect(Array.from(result)).toEqual([10, 20, 30, 40, 50, 60, 70, 80]);
+
+    // Ring is empty again; both pointers hold the same (wrapped) Int32 value.
+    expect(ring.isEmpty).toBe(true);
+    expect(ring.availableToRead).toBe(0);
+  });
 });
 
 // ---------------------------------------------------------------------------
