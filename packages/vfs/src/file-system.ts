@@ -889,7 +889,10 @@ export class VirtualFileSystem {
 
     fsMut.readlinkSync = (p: unknown, opts?: unknown) => {
       if (typeof p === "string" && this.#shouldHandle(p)) {
-        return this.#provider.readlinkSync(this.#toProviderPath(p));
+        const result = this.#provider.readlinkSync(this.#toProviderPath(p));
+        return pathPosix.isAbsolute(result)
+          ? this.#toMountedPath(result)
+          : result;
       }
       return (saved.readlinkSync as AnyFn)(p, opts);
     };
@@ -1101,7 +1104,10 @@ export class VirtualFileSystem {
 
     promMut.readlink = async (p: unknown, opts?: unknown) => {
       if (typeof p === "string" && this.#shouldHandle(p)) {
-        return this.#provider.readlinkSync(this.#toProviderPath(p));
+        const result = this.#provider.readlinkSync(this.#toProviderPath(p));
+        return pathPosix.isAbsolute(result)
+          ? this.#toMountedPath(result)
+          : result;
       }
       return (saved.promises.readlink as AnyFn)(p, opts);
     };
