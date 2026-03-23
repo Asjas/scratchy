@@ -113,15 +113,20 @@ describe("renderer plugin", () => {
 
     await server.close();
   });
+});
 
-  it("should throw RangeError for invalid minThreads", async () => {
-    const plugin = (await import("./plugin.js")).default;
-
-    const mockFastify = {
+describe("renderer plugin — validation", () => {
+  function makeMockFastify() {
+    return {
       decorate: vi.fn(),
       addHook: vi.fn(),
       log: { info: vi.fn() },
     };
+  }
+
+  it("should throw RangeError for invalid minThreads", async () => {
+    const plugin = (await import("./plugin.js")).default;
+    const mockFastify = makeMockFastify();
 
     expect(() => {
       plugin(mockFastify as unknown as import("fastify").FastifyInstance, {
@@ -134,12 +139,7 @@ describe("renderer plugin", () => {
 
   it("should throw RangeError for invalid maxThreads", async () => {
     const plugin = (await import("./plugin.js")).default;
-
-    const mockFastify = {
-      decorate: vi.fn(),
-      addHook: vi.fn(),
-      log: { info: vi.fn() },
-    };
+    const mockFastify = makeMockFastify();
 
     expect(() => {
       plugin(mockFastify as unknown as import("fastify").FastifyInstance, {
@@ -152,12 +152,7 @@ describe("renderer plugin", () => {
 
   it("should throw RangeError when minThreads > maxThreads", async () => {
     const plugin = (await import("./plugin.js")).default;
-
-    const mockFastify = {
-      decorate: vi.fn(),
-      addHook: vi.fn(),
-      log: { info: vi.fn() },
-    };
+    const mockFastify = makeMockFastify();
 
     expect(() => {
       plugin(mockFastify as unknown as import("fastify").FastifyInstance, {

@@ -8,6 +8,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 // Must be at the top level so Vitest hoists it before the interval import.
+// `mockRejectedValueOnce` fires only on the first call and then falls back to
+// the real implementation. This file intentionally contains only one test so
+// that subsequent calls in unrelated specs are unaffected.
 vi.mock("node:timers/promises", () => ({
   setTimeout: vi.fn().mockRejectedValueOnce(new TypeError("network error")),
 }));
