@@ -28,7 +28,9 @@
     "docs:preview": "vitepress preview docs",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "cy:run:docs": "cypress run --spec \"cypress/e2e/**\""
+    "cy:run:docs": "cypress run --spec \"cypress/e2e/**\"",
+    "bench": "vitest bench --config vitest.bench.config.ts",
+    "bench:ci": "vitest bench --run --config vitest.bench.config.ts"
   },
   "lint-staged": {
     "*.{html,js,jsx,ts,tsx,md,json,yaml,yml}": [

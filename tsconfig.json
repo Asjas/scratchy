@@ -25,6 +25,7 @@
     "cypress.config.ts",
     "examples/*/src/client",
     "examples/*/vite.config.ts",
-    "examples/*/drizzle.config.ts"
+    "examples/*/drizzle.config.ts",
+    "packages/create-scratchy-app/src/template"
   ]
 }
