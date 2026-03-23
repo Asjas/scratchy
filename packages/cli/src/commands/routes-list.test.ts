@@ -1,21 +1,44 @@
+import { type VirtualFileSystem, create } from "@scratchyjs/vfs";
 import type { CommandMeta } from "citty";
 import { consola } from "consola";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { createRequire } from "node:module";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("node:fs", () => ({
-  readdirSync: vi.fn(),
-  readFileSync: vi.fn(),
-  statSync: vi.fn(),
-}));
+/**
+ * VFS patches `require("node:fs")` (the CJS module object), but vitest
+ * resolves `node:fs` imports via native ESM by default.  We bridge the gap
+ * with `vi.doMock("node:fs", …)` so that every fresh import of `routes-list`
+ * after `vi.resetModules()` picks up the VFS-patched CJS exports.
+ *
+ * Each test mounts a fresh VFS instance at a unique path under MOUNT so files
+ * added for one test never bleed into another.
+ */
+const _require = createRequire(import.meta.url);
+const MOUNT = `/tmp/vfs-routes-list-${process.pid}`;
 
 describe("routesListCommand", () => {
+  let vfs: VirtualFileSystem;
+  let testIndex = 0;
+  let cwd = "";
+
+  beforeEach(() => {
+    testIndex += 1;
+    cwd = `${MOUNT}/t${testIndex}`;
+    vi.resetModules();
+    vfs = create();
+    vfs.mount(MOUNT);
+    // Return the CJS module object (already patched by VFS) so that
+    // routes-list.ts's destructured bindings get the VFS hooks.
+    vi.doMock("node:fs", () => _require("node:fs"));
+  });
+
   afterEach(() => {
-    vi.clearAllMocks();
+    vfs.unmount();
+    vi.doUnmock("node:fs");
+    vi.restoreAllMocks();
   });
 
   it("should warn when no routes or routers directories exist", async () => {
-    const { readdirSync } = await import("node:fs");
-    vi.mocked(readdirSync).mockReturnValue([]);
     const warnSpy = vi
       .spyOn(consola, "warn")
       .mockImplementation(() => undefined);
@@ -25,7 +48,7 @@ describe("routesListCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd },
       rawArgs: [],
       cmd: routesListCommand,
     });
@@ -33,26 +56,11 @@ describe("routesListCommand", () => {
     expect(warnSpy).toHaveBeenCalledWith(
       "No routes found. Make sure src/routes/ and src/routers/ exist.",
     );
-    warnSpy.mockRestore();
   });
 
   it("should list REST routes from routes directory", async () => {
-    const { readdirSync, readFileSync, statSync } = await import("node:fs");
-
-    vi.mocked(readdirSync).mockImplementation((dir) => {
-      if (String(dir).endsWith("routes")) {
-        return ["index.ts"] as unknown as ReturnType<typeof readdirSync>;
-      }
-      return [] as unknown as ReturnType<typeof readdirSync>;
-    });
-
-    vi.mocked(statSync).mockReturnValue({
-      isDirectory: () => false,
-    } as ReturnType<typeof statSync>);
-
-    vi.mocked(readFileSync).mockReturnValue(
-      'fastify.get("/", handler)' as unknown as ReturnType<typeof readFileSync>,
-    );
+    vfs.addDirectory(`${cwd}/src/routes`);
+    vfs.addFile(`${cwd}/src/routes/index.ts`, 'fastify.get("/", handler)');
 
     const logSpy = vi.spyOn(consola, "log").mockImplementation(() => undefined);
     const successSpy = vi
@@ -64,7 +72,7 @@ describe("routesListCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd },
       rawArgs: [],
       cmd: routesListCommand,
     });
@@ -78,30 +86,10 @@ describe("routesListCommand", () => {
   });
 
   it("should list tRPC procedures from routers directory", async () => {
-    const { readdirSync, readFileSync, statSync } = await import("node:fs");
-
-    vi.mocked(readdirSync).mockImplementation((dir) => {
-      const dirStr = String(dir);
-      if (dirStr.endsWith("routers")) {
-        return ["posts"] as unknown as ReturnType<typeof readdirSync>;
-      }
-      if (dirStr.endsWith("posts")) {
-        return ["queries.ts"] as unknown as ReturnType<typeof readdirSync>;
-      }
-      return [] as unknown as ReturnType<typeof readdirSync>;
-    });
-
-    vi.mocked(statSync).mockImplementation((p) => {
-      const pathStr = String(p);
-      return {
-        isDirectory: () => pathStr.endsWith("posts"),
-      } as ReturnType<typeof statSync>;
-    });
-
-    vi.mocked(readFileSync).mockReturnValue(
-      "  getById: publicProcedure\n    .input(z.string())\n    .query(handler)" as unknown as ReturnType<
-        typeof readFileSync
-      >,
+    vfs.addDirectory(`${cwd}/src/routers/posts`);
+    vfs.addFile(
+      `${cwd}/src/routers/posts/queries.ts`,
+      "  getById: publicProcedure\n    .input(z.string())\n    .query(handler)",
     );
 
     const logSpy = vi.spyOn(consola, "log").mockImplementation(() => undefined);
@@ -114,7 +102,7 @@ describe("routesListCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd },
       rawArgs: [],
       cmd: routesListCommand,
     });
@@ -128,30 +116,10 @@ describe("routesListCommand", () => {
   });
 
   it("should list tRPC mutations (from mutations.ts files)", async () => {
-    const { readdirSync, readFileSync, statSync } = await import("node:fs");
-
-    vi.mocked(readdirSync).mockImplementation((dir) => {
-      const dirStr = String(dir);
-      if (dirStr.endsWith("routers")) {
-        return ["posts"] as unknown as ReturnType<typeof readdirSync>;
-      }
-      if (dirStr.endsWith("posts")) {
-        return ["mutations.ts"] as unknown as ReturnType<typeof readdirSync>;
-      }
-      return [] as unknown as ReturnType<typeof readdirSync>;
-    });
-
-    vi.mocked(statSync).mockImplementation((p) => {
-      const pathStr = String(p);
-      return {
-        isDirectory: () => pathStr.endsWith("posts"),
-      } as ReturnType<typeof statSync>;
-    });
-
-    vi.mocked(readFileSync).mockReturnValue(
-      "  create: protectedProcedure\n    .input(z.object({}))\n    .mutation(handler)" as unknown as ReturnType<
-        typeof readFileSync
-      >,
+    vfs.addDirectory(`${cwd}/src/routers/posts`);
+    vfs.addFile(
+      `${cwd}/src/routers/posts/mutations.ts`,
+      "  create: protectedProcedure\n    .input(z.object({}))\n    .mutation(handler)",
     );
 
     const logSpy = vi.spyOn(consola, "log").mockImplementation(() => undefined);
@@ -164,7 +132,7 @@ describe("routesListCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd },
       rawArgs: [],
       cmd: routesListCommand,
     });
@@ -178,24 +146,10 @@ describe("routesListCommand", () => {
   });
 
   it("should include routes with no explicit method as wildcard", async () => {
-    const { readdirSync, readFileSync, statSync } = await import("node:fs");
-
-    vi.mocked(readdirSync).mockImplementation((dir) => {
-      if (String(dir).endsWith("routes")) {
-        return ["health.ts"] as unknown as ReturnType<typeof readdirSync>;
-      }
-      return [] as unknown as ReturnType<typeof readdirSync>;
-    });
-
-    vi.mocked(statSync).mockReturnValue({
-      isDirectory: () => false,
-    } as ReturnType<typeof statSync>);
-
-    // No fastify.get/post/etc — so it should be listed as "*"
-    vi.mocked(readFileSync).mockReturnValue(
-      "export default function handler() {}" as unknown as ReturnType<
-        typeof readFileSync
-      >,
+    vfs.addDirectory(`${cwd}/src/routes`);
+    vfs.addFile(
+      `${cwd}/src/routes/health.ts`,
+      "export default function handler() {}",
     );
 
     const logSpy = vi.spyOn(consola, "log").mockImplementation(() => undefined);
@@ -208,7 +162,7 @@ describe("routesListCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd },
       rawArgs: [],
       cmd: routesListCommand,
     });
@@ -222,32 +176,11 @@ describe("routesListCommand", () => {
   });
 
   it("should skip index files in routers directory", async () => {
-    const { readdirSync, readFileSync, statSync } = await import("node:fs");
-
-    vi.mocked(readdirSync).mockImplementation((dir) => {
-      const dirStr = String(dir);
-      if (dirStr.endsWith("routers")) {
-        return ["posts"] as unknown as ReturnType<typeof readdirSync>;
-      }
-      if (dirStr.endsWith("posts")) {
-        return ["index.ts", "queries.ts"] as unknown as ReturnType<
-          typeof readdirSync
-        >;
-      }
-      return [] as unknown as ReturnType<typeof readdirSync>;
-    });
-
-    vi.mocked(statSync).mockImplementation((p) => {
-      const pathStr = String(p);
-      return {
-        isDirectory: () => pathStr.endsWith("posts"),
-      } as ReturnType<typeof statSync>;
-    });
-
-    vi.mocked(readFileSync).mockReturnValue(
-      "  list: publicProcedure.query(handler)" as unknown as ReturnType<
-        typeof readFileSync
-      >,
+    vfs.addDirectory(`${cwd}/src/routers/posts`);
+    vfs.addFile(`${cwd}/src/routers/posts/index.ts`, "export default {}");
+    vfs.addFile(
+      `${cwd}/src/routers/posts/queries.ts`,
+      "  list: publicProcedure.query(handler)",
     );
 
     const logSpy = vi.spyOn(consola, "log").mockImplementation(() => undefined);
@@ -260,7 +193,7 @@ describe("routesListCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd },
       rawArgs: [],
       cmd: routesListCommand,
     });
@@ -274,8 +207,6 @@ describe("routesListCommand", () => {
   });
 
   it("should use process.cwd() when cwd is empty", async () => {
-    const { readdirSync } = await import("node:fs");
-    vi.mocked(readdirSync).mockReturnValue([]);
     const warnSpy = vi
       .spyOn(consola, "warn")
       .mockImplementation(() => undefined);
@@ -291,27 +222,13 @@ describe("routesListCommand", () => {
     });
 
     expect(warnSpy).toHaveBeenCalled();
-    warnSpy.mockRestore();
   });
 
   it("should list multiple HTTP methods for the same route file", async () => {
-    const { readdirSync, readFileSync, statSync } = await import("node:fs");
-
-    vi.mocked(readdirSync).mockImplementation((dir) => {
-      if (String(dir).endsWith("routes")) {
-        return ["api.ts"] as unknown as ReturnType<typeof readdirSync>;
-      }
-      return [] as unknown as ReturnType<typeof readdirSync>;
-    });
-
-    vi.mocked(statSync).mockReturnValue({
-      isDirectory: () => false,
-    } as ReturnType<typeof statSync>);
-
-    vi.mocked(readFileSync).mockReturnValue(
-      'fastify.get("/", getHandler)\nfastify.post("/", postHandler)' as unknown as ReturnType<
-        typeof readFileSync
-      >,
+    vfs.addDirectory(`${cwd}/src/routes`);
+    vfs.addFile(
+      `${cwd}/src/routes/api.ts`,
+      'fastify.get("/", getHandler)\nfastify.post("/", postHandler)',
     );
 
     const logSpy = vi.spyOn(consola, "log").mockImplementation(() => undefined);
@@ -324,7 +241,7 @@ describe("routesListCommand", () => {
     if (!run) throw new Error("run is undefined");
 
     run({
-      args: { _: [], cwd: "/tmp/test-project" },
+      args: { _: [], cwd },
       rawArgs: [],
       cmd: routesListCommand,
     });
