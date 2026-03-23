@@ -2,7 +2,7 @@
  * Describes a rendering task dispatched to the worker pool.
  */
 export interface RenderTask {
-  /** Rendering mode: server-side or static generation. */
+  /** Rendering mode: server-side, static generation, or streaming SSR. */
   type: "ssr" | "ssg" | "ssr-stream";
   /** The route path to render (e.g. `"/about"`). */
   route: string;
