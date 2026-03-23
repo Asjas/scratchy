@@ -2056,7 +2056,7 @@ it("removes cache directories", async () => {
 - [Testing Library](https://testing-library.com/)
 - [Drizzle ORM](https://orm.drizzle.team/)
 - [Piscina Worker Pool](https://github.com/piscinajs/piscina)
-- [`@scratchyjs/vfs` package](../packages/vfs)
+- `@scratchyjs/vfs` — private workspace package at `packages/vfs/`
 
 ## Related Documentation
 
