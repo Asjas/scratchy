@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("createStreamingSSRHandler", () => {
-  it("should stream an SSR page with chunked transfer encoding", async () => {
+  it("should stream an SSR page and return full HTML with expected headers", async () => {
     const plugin = (await import("./plugin.js")).default;
     const server = Fastify({ logger: false });
 
