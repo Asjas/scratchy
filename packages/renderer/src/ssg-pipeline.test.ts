@@ -1,8 +1,13 @@
 import { runSsgPipeline } from "./ssg-pipeline.js";
-import { readFile, rm } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, writeFile: vi.fn(actual.writeFile) };
+});
 
 /** Unique temporary directory per test run to avoid collisions. */
 function makeTmpDir(): string {
@@ -260,11 +265,13 @@ describe("runSsgPipeline", () => {
     const outDir = makeTmpDir();
     dirsCreated.push(outDir);
 
-    // Use a real worker that will succeed rendering, but make the outDir
-    // read-only so the write fails.
-    const { mkdirSync, chmodSync } = await import("node:fs");
-    mkdirSync(outDir, { recursive: true });
-    chmodSync(outDir, 0o444); // read-only
+    // Stub writeFile to reject with EACCES so the write-failure branch is
+    // exercised deterministically without relying on OS-level permissions.
+    const eaccesError = Object.assign(
+      new Error("EACCES: permission denied, open '/write-fail/index.html'"),
+      { code: "EACCES" as const },
+    );
+    vi.mocked(writeFile).mockRejectedValueOnce(eaccesError);
 
     const result = await runSsgPipeline({
       worker: resolve(import.meta.dirname, "worker.ts"),
@@ -272,9 +279,6 @@ describe("runSsgPipeline", () => {
       outDir,
       maxThreads: 1,
     });
-
-    // Restore permissions for cleanup
-    chmodSync(outDir, 0o755);
 
     expect(result.rendered).toHaveLength(0);
     expect(result.failed).toHaveLength(1);

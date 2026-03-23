@@ -2743,32 +2743,22 @@ describe("fs.promises hooks: mkdir fallback, relative symlink target", () => {
   });
 });
 
-// ─── MemoryProvider: lazy directory populate with addSymlink ──────────────────
+// ─── MemoryProvider: symlink inside a manually created directory ──────────────
 
-describe("MemoryProvider: lazy directory populate with addSymlink", () => {
-  it("addDirectory populate callback supports addSymlink via MemoryProvider", () => {
+describe("MemoryProvider: symlink inside a directory", () => {
+  it("creates a symlink inside a directory and reads the target file", () => {
     const provider = new MemoryProvider();
     provider.mkdirSync("/", { recursive: true });
-
-    // Create a directory with a lazy populate callback
-    provider.mkdirSync("/lazy-root", { recursive: true });
+    provider.mkdirSync("/dir-root", { recursive: true });
     provider.writeFileSync(
-      "/lazy-root/target.txt",
+      "/dir-root/target.txt",
       Buffer.from("symlink target content"),
     );
 
-    // Now use the MemoryProvider's addDirectory to create a lazy directory
-    // with a symlink via the ScopedVfs callback
-    // The lazy population happens via the MemoryProvider internals
-    // We need to use the MemoryProvider.mkdirSync with a populate option
-    // But MemoryProvider.mkdirSync doesn't accept a populate callback.
-    // The ScopedVfs is exercised when a directory has a `populate` function.
-    // This is set via the MemoryEntry internal. Let's test via the provider
-    // by writing files and using symlinks directly.
-    provider.symlinkSync("target.txt", "/lazy-root/link.txt");
+    provider.symlinkSync("target.txt", "/dir-root/link.txt");
 
-    expect(provider.existsSync("/lazy-root/link.txt")).toBe(true);
-    const content = provider.readFileSync("/lazy-root/target.txt", "utf8");
+    expect(provider.existsSync("/dir-root/link.txt")).toBe(true);
+    const content = provider.readFileSync("/dir-root/target.txt", "utf8");
     expect(content).toBe("symlink target content");
   });
 });
