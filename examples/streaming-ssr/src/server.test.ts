@@ -1,83 +1,15 @@
-import { createServer, loadConfig } from "@scratchyjs/core";
-import { createStreamingSSRHandler } from "@scratchyjs/renderer";
+import { loadConfig } from "@scratchyjs/core";
 import type {} from "@scratchyjs/renderer/plugin";
 import type { FastifyInstance } from "fastify";
-import { resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { buildServer } from "./server.js";
 
 // ── Server setup ─────────────────────────────────────────────────────────────
 let server: FastifyInstance;
 
 beforeAll(async () => {
   const config = loadConfig({ LOG_LEVEL: "silent" });
-  server = await createServer(config);
-
-  // Register the renderer worker pool
-  const { default: rendererPlugin } =
-    await import("@scratchyjs/renderer/plugin");
-  const workerPath = resolve(import.meta.dirname, "renderer", "worker.ts");
-  await server.register(rendererPlugin, {
-    worker: workerPath,
-    minThreads: 1,
-    maxThreads: 2,
-    taskTimeout: 10_000,
-  });
-
-  // Register streaming SSR handlers for each page
-  server.get(
-    "/",
-    createStreamingSSRHandler({
-      getProps: () => ({
-        page: "home",
-        headline: "Ship faster with Scratchy",
-      }),
-    }),
-  );
-
-  server.get(
-    "/about",
-    createStreamingSSRHandler({
-      getProps: () => ({
-        page: "about",
-        mission: "Make server-rendered web applications fast and ergonomic.",
-      }),
-    }),
-  );
-
-  server.get(
-    "/features",
-    createStreamingSSRHandler({
-      getProps: () => ({
-        page: "features",
-        features: [
-          { title: "Streaming SSR", description: "Stream HTML progressively." },
-        ],
-      }),
-    }),
-  );
-
-  server.get(
-    "/blog",
-    createStreamingSSRHandler({
-      getProps: () => ({
-        page: "blog",
-        posts: [{ id: "1", title: "Getting Started", excerpt: "First steps." }],
-      }),
-    }),
-  );
-
-  server.get(
-    "/contact",
-    createStreamingSSRHandler({
-      getProps: () => ({
-        page: "contact",
-        email: "hello@scratchyjs.com",
-      }),
-    }),
-  );
-
-  server.get("/*", createStreamingSSRHandler());
-
+  server = await buildServer({ config });
   await server.ready();
 });
 
