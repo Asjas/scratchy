@@ -1,16 +1,59 @@
 import { interval } from "./timers.js";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// node:timers/promises.setTimeout uses Node.js internal timers that
+// vi.useFakeTimers() cannot intercept directly. This shim routes through
+// globalThis.setTimeout (which IS replaceable by vi.useFakeTimers()) so that
+// vi.advanceTimersByTimeAsync() can drive the interval generator in tests.
+//
+// vi.mock() is hoisted by Vitest, so the import inside timers.ts loads the
+// mocked version from the very first test.
+vi.mock("node:timers/promises", () => ({
+  setTimeout: (
+    ms: number,
+    value: unknown,
+    options?: { signal?: AbortSignal },
+  ) =>
+    new Promise<unknown>((resolve, reject) => {
+      const id = globalThis.setTimeout(() => resolve(value), ms);
+      options?.signal?.addEventListener(
+        "abort",
+        () => {
+          globalThis.clearTimeout(id);
+          reject(
+            options.signal?.reason ??
+              new DOMException("This operation was aborted", "AbortError"),
+          );
+        },
+        { once: true },
+      );
+    }),
+}));
 
 describe("interval", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("yields values at the given interval until aborted", async () => {
     const controller = new AbortController();
     let count = 0;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for await (const _ of interval(20, { signal: controller.signal })) {
-      count++;
-      if (count >= 3) controller.abort();
+    async function runLoop() {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for await (const _ of interval(1000, { signal: controller.signal })) {
+        count++;
+        if (count >= 3) controller.abort();
+      }
     }
+
+    const loopPromise = runLoop();
+    await vi.advanceTimersByTimeAsync(3000);
+    await loopPromise;
 
     expect(count).toBe(3);
   });
@@ -21,7 +64,7 @@ describe("interval", () => {
 
     let count = 0;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for await (const _ of interval(1, { signal: controller.signal })) {
+    for await (const _ of interval(1000, { signal: controller.signal })) {
       count++;
     }
 
@@ -31,11 +74,17 @@ describe("interval", () => {
   it("uses a default AbortSignal (never-aborted) when no signal is provided", async () => {
     let count = 0;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for await (const _ of interval(10)) {
-      count++;
-      if (count >= 2) break;
+    async function runLoop() {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for await (const _ of interval(1000)) {
+        count++;
+        if (count >= 2) break;
+      }
     }
+
+    const loopPromise = runLoop();
+    await vi.advanceTimersByTimeAsync(2000);
+    await loopPromise;
 
     expect(count).toBeGreaterThanOrEqual(2);
   });
@@ -44,17 +93,19 @@ describe("interval", () => {
     const controller = new AbortController();
     let count = 0;
 
-    try {
+    async function runLoop() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for await (const _ of interval(10, { signal: controller.signal })) {
+      for await (const _ of interval(1000, { signal: controller.signal })) {
         count++;
         if (count >= 1) {
           controller.abort();
         }
       }
-    } catch {
-      // Expected — abort triggers an error
     }
+
+    const loopPromise = runLoop();
+    await vi.advanceTimersByTimeAsync(1000);
+    await loopPromise;
 
     expect(count).toBe(1);
   });
@@ -62,11 +113,17 @@ describe("interval", () => {
   it("handles options without signal (undefined signal)", async () => {
     let count = 0;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for await (const _ of interval(10, {})) {
-      count++;
-      if (count >= 2) break;
+    async function runLoop() {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for await (const _ of interval(1000, {})) {
+        count++;
+        if (count >= 2) break;
+      }
     }
+
+    const loopPromise = runLoop();
+    await vi.advanceTimersByTimeAsync(2000);
+    await loopPromise;
 
     expect(count).toBeGreaterThanOrEqual(2);
   });
@@ -74,17 +131,14 @@ describe("interval", () => {
   it("catches AbortError thrown by setTimeout when signal is aborted mid-wait", async () => {
     const controller = new AbortController();
 
-    // Manually advance the generator so the 200ms timer starts running,
-    // then abort during the wait — this puts the abort error into the catch block.
-    const gen = interval(200, { signal: controller.signal });
+    // Start the generator — the shim registers an abort listener on the signal
+    // and a fake globalThis.setTimeout. Aborting fires the listener
+    // synchronously, which cancels the fake timer and rejects the promise.
+    const gen = interval(1000, { signal: controller.signal });
     const tickPromise = gen.next();
 
-    // Abort after a very short delay, well before the 200ms timer fires.
-    await new Promise<void>((resolve) => globalThis.setTimeout(resolve, 10));
     controller.abort();
 
-    // The generator should complete (done: true) because the catch block
-    // detects signal.aborted === true and returns.
     const result = await tickPromise;
     expect(result.done).toBe(true);
   });
@@ -92,8 +146,8 @@ describe("interval", () => {
   it("catches and returns when an AbortError is thrown but signal is not yet marked aborted", async () => {
     const controller = new AbortController();
 
-    // Build a fake signal that reports aborted=false even after the abort,
-    // so that the second branch (error.name === "AbortError") is exercised.
+    // A fake signal that always reports aborted=false so the second catch
+    // branch (error.name === "AbortError") is exercised instead of the first.
     const fakeSignal = {
       aborted: false,
       addEventListener: controller.signal.addEventListener.bind(
@@ -104,10 +158,12 @@ describe("interval", () => {
       ),
     } as unknown as AbortSignal;
 
-    const gen = interval(200, { signal: fakeSignal });
+    const gen = interval(1000, { signal: fakeSignal });
     const tickPromise = gen.next();
 
-    await new Promise<void>((resolve) => globalThis.setTimeout(resolve, 10));
+    // Aborting fires the listener registered by the shim, rejecting with
+    // AbortError. Since fakeSignal.aborted stays false, the second catch
+    // branch handles it.
     controller.abort();
 
     const result = await tickPromise;
