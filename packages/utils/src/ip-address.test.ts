@@ -135,4 +135,30 @@ describe("getClientIPAddress", () => {
       "45.55.33.22",
     );
   });
+
+  it("skips non-for directives in Forwarded header", () => {
+    // "proto=https" should be skipped by the continue on non-for= directives
+    const result = getClientIPAddress(
+      req({ forwarded: "proto=https; for=198.51.100.1" }),
+    );
+    expect(result).toBe("198.51.100.1");
+  });
+
+  it("handles malformed IPv6 bracket without closing bracket", () => {
+    // "[2001:db8::1" has no closing "]" — should still attempt to extract
+    const result = getClientIPAddress(req({ forwarded: "for=[2001:db8::1" }));
+    // The entire "[2001:db8::1" is not a valid IP, so returns null
+    expect(result).toBeNull();
+  });
+
+  it("handles empty for= value in Forwarded header", () => {
+    const result = getClientIPAddress(req({ forwarded: "for=" }));
+    expect(result).toBeNull();
+  });
+
+  it("handles bare IPv6 address without brackets in for=", () => {
+    // Bare IPv6 has multiple colons so the port-stripping branch is skipped
+    const result = getClientIPAddress(req({ forwarded: "for=2001:db8::1" }));
+    expect(result).toBe("2001:db8::1");
+  });
 });

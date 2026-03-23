@@ -12,7 +12,7 @@ import {
 } from "./utils.js";
 import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -23,6 +23,11 @@ vi.mock("node:child_process", async (importOriginal) => {
     ...actual,
     execSync: vi.fn(actual.execSync),
   };
+});
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, readdir: vi.fn(actual.readdir) };
 });
 
 // ---------------------------------------------------------------------------
@@ -212,6 +217,17 @@ describe("isEmptyDir", () => {
     await writeFile(join(testDir, ".env"), "SECRET=abc");
     expect(await isEmptyDir(testDir)).toBe(false);
   });
+
+  it("rethrows non-ENOENT errors (e.g., permission denied)", async () => {
+    const eaccesError = Object.assign(new Error("EACCES: permission denied"), {
+      code: "EACCES" as const,
+    });
+
+    vi.mocked(readdir).mockRejectedValueOnce(eaccesError);
+
+    await expect(isEmptyDir(testDir)).rejects.toBe(eaccesError);
+    expect(readdir).toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -352,6 +368,27 @@ describe("initGit", () => {
 
   afterEach(async () => {
     await rm(testDir, { recursive: true, force: true });
+  });
+
+  it("returns true when git init, add, and commit all succeed", async () => {
+    // Ensure git has user identity so the commit step succeeds in CI without
+    // mutating the global git config. Git respects these environment
+    // variables for author/committer information.
+    const originalEnv = { ...process.env };
+
+    process.env.GIT_AUTHOR_NAME = "CI";
+    process.env.GIT_AUTHOR_EMAIL = "ci@test.com";
+    process.env.GIT_COMMITTER_NAME = "CI";
+    process.env.GIT_COMMITTER_EMAIL = "ci@test.com";
+
+    try {
+      const result = initGit(testDir);
+      expect(result).toBe(true);
+      expect(existsSync(join(testDir, ".git"))).toBe(true);
+    } finally {
+      // Restore the previous environment to avoid leaking state to other tests
+      process.env = originalEnv;
+    }
   });
 
   it("returns a boolean without throwing", () => {

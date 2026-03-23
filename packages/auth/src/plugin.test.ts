@@ -2,7 +2,8 @@ import authPlugin from "./plugin.js";
 import { createAuth } from "./server.js";
 import type { FastifyRequest } from "fastify";
 import Fastify from "fastify";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { getAuthDecorator } from "fastify-better-auth";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 function buildAuth() {
   return createAuth({
@@ -46,7 +47,6 @@ describe("authPlugin", () => {
   });
 
   it("makes the auth instance available via getAuthDecorator", async () => {
-    const { getAuthDecorator } = await import("fastify-better-auth");
     const auth = buildAuth();
     await fastify.register(authPlugin, { auth });
     await fastify.ready();
@@ -55,5 +55,30 @@ describe("authPlugin", () => {
     expect(authInstance).toBeDefined();
     expect(authInstance.api).toBeDefined();
     expect(authInstance.handler).toBeTypeOf("function");
+  });
+
+  it("sets session and user to null when getSession throws", async () => {
+    const auth = buildAuth();
+    await fastify.register(authPlugin, { auth });
+
+    // Override the auth api.getSession to throw an error
+    const authInstance = getAuthDecorator(fastify);
+    vi.spyOn(authInstance.api, "getSession").mockRejectedValue(
+      new Error("session resolution failed"),
+    );
+
+    fastify.get("/test-error", (request: FastifyRequest) => {
+      return { session: request.session, user: request.user };
+    });
+
+    const response = await fastify.inject({
+      method: "GET",
+      url: "/test-error",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ session: null, user: null });
+
+    vi.restoreAllMocks();
   });
 });

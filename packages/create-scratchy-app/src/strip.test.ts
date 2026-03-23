@@ -248,6 +248,27 @@ describe("removeFeatureBlocks", () => {
     const content = await readFile(file, "utf8");
     expect(content).toBe(original);
   });
+
+  it("strips posts import lines for the posts feature", async () => {
+    const file = join(testDir, "server.ts");
+    await writeFile(
+      file,
+      [
+        'import { createServer } from "@scratchyjs/core";',
+        'import { postQueries } from "~/routers/posts/queries.js";',
+        'import { postMutations } from "~/routers/posts/mutations.js";',
+        "",
+        "const server = await createServer();",
+      ].join("\n"),
+    );
+
+    await removeFeatureBlocks(file, ["posts"]);
+
+    const content = await readFile(file, "utf8");
+    expect(content).not.toContain("~/routers/posts/queries.js");
+    expect(content).not.toContain("~/routers/posts/mutations.js");
+    expect(content).toContain("@scratchyjs/core");
+  });
 });
 
 // ---------------------------------------------------------------------------

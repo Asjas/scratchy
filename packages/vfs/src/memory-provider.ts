@@ -91,6 +91,7 @@ function getChildren(
   syscall: string,
   path: string,
 ): Map<string, MemoryEntry> {
+  /* istanbul ignore next -- defensive guard: callers verify isDirectory() first */
   if (!entry.children) {
     throw createENOTDIR(syscall, path);
   }
@@ -101,6 +102,7 @@ function getChildren(
  * Returns the symlink target string, throwing `EINVAL` if it is null.
  */
 function getTarget(entry: MemoryEntry, syscall: string, path: string): string {
+  /* istanbul ignore next -- defensive guard: callers verify isSymbolicLink() first */
   if (entry.target === null) {
     throw createEINVAL(syscall, path);
   }
@@ -344,6 +346,21 @@ export class MemoryProvider {
     return current;
   }
 
+  /**
+   * Lazy-populate support for directories.
+   *
+   * This infrastructure allows directory entries to defer their content
+   * population until the first access. The populate callback receives a
+   * `ScopedVfs` that can add files, directories, and symlinks.
+   *
+   * This method is invoked from internal helpers such as `#lookupEntry`,
+   * `#ensureParent`, and `readdirSync` to ensure directory contents are
+   * populated before access. However, the *populate callback* path
+   * (where `entry.populate` is set and invoked) is not currently
+   * constructible via the public API, so the lazy-populate behaviour
+   * remains infrastructure for future use and for nested lazy directories.
+   */
+  /* istanbul ignore next -- lazy-populate infrastructure for future use */
   #ensurePopulated(entry: MemoryEntry): void {
     if (entry.isDirectory() && !entry.populated && entry.populate) {
       const children = entry.children;

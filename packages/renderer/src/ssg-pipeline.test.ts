@@ -1,8 +1,13 @@
 import { runSsgPipeline } from "./ssg-pipeline.js";
-import { readFile, rm } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, writeFile: vi.fn(actual.writeFile) };
+});
 
 /** Unique temporary directory per test run to avoid collisions. */
 function makeTmpDir(): string {
@@ -203,6 +208,17 @@ describe("runSsgPipeline", () => {
     ).rejects.toThrow(RangeError);
   });
 
+  it("throws RangeError for non-integer maxThreads", async () => {
+    await expect(
+      runSsgPipeline({
+        worker: resolve(import.meta.dirname, "worker.ts"),
+        routes: ["/"],
+        outDir: makeTmpDir(),
+        maxThreads: 1.5,
+      }),
+    ).rejects.toThrow(RangeError);
+  });
+
   it("throws RangeError for invalid taskTimeout", async () => {
     await expect(
       runSsgPipeline({
@@ -213,4 +229,103 @@ describe("runSsgPipeline", () => {
       }),
     ).rejects.toThrow(RangeError);
   });
+
+  it("throws RangeError for non-integer taskTimeout", async () => {
+    await expect(
+      runSsgPipeline({
+        worker: resolve(import.meta.dirname, "worker.ts"),
+        routes: ["/"],
+        outDir: makeTmpDir(),
+        taskTimeout: 1.5,
+      }),
+    ).rejects.toThrow(RangeError);
+  });
+
+  it("records a failure when getProps throws a non-Error value", async () => {
+    const outDir = makeTmpDir();
+    dirsCreated.push(outDir);
+
+    const result = await runSsgPipeline({
+      worker: resolve(import.meta.dirname, "worker.ts"),
+      routes: ["/props-string-error"],
+      outDir,
+      maxThreads: 1,
+      getProps: () => {
+        throw "string error from getProps";
+      },
+    });
+
+    expect(result.rendered).toHaveLength(0);
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0]?.route).toBe("/props-string-error");
+    expect(result.failed[0]?.error.message).toBe("string error from getProps");
+  });
+
+  it("records failure and writes error for write-permission-denied path", async () => {
+    const outDir = makeTmpDir();
+    dirsCreated.push(outDir);
+
+    // Stub writeFile to reject with EACCES so the write-failure branch is
+    // exercised deterministically without relying on OS-level permissions.
+    const eaccesError = Object.assign(
+      new Error("EACCES: permission denied, open '/write-fail/index.html'"),
+      { code: "EACCES" as const },
+    );
+    vi.mocked(writeFile).mockRejectedValueOnce(eaccesError);
+
+    const result = await runSsgPipeline({
+      worker: resolve(import.meta.dirname, "worker.ts"),
+      routes: ["/write-fail"],
+      outDir,
+      maxThreads: 1,
+    });
+
+    expect(result.rendered).toHaveLength(0);
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0]?.route).toBe("/write-fail");
+    expect(result.failed[0]?.error).toBeInstanceOf(Error);
+  });
+
+  it("records a failure with wrapped message when worker throws a non-Error", async () => {
+    const outDir = makeTmpDir();
+    dirsCreated.push(outDir);
+
+    const result = await runSsgPipeline({
+      worker: resolve(
+        import.meta.dirname,
+        "test-workers",
+        "throw-string-worker.ts",
+      ),
+      routes: ["/non-error-throw"],
+      outDir,
+      maxThreads: 1,
+    });
+
+    expect(result.rendered).toHaveLength(0);
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0]?.route).toBe("/non-error-throw");
+    expect(result.failed[0]?.error).toBeInstanceOf(Error);
+    expect(result.failed[0]?.error.message).toContain(
+      "string error from worker",
+    );
+  });
+
+  it("records a failure with timeout message when worker times out", async () => {
+    const outDir = makeTmpDir();
+    dirsCreated.push(outDir);
+
+    const result = await runSsgPipeline({
+      worker: resolve(import.meta.dirname, "test-workers", "hang-worker.ts"),
+      routes: ["/timeout-route"],
+      outDir,
+      maxThreads: 1,
+      taskTimeout: 200, // 200ms timeout for fast test
+    });
+
+    expect(result.rendered).toHaveLength(0);
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0]?.route).toBe("/timeout-route");
+    expect(result.failed[0]?.error).toBeInstanceOf(Error);
+    expect(result.failed[0]?.error.message).toContain("timed out");
+  }, 10_000);
 });

@@ -286,6 +286,24 @@ describe("renderTemplate (model.ts.hbs)", () => {
     expect(content).toContain("text");
     expect(content).toContain("drizzle-orm/pg-core");
   });
+
+  it("returns cached template on second call (cache hit path)", () => {
+    const context = {
+      pascalName: "Post",
+      camelName: "post",
+      kebabName: "post",
+      snakeName: "post",
+      columns: [],
+      uniqueColumnTypes: [],
+    };
+
+    // First call compiles the template
+    const first = renderTemplate("model.ts.hbs", context);
+    // Second call uses the cache
+    const second = renderTemplate("model.ts.hbs", context);
+
+    expect(first).toBe(second);
+  });
 });
 
 describe("renderTemplate (queries.ts.hbs)", () => {
@@ -646,3 +664,7 @@ describe("file path conventions", () => {
     expect(`src/${path}.test.ts`).toBe("src/routers/posts/queries.test.ts");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Template cache hit
+// ---------------------------------------------------------------------------

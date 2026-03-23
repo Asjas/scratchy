@@ -2742,3 +2742,215 @@ describe("fs.promises hooks: mkdir fallback, relative symlink target", () => {
     expect(target).toBe("relative.txt");
   });
 });
+
+// ─── MemoryProvider: symlink inside a manually created directory ──────────────
+
+describe("MemoryProvider: symlink inside a directory", () => {
+  it("creates a symlink inside a directory and reads the target file", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.mkdirSync("/dir-root", { recursive: true });
+    provider.writeFileSync(
+      "/dir-root/target.txt",
+      Buffer.from("symlink target content"),
+    );
+
+    provider.symlinkSync("target.txt", "/dir-root/link.txt");
+
+    expect(provider.existsSync("/dir-root/link.txt")).toBe(true);
+    const content = provider.readFileSync("/dir-root/target.txt", "utf8");
+    expect(content).toBe("symlink target content");
+  });
+});
+
+// ─── MemoryProvider: copyFileSync with empty content ─────────────────────────
+
+describe("MemoryProvider: copyFileSync with empty content", () => {
+  it("copyFileSync copies a file with empty content to a new path", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.writeFileSync("/empty.txt", Buffer.alloc(0));
+    provider.copyFileSync("/empty.txt", "/empty-copy.txt");
+
+    expect(provider.readFileSync("/empty-copy.txt", "utf8")).toBe("");
+  });
+
+  it("copyFileSync overwrites existing file with source that has empty content", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.writeFileSync("/empty.txt", Buffer.alloc(0));
+    provider.writeFileSync("/target.txt", Buffer.from("existing content"));
+    provider.copyFileSync("/empty.txt", "/target.txt");
+
+    expect(provider.readFileSync("/target.txt", "utf8")).toBe("");
+  });
+});
+
+// ─── VirtualFileSystem: existsSync catch branch ──────────────────────────────
+
+describe("VirtualFileSystem: existsSync catch branch (file-system L584-585)", () => {
+  it("existsSync returns false for a deeply nested non-existent path in mounted VFS", () => {
+    const vfs = create();
+    const mount = `/tmp/vfs-exists-catch-${process.pid}`;
+    vfs.addDirectory(mount + "/dir");
+    vfs.mount(mount);
+
+    // Querying a non-existent file under a valid directory returns false
+    expect(vfs.existsSync(mount + "/dir/no-such-file")).toBe(false);
+    // Querying a non-existent deep path also returns false
+    expect(vfs.existsSync(mount + "/no/such/path")).toBe(false);
+
+    vfs.unmount();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Additional edge-case tests to improve statement coverage
+// ---------------------------------------------------------------------------
+
+describe("MemoryProvider — additional edge cases", () => {
+  it("existsSync returns false when path causes internal error", () => {
+    // Use MemoryProvider directly to create a symlink loop
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.symlinkSync("loop-b", "/loop-a");
+    provider.symlinkSync("loop-a", "/loop-b");
+
+    // existsSync catch branch — symlink loop triggers ELOOP
+    // which is caught internally and returns false
+    expect(provider.existsSync("/loop-a")).toBe(false);
+  });
+
+  it("readdirSync throws ENOTDIR for a file", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.writeFileSync("/file.txt", Buffer.from("data"));
+
+    expect(() => provider.readdirSync("/file.txt")).toThrow(/not a directory/);
+  });
+
+  it("readlinkSync throws EINVAL for a non-symlink", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.writeFileSync("/file.txt", Buffer.from("data"));
+
+    expect(() => provider.readlinkSync("/file.txt")).toThrow(
+      /invalid argument/,
+    );
+  });
+
+  it("realpathSync throws ENOENT for a missing path", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+
+    expect(() => provider.realpathSync("/nonexistent")).toThrow(
+      /no such file or directory/,
+    );
+  });
+
+  it("realpathSync throws ELOOP for a symlink loop", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.symlinkSync("b", "/a");
+    provider.symlinkSync("a", "/b");
+
+    expect(() => provider.realpathSync("/a")).toThrow(
+      /too many levels of symbolic links/,
+    );
+  });
+
+  it("truncateSync throws EISDIR for a directory", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.mkdirSync("/sub");
+
+    expect(() => provider.truncateSync("/sub")).toThrow(
+      /illegal operation on a directory/,
+    );
+  });
+
+  it("linkSync throws EISDIR when linking a directory", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.mkdirSync("/sub");
+
+    expect(() => provider.linkSync("/sub", "/link")).toThrow(
+      /illegal operation on a directory/,
+    );
+  });
+
+  it("linkSync throws EEXIST when target already exists", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.writeFileSync("/a.txt", Buffer.from("hello"));
+    provider.writeFileSync("/b.txt", Buffer.from("world"));
+
+    expect(() => provider.linkSync("/a.txt", "/b.txt")).toThrow(
+      /file already exists/,
+    );
+  });
+
+  it("recursive readdir traverses subdirectories", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.writeFileSync("/root.txt", Buffer.from("data"));
+    provider.mkdirSync("/sub");
+    provider.writeFileSync("/sub/nested.txt", Buffer.from("nested"));
+
+    const entries = provider.readdirSync("/", {
+      recursive: true,
+    }) as string[];
+    expect(entries).toContain("root.txt");
+    expect(entries).toContain("sub");
+    expect(entries).toContain("sub/nested.txt");
+  });
+
+  it("mkdirSync with recursive creates nested directories", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.mkdirSync("/a/b/c", { recursive: true });
+
+    expect(provider.existsSync("/a/b/c")).toBe(true);
+  });
+
+  it("ensureParent follows symlink to directory", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.mkdirSync("/real");
+    provider.symlinkSync("real", "/link");
+
+    // Writing a file under a symlinked directory triggers ensureParent
+    // to follow the symlink
+    provider.writeFileSync("/link/file.txt", Buffer.from("content"));
+    expect(provider.readFileSync("/real/file.txt", "utf8")).toBe("content");
+  });
+
+  it("ensureParent throws ENOENT for broken symlink parent", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.symlinkSync("nonexistent", "/broken");
+
+    expect(() =>
+      provider.writeFileSync("/broken/file.txt", Buffer.from("data")),
+    ).toThrow(/no such file or directory/);
+  });
+
+  it("ensureParent throws ENOTDIR when parent is a file", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.writeFileSync("/file.txt", Buffer.from("data"));
+
+    expect(() =>
+      provider.writeFileSync("/file.txt/child", Buffer.from("data")),
+    ).toThrow(/not a directory/);
+  });
+
+  it("lookupEntry returns null for path through a file", () => {
+    const provider = new MemoryProvider();
+    provider.mkdirSync("/", { recursive: true });
+    provider.writeFileSync("/file.txt", Buffer.from("data"));
+
+    // Trying to check existence of a path through a file
+    expect(provider.existsSync("/file.txt/deeper")).toBe(false);
+  });
+});
