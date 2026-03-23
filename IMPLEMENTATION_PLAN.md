@@ -793,10 +793,10 @@ be planned for:
 - [x] `db:seed`, `db:fresh`, `routes:list`, `cache:clear` CLI commands
 - [x] OpenAPI/Swagger documentation generation for REST endpoints
 - [x] SSG build-time pre-rendering pipeline
-- [ ] Streaming SSR (send HTML chunks as they render)
+- [x] Streaming SSR (send HTML chunks as they render)
+- [x] Turborepo or Nx for optimized monorepo task execution
+- [x] `create-scratchy-app` initializer package
 - [ ] Lock-free ring buffer for high-throughput SharedArrayBuffer communication
 - [ ] Multi-server cache invalidation via Redis Pub/Sub
-- [ ] Turborepo or Nx for optimized monorepo task execution
-- [ ] `create-scratchy-app` initializer package
 - [ ] Plugin marketplace / community plugin conventions
 - [ ] Performance benchmarking suite

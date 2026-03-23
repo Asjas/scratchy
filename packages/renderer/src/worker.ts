@@ -2,13 +2,33 @@
  * Describes a rendering task dispatched to the worker pool.
  */
 export interface RenderTask {
-  /** Rendering mode: server-side or static generation. */
-  type: "ssr" | "ssg";
+  /** Rendering mode: server-side, static generation, or streaming SSR. */
+  type: "ssr" | "ssg" | "ssr-stream";
   /** The route path to render (e.g. `"/about"`). */
   route: string;
   /** Optional props / data to pass into the renderer. */
   props?: Record<string, unknown>;
   /** Optional request headers forwarded from the client. */
+  headers?: Record<string, string | string[] | undefined>;
+}
+
+/**
+ * A render task for non-streaming modes (SSR or SSG).
+ */
+export interface NonStreamingRenderTask {
+  type: "ssr" | "ssg";
+  route: string;
+  props?: Record<string, unknown>;
+  headers?: Record<string, string | string[] | undefined>;
+}
+
+/**
+ * A render task for streaming SSR mode.
+ */
+export interface StreamingRenderTask {
+  type: "ssr-stream";
+  route: string;
+  props?: Record<string, unknown>;
   headers?: Record<string, string | string[] | undefined>;
 }
 
@@ -20,6 +40,28 @@ export interface RenderResult {
   html: string;
   /** Content to inject into `<head>` (meta tags, styles, etc.). */
   head: string;
+  /** HTTP status code for the response. */
+  statusCode: number;
+  /** Optional response headers to set on the HTTP reply. */
+  headers?: Record<string, string>;
+}
+
+/**
+ * The result returned from a streaming render task.
+ * Contains an ordered array of HTML chunks to be sent progressively.
+ */
+export interface StreamingRenderResult {
+  /**
+   * Ordered HTML chunks to stream to the client.
+   *
+   * Typical layout:
+   * - `chunks[0]`: HTML shell + `<head>` section (sent immediately so the
+   *   browser can start parsing critical CSS/JS links).
+   * - `chunks[1]`: Above-the-fold body content.
+   * - `chunks[2]` … `chunks[n-2]`: Deferred / below-fold content sections.
+   * - Last chunk: Closing `</body></html>` tag.
+   */
+  chunks: string[];
   /** HTTP status code for the response. */
   statusCode: number;
   /** Optional response headers to set on the HTTP reply. */
@@ -122,15 +164,78 @@ function renderSSG(
 }
 
 /**
+ * Renders the given route in streaming mode, splitting the HTML into
+ * ordered chunks so the main thread can pipe them to the response with
+ * `Transfer-Encoding: chunked`.
+ *
+ * Chunk layout:
+ * 1. HTML shell + `<head>` section — sent immediately so the browser
+ *    can start fetching critical resources before the body is ready.
+ * 2. Above-the-fold body content (the `#app` mount point + props).
+ * 3. Closing `</body></html>` — ends the response.
+ *
+ * This is a placeholder implementation. In a real Qwik application the
+ * render pipeline would yield chunks as components resolve (e.g. using
+ * `renderToStream()` from `@builder.io/qwik/server`). Route and props
+ * are HTML-escaped to prevent XSS.
+ */
+function renderStreamingSSR(
+  route: string,
+  props?: Record<string, unknown>,
+): StreamingRenderResult {
+  const head = "<title>SSR</title>";
+  const escapedRoute = escapeHtml(route);
+  const propsScript = props
+    ? `<script type="application/json" id="__PROPS__">${escapeHtml(JSON.stringify(props))}</script>`
+    : "";
+
+  // Chunk 1: HTML shell opening + full <head> (critical path — sent first).
+  const shellChunk = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+${head}
+</head>
+<body>
+`;
+
+  // Chunk 2: Above-the-fold app content.
+  const contentChunk = `<div id="app" data-route="${escapedRoute}" data-streaming="true"></div>${propsScript}
+`;
+
+  // Chunk 3: Closing tags.
+  const closingChunk = `</body>
+</html>`;
+
+  return {
+    chunks: [shellChunk, contentChunk, closingChunk],
+    statusCode: 200,
+  };
+}
+
+/**
  * Worker entry point. Piscina calls this function for each task
  * dispatched via `fastify.runTask()`.
+ *
+ * Overloads ensure the correct return type is inferred at call sites:
+ * - `"ssr"` / `"ssg"` tasks → `RenderResult`
+ * - `"ssr-stream"` tasks → `StreamingRenderResult`
  */
-export default function handler(task: RenderTask): RenderResult {
+export default function handler(task: NonStreamingRenderTask): RenderResult;
+export default function handler(
+  task: StreamingRenderTask,
+): StreamingRenderResult;
+export default function handler(
+  task: RenderTask,
+): RenderResult | StreamingRenderResult {
   switch (task.type) {
     case "ssr":
       return renderSSR(task.route, task.props);
     case "ssg":
       return renderSSG(task.route, task.props);
+    case "ssr-stream":
+      return renderStreamingSSR(task.route, task.props);
     default:
       throw new Error(
         `Unknown render task type: ${String((task as RenderTask).type)}`,

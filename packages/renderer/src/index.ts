@@ -19,6 +19,9 @@ export {
 export { createSSRHandler } from "./ssr-handler.js";
 export type { SSRHandlerOptions } from "./ssr-handler.js";
 
+export { createStreamingSSRHandler } from "./streaming-ssr-handler.js";
+export type { StreamingSSRHandlerOptions } from "./streaming-ssr-handler.js";
+
 export { runSsgPipeline } from "./ssg-pipeline.js";
 export type {
   SsgPipelineOptions,
@@ -28,4 +31,10 @@ export type {
 } from "./ssg-pipeline.js";
 
 export type { RendererPluginOptions } from "./plugin.js";
-export type { RenderResult, RenderTask } from "./worker.js";
+export type {
+  NonStreamingRenderTask,
+  RenderResult,
+  RenderTask,
+  StreamingRenderResult,
+  StreamingRenderTask,
+} from "./worker.js";
