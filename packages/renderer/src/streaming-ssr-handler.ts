@@ -63,8 +63,9 @@ export function createStreamingSSRHandler(
 
     if (result.headers) {
       for (const [key, value] of Object.entries(result.headers)) {
-        // Avoid overwriting the content-type we already set.
-        if (key.toLowerCase() !== "content-type") {
+        const lowerKey = key.toLowerCase();
+        // Avoid overwriting the content-type and x-content-type-options we already set.
+        if (lowerKey !== "content-type" && lowerKey !== "x-content-type-options") {
           reply.header(key, value);
         }
       }
