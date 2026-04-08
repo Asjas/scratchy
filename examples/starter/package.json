@@ -20,7 +20,7 @@
     "@scratchyjs/vite-plugin": "workspace:*",
     "better-auth": "1.5.5",
     "argon2": "0.44.0",
-    "drizzle-orm": "0.45.1",
+    "drizzle-orm": "0.45.2",
     "ulid": "3.0.2"
   },
   "devDependencies": {
