@@ -372,7 +372,7 @@ export default async function handler(task: { requestId: string }) {
 Pub/Sub. When any server mutates data it broadcasts the stale key names to all
 other nodes; each node then evicts those entries from its local in-memory cache.
 
-#### Publisher (one per mutation path)
+#### Publisher (one per process / server instance)
 
 `@scratchyjs/renderer` ships a ready-made Fastify plugin that decorates the
 instance with `server.invalidateCache()`. Register it once at startup and pass a
