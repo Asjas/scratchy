@@ -26,6 +26,11 @@ function createMockSubscriber() {
     on: vi.fn((event: string, handler: MessageHandler) => {
       if (event === "message") _messageHandler = handler;
     }),
+    removeListener: vi.fn((event: string, handler: MessageHandler) => {
+      if (event === "message" && _messageHandler === handler) {
+        _messageHandler = null;
+      }
+    }),
     subscribe: vi.fn().mockResolvedValue(undefined),
     unsubscribe: vi.fn().mockResolvedValue(undefined),
     // Helper to simulate an incoming pub/sub message in tests.
@@ -327,8 +332,46 @@ describe("subscribeToCacheInvalidation", () => {
 
     await handle.unsubscribe();
 
+    expect(subscriber.removeListener).toHaveBeenCalledWith(
+      "message",
+      expect.any(Function),
+    );
     expect(subscriber.unsubscribe).toHaveBeenCalledWith(
       DEFAULT_CACHE_INVALIDATION_CHANNEL,
     );
+  });
+
+  it("is idempotent — calling unsubscribe() twice only tears down once", async () => {
+    const subscriber = createMockSubscriber();
+    const handle = await subscribeToCacheInvalidation({
+      subscriber: subscriber as never,
+      onInvalidate: vi.fn(),
+    });
+
+    await handle.unsubscribe();
+    await handle.unsubscribe();
+
+    expect(subscriber.removeListener).toHaveBeenCalledOnce();
+    expect(subscriber.unsubscribe).toHaveBeenCalledOnce();
+  });
+
+  it("does not fire onInvalidate after unsubscribe() has been called", async () => {
+    const subscriber = createMockSubscriber();
+    const onInvalidate = vi.fn();
+    const handle = await subscribeToCacheInvalidation({
+      subscriber: subscriber as never,
+      onInvalidate,
+    });
+
+    await handle.unsubscribe();
+
+    // Simulate a message arriving after unsubscribe — the removed listener
+    // should no longer be invoked.
+    subscriber._simulateMessage(
+      DEFAULT_CACHE_INVALIDATION_CHANNEL,
+      JSON.stringify({ keys: ["stale-key"] }),
+    );
+
+    expect(onInvalidate).not.toHaveBeenCalled();
   });
 });

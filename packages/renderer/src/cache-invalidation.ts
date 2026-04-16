@@ -168,8 +168,9 @@ export async function subscribeToCacheInvalidation(
 ): Promise<CacheInvalidationSubscriber> {
   const { subscriber, onInvalidate, onError } = opts;
   const channel = opts.channel ?? DEFAULT_CACHE_INVALIDATION_CHANNEL;
+  let subscribed = true;
 
-  subscriber.on("message", (ch: string, rawMessage: string) => {
+  const messageHandler = (ch: string, rawMessage: string) => {
     if (ch !== channel) return;
 
     let parsed: InvalidationMessage;
@@ -206,14 +207,18 @@ export async function subscribeToCacheInvalidation(
         onError?.(err instanceof Error ? err : new Error(String(err)));
       });
     }
-  });
+  };
 
+  subscriber.on("message", messageHandler);
   await subscriber.subscribe(channel);
 
   return {
     channel,
 
     async unsubscribe(): Promise<void> {
+      if (!subscribed) return;
+      subscribed = false;
+      subscriber.removeListener("message", messageHandler);
       await subscriber.unsubscribe(channel);
     },
   };

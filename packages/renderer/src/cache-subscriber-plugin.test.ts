@@ -15,6 +15,16 @@ function createMockSubscriber() {
         listeners.push(handler as (channel: string, message: string) => void);
       }
     }),
+    removeListener: vi.fn(
+      (event: string, handler: (...args: unknown[]) => void) => {
+        if (event === "message") {
+          const idx = listeners.indexOf(
+            handler as (channel: string, message: string) => void,
+          );
+          if (idx !== -1) listeners.splice(idx, 1);
+        }
+      },
+    ),
     _simulateMessage(channel: string, message: string) {
       for (const h of listeners) h(channel, message);
     },
@@ -231,6 +241,10 @@ describe("cacheSubscriberPlugin", () => {
     await server.ready();
     await server.close();
 
+    expect(subscriber.removeListener).toHaveBeenCalledWith(
+      "message",
+      expect.any(Function),
+    );
     expect(subscriber.unsubscribe).toHaveBeenCalledWith(
       DEFAULT_CACHE_INVALIDATION_CHANNEL,
     );
