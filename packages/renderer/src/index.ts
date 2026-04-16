@@ -18,6 +18,18 @@ export {
   storeRenderResult,
 } from "./redis-comm.js";
 
+export {
+  DEFAULT_CACHE_INVALIDATION_CHANNEL,
+  createCacheInvalidator,
+  subscribeToCacheInvalidation,
+} from "./cache-invalidation.js";
+export type {
+  CacheInvalidationSubscriber,
+  CacheInvalidationSubscriberOptions,
+  CacheInvalidator,
+  CacheInvalidatorOptions,
+} from "./cache-invalidation.js";
+
 export { createSSRHandler } from "./ssr-handler.js";
 export type { SSRHandlerOptions } from "./ssr-handler.js";
 
@@ -33,6 +45,8 @@ export type {
 } from "./ssg-pipeline.js";
 
 export type { RendererPluginOptions } from "./plugin.js";
+export type { CacheInvalidatorPluginOptions } from "./cache-invalidator-plugin.js";
+export type { CacheSubscriberPluginOptions } from "./cache-subscriber-plugin.js";
 export type {
   NonStreamingRenderTask,
   RenderResult,
