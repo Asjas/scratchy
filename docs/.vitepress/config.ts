@@ -93,4 +93,15 @@ export default defineConfig({
   markdown: {
     lineNumbers: true,
   },
+
+  vite: {
+    build: {
+      target: "esnext",
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        },
+      },
+    },
+  },
 });
