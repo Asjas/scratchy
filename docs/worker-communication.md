@@ -374,90 +374,93 @@ other nodes; each node then evicts those entries from its local in-memory cache.
 
 #### Publisher (one per mutation path)
 
-Create a **single** `Redis` client for publishing and reuse it for the lifetime
-of the process:
+`@scratchyjs/renderer` ships a ready-made Fastify plugin that decorates the
+instance with `server.invalidateCache()`. Register it once at startup and pass a
+**single** ioredis client dedicated to publishing:
 
 ```typescript
-// src/plugins/app/cache-invalidator.ts
-import { createCacheInvalidator } from "@scratchyjs/renderer";
-import fp from "fastify-plugin";
+// src/server.ts
+import cacheInvalidatorPlugin from "@scratchyjs/renderer/cache-invalidator-plugin";
 import Redis from "ioredis";
 
-export default fp(async function cacheInvalidatorPlugin(fastify) {
-  const publisher = new Redis(fastify.config.REDIS_URL);
-  const invalidator = createCacheInvalidator({ publisher });
-
-  fastify.decorate("invalidateCache", invalidator.publish.bind(invalidator));
-
-  fastify.addHook("onClose", async () => {
-    await publisher.quit();
-  });
-});
-
-declare module "fastify" {
-  interface FastifyInstance {
-    invalidateCache: (keys: string[]) => Promise<void>;
-  }
-}
+const publisher = new Redis(process.env.REDIS_URL);
+await server.register(cacheInvalidatorPlugin, { publisher });
 ```
 
 Then call it from any mutation handler:
 
 ```typescript
 // After updating a blog post:
-await fastify.invalidateCache([`page:/blog/${slug}`, "page:/blog"]);
+await server.invalidateCache([`page:/blog/${slug}`, "page:/blog"]);
 ```
 
 #### Subscriber (every server instance)
 
-Create a **dedicated** `Redis` client for subscribing — ioredis clients enter
+Similarly, a ready-made subscriber plugin wires up the subscription and tears it
+down on shutdown. Create a **dedicated** ioredis client — ioredis clients enter
 subscriber mode after calling `subscribe()` and can no longer issue regular
 commands:
 
 ```typescript
-// src/plugins/app/cache-subscriber.ts
-import { subscribeToCacheInvalidation } from "@scratchyjs/renderer";
-import fp from "fastify-plugin";
+// src/server.ts
+import cacheSubscriberPlugin from "@scratchyjs/renderer/cache-subscriber-plugin";
 import Redis from "ioredis";
 
-export default fp(async function cacheSubscriberPlugin(fastify) {
-  const subscriber = new Redis(fastify.config.REDIS_URL);
-
-  const handle = await subscribeToCacheInvalidation({
-    subscriber,
-    onInvalidate: (keys) => {
-      for (const key of keys) {
-        fastify.cache.delete(key); // evict from your local LRU cache
-      }
-    },
-    onError: (err) => {
-      fastify.log.warn({ err }, "cache invalidation error");
-    },
-  });
-
-  fastify.addHook("onClose", async () => {
-    await handle.unsubscribe();
-    await subscriber.quit();
-  });
+const subscriber = new Redis(process.env.REDIS_URL);
+await server.register(cacheSubscriberPlugin, {
+  subscriber,
+  onInvalidate: (keys) => {
+    for (const key of keys) {
+      localCache.delete(key); // evict from your local LRU cache
+    }
+  },
+  onError: (err) => {
+    server.log.warn({ err }, "cache invalidation error");
+  },
 });
 ```
 
+Both plugins close their Redis client automatically when the Fastify server
+shuts down — no manual `onClose` hooks needed.
+
 #### API reference
 
-| Export                               | Description                                                  |
-| ------------------------------------ | ------------------------------------------------------------ |
-| `createCacheInvalidator(opts)`       | Returns a `CacheInvalidator` for publishing events.          |
-| `subscribeToCacheInvalidation(opts)` | Subscribes to events; returns a handle with `unsubscribe()`. |
-| `DEFAULT_CACHE_INVALIDATION_CHANNEL` | Default channel name: `"scratchy:cache:invalidate"`.         |
+| Export                               | Description                                                       |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| `cacheInvalidatorPlugin` (default)   | Fastify plugin; decorates `fastify.invalidateCache()`.            |
+| `cacheSubscriberPlugin` (default)    | Fastify plugin; subscribes at startup, unsubscribes on shutdown.  |
+| `createCacheInvalidator(opts)`       | Returns a `CacheInvalidator` for publishing events (lower-level). |
+| `subscribeToCacheInvalidation(opts)` | Subscribes to events; returns a handle with `unsubscribe()`.      |
+| `DEFAULT_CACHE_INVALIDATION_CHANNEL` | Default channel name: `"scratchy:cache:invalidate"`.              |
 
-**`CacheInvalidatorOptions`**
+**`CacheInvalidatorPluginOptions`**
+(`@scratchyjs/renderer/cache-invalidator-plugin`)
+
+| Option      | Type     | Default                       | Description                                                   |
+| ----------- | -------- | ----------------------------- | ------------------------------------------------------------- |
+| `publisher` | `Redis`  | required                      | ioredis client for publishing (not put into subscriber mode). |
+| `channel`   | `string` | `"scratchy:cache:invalidate"` | Pub/Sub channel name.                                         |
+
+**`CacheSubscriberPluginOptions`**
+(`@scratchyjs/renderer/cache-subscriber-plugin`)
+
+| Option         | Type                                        | Default                       | Description                                          |
+| -------------- | ------------------------------------------- | ----------------------------- | ---------------------------------------------------- |
+| `subscriber`   | `Redis`                                     | required                      | Dedicated ioredis client (enters subscriber mode).   |
+| `onInvalidate` | `(keys: string[]) => void \| Promise<void>` | required                      | Called with the keys to evict on each event.         |
+| `channel`      | `string`                                    | `"scratchy:cache:invalidate"` | Pub/Sub channel name.                                |
+| `onError`      | `(err: Error) => void`                      | `undefined`                   | Called on parse errors or `onInvalidate` rejections. |
+
+**`CacheInvalidatorOptions`** (lower-level, used when wiring the publisher
+manually)
 
 | Option      | Type     | Default                       | Description                    |
 | ----------- | -------- | ----------------------------- | ------------------------------ |
 | `publisher` | `Redis`  | required                      | ioredis client for publishing. |
 | `channel`   | `string` | `"scratchy:cache:invalidate"` | Pub/Sub channel name.          |
 
-**`CacheInvalidationSubscriberOptions`**
+**`CacheInvalidationSubscriberOptions`** (lower-level, used when wiring the
+subscriber manually)
 
 | Option         | Type                                        | Default                       | Description                                          |
 | -------------- | ------------------------------------------- | ----------------------------- | ---------------------------------------------------- |

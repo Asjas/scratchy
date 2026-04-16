@@ -45,6 +45,8 @@ export type {
 } from "./ssg-pipeline.js";
 
 export type { RendererPluginOptions } from "./plugin.js";
+export type { CacheInvalidatorPluginOptions } from "./cache-invalidator-plugin.js";
+export type { CacheSubscriberPluginOptions } from "./cache-subscriber-plugin.js";
 export type {
   NonStreamingRenderTask,
   RenderResult,
