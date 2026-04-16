@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "drizzle-orm": "0.45.1",
+    "drizzle-orm": "0.45.2",
     "fastify-plugin": "5.1.0",
     "pg": "8.20.0"
   },
