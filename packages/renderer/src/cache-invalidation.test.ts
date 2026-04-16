@@ -258,13 +258,14 @@ describe("subscribeToCacheInvalidation", () => {
       onError,
     });
 
-    // The synchronous throw propagates out of the message handler
-    expect(() =>
-      subscriber._simulateMessage(
-        DEFAULT_CACHE_INVALIDATION_CHANNEL,
-        JSON.stringify({ keys: ["k"] }),
-      ),
-    ).toThrow("sync boom");
+    // The synchronous throw is caught and routed through onError
+    subscriber._simulateMessage(
+      DEFAULT_CACHE_INVALIDATION_CHANNEL,
+      JSON.stringify({ keys: ["k"] }),
+    );
+
+    expect(onError).toHaveBeenCalledOnce();
+    expect((onError.mock.calls[0]?.[0] as Error).message).toBe("sync boom");
   });
 
   it("calls onError when onInvalidate (async) rejects", async () => {

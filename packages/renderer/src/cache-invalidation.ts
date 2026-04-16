@@ -193,7 +193,14 @@ export async function subscribeToCacheInvalidation(
       return;
     }
 
-    const result = onInvalidate(parsed.keys);
+    let result: void | Promise<void>;
+    try {
+      result = onInvalidate(parsed.keys);
+    } catch (err: unknown) {
+      onError?.(err instanceof Error ? err : new Error(String(err)));
+      return;
+    }
+
     if (result instanceof Promise) {
       result.catch((err: unknown) => {
         onError?.(err instanceof Error ? err : new Error(String(err)));
