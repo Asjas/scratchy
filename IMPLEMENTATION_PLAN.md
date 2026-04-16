@@ -797,6 +797,6 @@ be planned for:
 - [x] Turborepo or Nx for optimized monorepo task execution
 - [x] `create-scratchy-app` initializer package
 - [x] Lock-free ring buffer for high-throughput SharedArrayBuffer communication
-- [ ] Multi-server cache invalidation via Redis Pub/Sub
+- [x] Multi-server cache invalidation via Redis Pub/Sub
 - [ ] Plugin marketplace / community plugin conventions
 - [x] Performance benchmarking suite

@@ -24,6 +24,14 @@ describe("renderer/src/index re-exports", () => {
     expect(typeof indexExports.storeRenderResult).toBe("function");
   });
 
+  it("re-exports cache-invalidation utilities", () => {
+    expect(typeof indexExports.createCacheInvalidator).toBe("function");
+    expect(typeof indexExports.subscribeToCacheInvalidation).toBe("function");
+    expect(indexExports.DEFAULT_CACHE_INVALIDATION_CHANNEL).toBe(
+      "scratchy:cache:invalidate",
+    );
+  });
+
   it("re-exports createSSRHandler", () => {
     expect(typeof indexExports.createSSRHandler).toBe("function");
   });
