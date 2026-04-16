@@ -194,9 +194,23 @@ export async function subscribeToCacheInvalidation(
       return;
     }
 
+    // Discard any entry that is not a non-empty string so that the
+    // `string[]` contract of `onInvalidate` is always satisfied.
+    const validKeys = (parsed.keys as unknown[]).filter(
+      (k): k is string => typeof k === "string" && k.trim().length > 0,
+    );
+    if (validKeys.length === 0) {
+      onError?.(
+        new Error(
+          `Cache invalidation message received on channel "${channel}" contains no valid string keys: ${rawMessage}`,
+        ),
+      );
+      return;
+    }
+
     let result: void | Promise<void>;
     try {
-      result = onInvalidate(parsed.keys);
+      result = onInvalidate(validKeys);
     } catch (err: unknown) {
       onError?.(err instanceof Error ? err : new Error(String(err)));
       return;

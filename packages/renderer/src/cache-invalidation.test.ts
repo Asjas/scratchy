@@ -11,6 +11,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 type MessageHandler = (channel: string, message: string) => void;
 
+// Convenience type aliases so every call site uses a type-checked cast
+// rather than the unsafe `as never` pattern.
+type MockPublisher = Parameters<typeof createCacheInvalidator>[0]["publisher"];
+type MockSubscriber = Parameters<
+  typeof subscribeToCacheInvalidation
+>[0]["subscriber"];
+
 /** Mock Redis client used for publishing. */
 function createMockPublisher() {
   return {
@@ -52,7 +59,7 @@ describe("createCacheInvalidator", () => {
   it("exposes the default channel", () => {
     const publisher = createMockPublisher();
     const invalidator = createCacheInvalidator({
-      publisher: publisher as never,
+      publisher: publisher as unknown as MockPublisher,
     });
 
     expect(invalidator.channel).toBe(DEFAULT_CACHE_INVALIDATION_CHANNEL);
@@ -61,7 +68,7 @@ describe("createCacheInvalidator", () => {
   it("exposes a custom channel when provided", () => {
     const publisher = createMockPublisher();
     const invalidator = createCacheInvalidator({
-      publisher: publisher as never,
+      publisher: publisher as unknown as MockPublisher,
       channel: "my-app:invalidate",
     });
 
@@ -71,7 +78,7 @@ describe("createCacheInvalidator", () => {
   it("publishes a JSON payload with the given keys to the default channel", async () => {
     const publisher = createMockPublisher();
     const invalidator = createCacheInvalidator({
-      publisher: publisher as never,
+      publisher: publisher as unknown as MockPublisher,
     });
 
     await invalidator.publish(["page:/about", "page:/blog"]);
@@ -86,7 +93,7 @@ describe("createCacheInvalidator", () => {
   it("publishes to a custom channel when configured", async () => {
     const publisher = createMockPublisher();
     const invalidator = createCacheInvalidator({
-      publisher: publisher as never,
+      publisher: publisher as unknown as MockPublisher,
       channel: "custom:invalidate",
     });
 
@@ -101,7 +108,7 @@ describe("createCacheInvalidator", () => {
   it("throws when an empty keys array is passed", async () => {
     const publisher = createMockPublisher();
     const invalidator = createCacheInvalidator({
-      publisher: publisher as never,
+      publisher: publisher as unknown as MockPublisher,
     });
 
     await expect(invalidator.publish([])).rejects.toThrow(
@@ -123,7 +130,7 @@ describe("subscribeToCacheInvalidation", () => {
   it("subscribes to the default channel", async () => {
     const subscriber = createMockSubscriber();
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: vi.fn(),
     });
 
@@ -135,7 +142,7 @@ describe("subscribeToCacheInvalidation", () => {
   it("subscribes to a custom channel when configured", async () => {
     const subscriber = createMockSubscriber();
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: vi.fn(),
       channel: "app:cache",
     });
@@ -146,7 +153,7 @@ describe("subscribeToCacheInvalidation", () => {
   it("exposes the channel name on the returned handle", async () => {
     const subscriber = createMockSubscriber();
     const handle = await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: vi.fn(),
     });
 
@@ -158,7 +165,7 @@ describe("subscribeToCacheInvalidation", () => {
     const onInvalidate = vi.fn();
 
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate,
     });
 
@@ -179,7 +186,7 @@ describe("subscribeToCacheInvalidation", () => {
     const onInvalidate = vi.fn();
 
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate,
     });
 
@@ -197,7 +204,7 @@ describe("subscribeToCacheInvalidation", () => {
     const onError = vi.fn();
 
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: vi.fn(),
       onError,
     });
@@ -219,7 +226,7 @@ describe("subscribeToCacheInvalidation", () => {
     const onError = vi.fn();
 
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: vi.fn(),
       onError,
     });
@@ -238,7 +245,7 @@ describe("subscribeToCacheInvalidation", () => {
     const onError = vi.fn();
 
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: vi.fn(),
       onError,
     });
@@ -251,12 +258,76 @@ describe("subscribeToCacheInvalidation", () => {
     expect(onError).toHaveBeenCalledOnce();
   });
 
+  it("calls onError when the keys array contains only non-string entries", async () => {
+    const subscriber = createMockSubscriber();
+    const onError = vi.fn();
+    const onInvalidate = vi.fn();
+
+    await subscribeToCacheInvalidation({
+      subscriber: subscriber as unknown as MockSubscriber,
+      onInvalidate,
+      onError,
+    });
+
+    subscriber._simulateMessage(
+      DEFAULT_CACHE_INVALIDATION_CHANNEL,
+      JSON.stringify({ keys: [123, true, null] }),
+    );
+
+    expect(onError).toHaveBeenCalledOnce();
+    expect((onError.mock.calls[0]?.[0] as Error).message).toMatch(
+      /no valid string keys/i,
+    );
+    expect(onInvalidate).not.toHaveBeenCalled();
+  });
+
+  it("calls onError when the keys array contains only empty/whitespace strings", async () => {
+    const subscriber = createMockSubscriber();
+    const onError = vi.fn();
+    const onInvalidate = vi.fn();
+
+    await subscribeToCacheInvalidation({
+      subscriber: subscriber as unknown as MockSubscriber,
+      onInvalidate,
+      onError,
+    });
+
+    subscriber._simulateMessage(
+      DEFAULT_CACHE_INVALIDATION_CHANNEL,
+      JSON.stringify({ keys: ["", "   ", "\t"] }),
+    );
+
+    expect(onError).toHaveBeenCalledOnce();
+    expect((onError.mock.calls[0]?.[0] as Error).message).toMatch(
+      /no valid string keys/i,
+    );
+    expect(onInvalidate).not.toHaveBeenCalled();
+  });
+
+  it("strips non-string and empty entries and calls onInvalidate with only the valid keys", async () => {
+    const subscriber = createMockSubscriber();
+    const onInvalidate = vi.fn();
+
+    await subscribeToCacheInvalidation({
+      subscriber: subscriber as unknown as MockSubscriber,
+      onInvalidate,
+    });
+
+    subscriber._simulateMessage(
+      DEFAULT_CACHE_INVALIDATION_CHANNEL,
+      JSON.stringify({ keys: ["valid-key", 42, "", "  ", "another-key"] }),
+    );
+
+    expect(onInvalidate).toHaveBeenCalledOnce();
+    expect(onInvalidate).toHaveBeenCalledWith(["valid-key", "another-key"]);
+  });
+
   it("calls onError when onInvalidate (sync) throws", async () => {
     const subscriber = createMockSubscriber();
     const onError = vi.fn();
 
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: () => {
         throw new Error("sync boom");
       },
@@ -278,7 +349,7 @@ describe("subscribeToCacheInvalidation", () => {
     const onError = vi.fn();
 
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: async () => {
         throw new Error("async boom");
       },
@@ -303,7 +374,7 @@ describe("subscribeToCacheInvalidation", () => {
     const onError = vi.fn();
 
     await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: async () => Promise.reject("string rejection"),
       onError,
     });
@@ -326,7 +397,7 @@ describe("subscribeToCacheInvalidation", () => {
   it("unsubscribes from the channel when handle.unsubscribe() is called", async () => {
     const subscriber = createMockSubscriber();
     const handle = await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: vi.fn(),
     });
 
@@ -344,7 +415,7 @@ describe("subscribeToCacheInvalidation", () => {
   it("is idempotent — calling unsubscribe() twice only tears down once", async () => {
     const subscriber = createMockSubscriber();
     const handle = await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate: vi.fn(),
     });
 
@@ -359,7 +430,7 @@ describe("subscribeToCacheInvalidation", () => {
     const subscriber = createMockSubscriber();
     const onInvalidate = vi.fn();
     const handle = await subscribeToCacheInvalidation({
-      subscriber: subscriber as never,
+      subscriber: subscriber as unknown as MockSubscriber,
       onInvalidate,
     });
 
