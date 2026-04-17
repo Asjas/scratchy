@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@types/node": "22.19.17",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "dependencies": {
     "@fastify/autoload": "6.3.1",

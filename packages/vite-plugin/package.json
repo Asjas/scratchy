@@ -31,7 +31,7 @@
     "@builder.io/qwik-city": "1.19.2",
     "@builder.io/qwik-react": "0.5.8",
     "@tailwindcss/vite": "4.2.2",
-    "typescript": "5.8.3",
+    "typescript": "5.9.3",
     "vite": "6.4.2"
   }
 }
