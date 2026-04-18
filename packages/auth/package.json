@@ -21,6 +21,6 @@
   },
   "devDependencies": {
     "fastify": "5.8.5",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   }
 }
