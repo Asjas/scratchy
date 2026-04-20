@@ -76,6 +76,6 @@
     "vitepress": "1.6.4",
     "vitest": "4.1.4",
     "wait-on": "9.0.5",
-    "wrangler": "4.83.0"
+    "wrangler": "4.84.0"
   }
 }
