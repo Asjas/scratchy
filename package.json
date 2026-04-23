@@ -7,7 +7,7 @@
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@10.33.2",
   "scripts": {
     "dev": "pnpm run --parallel --filter \"./examples/**\" --if-present dev",
     "build": "turbo build",
