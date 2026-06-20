@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "fastify-plugin": "5.1.0",
-    "piscina": "5.1.4"
+    "piscina": "5.2.0"
   },
   "peerDependencies": {
     "ioredis": ">=5.0.0"
